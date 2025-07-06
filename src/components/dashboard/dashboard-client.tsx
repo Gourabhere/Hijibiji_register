@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { 
   Building, 
   Users, 
@@ -11,7 +13,8 @@ import {
   FileText,
   Search,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  LogOut
 } from 'lucide-react';
 import { HijibijiFlatData, BlockName } from '@/data/flat-data';
 import { StatCard } from './stat-card';
@@ -19,6 +22,7 @@ import { BlockCard } from './block-card';
 import { FlatModal } from './flat-modal';
 import { FloatingActionButton } from './floating-action-button';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 export type FlatInfo = {
   blockName: BlockName;
@@ -38,7 +42,7 @@ export type FlatData = {
   lastUpdated?: string;
 }
 
-export const DashboardClient = () => {
+export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }) => {
   const [selectedFlat, setSelectedFlat] = useState<FlatInfo | null>(null);
   const [flatData, setFlatData] = useState<Record<string, FlatData>>({});
   const [searchTerm, setSearchTerm] = useState('');
@@ -47,13 +51,22 @@ export const DashboardClient = () => {
 
   const [currentBlockIndex, setCurrentBlockIndex] = useState(0);
   const blockNames = Object.keys(HijibijiFlatData) as BlockName[];
+  
+  const router = useRouter();
 
   useEffect(() => {
     setIsClient(true);
     setCurrentTime(new Date());
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000); // Update every minute
     return () => clearInterval(timer);
   }, []);
+
+  const handleLogout = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('isAdmin');
+      router.push('/');
+    }
+  };
 
   const getTotalStats = () => {
     const totalFlats = Object.values(HijibijiFlatData).reduce((sum, block) => 
@@ -66,6 +79,7 @@ export const DashboardClient = () => {
   const stats = getTotalStats();
 
   const openFlatModal = (blockName: BlockName, floor: number, flat: string) => {
+    if (!isEditable) return;
     const flatId = `${blockName}-${floor}${flat}`;
     setSelectedFlat({ blockName, floor, flat, flatId });
   };
@@ -114,12 +128,12 @@ export const DashboardClient = () => {
               </div>
             </div>
             
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
+            <div className="flex items-center space-x-2">
+              <div className="text-right hidden sm:block">
                  {currentTime && (
                   <>
                     <p className="text-sm font-medium text-slate-800">
-                      {currentTime.toLocaleTimeString()}
+                      {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                     <p className="text-xs text-slate-600">
                       {currentTime.toLocaleDateString()}
@@ -128,6 +142,17 @@ export const DashboardClient = () => {
                  )}
               </div>
               
+              {isEditable ? (
+                <Button onClick={handleLogout} variant="ghost" size="sm" className="space-x-2">
+                  <LogOut className="w-4 h-4"/>
+                  <span>Logout</span>
+                </Button>
+              ) : (
+                <Button asChild variant="ghost" size="sm">
+                  <Link href="/login">Admin Login</Link>
+                </Button>
+              )}
+
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -240,7 +265,7 @@ export const DashboardClient = () => {
                           blockName={currentBlockName} 
                           blockData={currentBlockData} 
                           allFlatData={flatData}
-                          onFlatClick={openFlatModal}
+                          onFlatClick={isEditable ? openFlatModal : undefined}
                       />
                   </motion.div>
               </AnimatePresence>
@@ -257,34 +282,38 @@ export const DashboardClient = () => {
         </motion.div>
       </main>
 
-      <div className="fixed bottom-6 right-6 flex flex-col gap-4 z-30">
-        <FloatingActionButton
-          icon={Bell}
-          onClick={() => alert('Notifications feature coming soon!')}
-          className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
-          tooltip="Notifications"
-        />
-        <FloatingActionButton
-          icon={FileText}
-          onClick={() => alert('Reports feature coming soon!')}
-          className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700"
-          tooltip="Generate Reports"
-        />
-        <FloatingActionButton
-          icon={Settings}
-          onClick={() => alert('Settings feature coming soon!')}
-          className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
-          tooltip="Settings"
-        />
-      </div>
+      {isEditable && (
+        <>
+          <div className="fixed bottom-6 right-6 flex flex-col gap-4 z-30">
+            <FloatingActionButton
+              icon={Bell}
+              onClick={() => alert('Notifications feature coming soon!')}
+              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+              tooltip="Notifications"
+            />
+            <FloatingActionButton
+              icon={FileText}
+              onClick={() => alert('Reports feature coming soon!')}
+              className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700"
+              tooltip="Generate Reports"
+            />
+            <FloatingActionButton
+              icon={Settings}
+              onClick={() => alert('Settings feature coming soon!')}
+              className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
+              tooltip="Settings"
+            />
+          </div>
 
-      <FlatModal 
-        isOpen={!!selectedFlat}
-        onClose={() => setSelectedFlat(null)}
-        flatInfo={selectedFlat}
-        flatData={selectedFlat ? flatData[selectedFlat.flatId] : undefined}
-        onSave={saveFlatData}
-      />
+          <FlatModal 
+            isOpen={!!selectedFlat}
+            onClose={() => setSelectedFlat(null)}
+            flatInfo={selectedFlat}
+            flatData={selectedFlat ? flatData[selectedFlat.flatId] : undefined}
+            onSave={saveFlatData}
+          />
+        </>
+      )}
     </div>
   );
 };

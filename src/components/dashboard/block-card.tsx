@@ -12,7 +12,7 @@ interface BlockCardProps {
   blockName: BlockName;
   blockData: BlockData;
   allFlatData: Record<string, FlatData>;
-  onFlatClick: (blockName: BlockName, floor: number, flat: string) => void;
+  onFlatClick?: (blockName: BlockName, floor: number, flat: string) => void;
 }
 
 export function BlockCard({ blockName, blockData, allFlatData, onFlatClick }: BlockCardProps) {
@@ -35,7 +35,7 @@ export function BlockCard({ blockName, blockData, allFlatData, onFlatClick }: Bl
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        whileHover={{ y: -8 }}
+        whileHover={ onFlatClick ? { y: -8 } : {}}
         className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-xl border border-white/20"
       >
         <div className="flex justify-between items-center mb-4">
@@ -82,7 +82,7 @@ export function BlockCard({ blockName, blockData, allFlatData, onFlatClick }: Bl
                       flat={flat}
                       isRegistered={isRegistered}
                       ownerInitials={ownerInitials}
-                      onClick={() => onFlatClick(blockName, floor, flat)}
+                      onClick={onFlatClick ? () => onFlatClick(blockName, floor, flat) : undefined}
                     />
                   );
               })}
