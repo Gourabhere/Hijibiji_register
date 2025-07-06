@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Building, 
   Users, 
@@ -10,7 +10,8 @@ import {
   Bell, 
   FileText,
   Search,
-  Filter
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { HijibijiFlatData, BlockName } from '@/data/flat-data';
 import { StatCard } from './stat-card';
@@ -18,7 +19,6 @@ import { BlockCard } from './block-card';
 import { FlatModal } from './flat-modal';
 import { FloatingActionButton } from './floating-action-button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export type FlatInfo = {
   blockName: BlockName;
@@ -41,9 +41,11 @@ export const DashboardClient = () => {
   const [selectedFlat, setSelectedFlat] = useState<FlatInfo | null>(null);
   const [flatData, setFlatData] = useState<Record<string, FlatData>>({});
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedBlock, setSelectedBlock] = useState('all');
   const [isClient, setIsClient] = useState(false);
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
+
+  const [currentBlockIndex, setCurrentBlockIndex] = useState(0);
+  const blockNames = Object.keys(HijibijiFlatData) as BlockName[];
 
   useEffect(() => {
     setIsClient(true);
@@ -83,9 +85,20 @@ export const DashboardClient = () => {
     setSelectedFlat(null);
   };
 
+  const goToNextBlock = () => {
+    setCurrentBlockIndex((prevIndex) => (prevIndex + 1) % blockNames.length);
+  };
+
+  const goToPrevBlock = () => {
+    setCurrentBlockIndex((prevIndex) => (prevIndex - 1 + blockNames.length) % blockNames.length);
+  };
+
   if (!isClient) {
     return null;
   }
+  
+  const currentBlockName = blockNames[currentBlockIndex];
+  const currentBlockData = HijibijiFlatData[currentBlockName];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 font-body">
@@ -200,48 +213,52 @@ export const DashboardClient = () => {
                 className="pl-10 h-12 rounded-xl"
               />
             </div>
-            <div className="relative">
-              <Select value={selectedBlock} onValueChange={setSelectedBlock}>
-                <SelectTrigger className="w-full sm:w-[180px] h-12 rounded-xl">
-                  <div className="flex items-center gap-2">
-                    <Filter className="w-5 h-5 text-slate-400" />
-                    <SelectValue placeholder="Select Block" />
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Blocks</SelectItem>
-                  {Object.keys(HijibijiFlatData).map(block => (
-                    <SelectItem key={block} value={block}>{block}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
           </div>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+            className="flex items-center justify-center gap-4 lg:gap-8"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
         >
-          {Object.entries(HijibijiFlatData)
-            .filter(([blockName]) => selectedBlock === 'all' || selectedBlock === blockName)
-            .map(([blockName, data], index) => (
-              <motion.div
-                key={blockName}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 * index }}
-              >
-                <BlockCard 
-                  blockName={blockName as BlockName} 
-                  blockData={data} 
-                  isOccupied={isOccupied}
-                  onFlatClick={openFlatModal}
-                />
-              </motion.div>
-            ))}
+            <motion.button 
+                onClick={goToPrevBlock} 
+                whileHover={{ scale: 1.1 }} 
+                whileTap={{ scale: 0.9 }}
+                className="p-3 bg-white/80 rounded-full shadow-lg border border-white/20 backdrop-blur-sm"
+            >
+                <ChevronLeft className="w-6 h-6 lg:w-8 lg:h-8 text-slate-600" />
+            </motion.button>
+
+            <div className="flex-grow max-w-2xl w-full">
+              <AnimatePresence mode="wait">
+                  <motion.div
+                      key={currentBlockIndex}
+                      initial={{ opacity: 0, x: 50 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -50 }}
+                      transition={{ duration: 0.3 }}
+                      className="w-full"
+                  >
+                      <BlockCard 
+                          blockName={currentBlockName} 
+                          blockData={currentBlockData} 
+                          isOccupied={isOccupied}
+                          onFlatClick={openFlatModal}
+                      />
+                  </motion.div>
+              </AnimatePresence>
+            </div>
+            
+            <motion.button 
+                onClick={goToNextBlock} 
+                whileHover={{ scale: 1.1 }} 
+                whileTap={{ scale: 0.9 }}
+                className="p-3 bg-white/80 rounded-full shadow-lg border border-white/20 backdrop-blur-sm"
+            >
+                <ChevronRight className="w-6 h-6 lg:w-8 lg:h-8 text-slate-600" />
+            </motion.button>
         </motion.div>
       </main>
 
