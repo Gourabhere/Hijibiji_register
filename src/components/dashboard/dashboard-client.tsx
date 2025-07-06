@@ -42,6 +42,8 @@ export type FlatData = {
   lastUpdated?: string;
 }
 
+const LOCAL_STORAGE_KEY = 'hijibiji_flat_data';
+
 export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }) => {
   const [selectedFlat, setSelectedFlat] = useState<FlatInfo | null>(null);
   const [flatData, setFlatData] = useState<Record<string, FlatData>>({});
@@ -58,6 +60,16 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
     setIsClient(true);
     setCurrentTime(new Date());
     const timer = setInterval(() => setCurrentTime(new Date()), 60000); // Update every minute
+    
+    try {
+      const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (savedData) {
+        setFlatData(JSON.parse(savedData));
+      }
+    } catch (e) {
+      console.error("Failed to load flat data from localStorage", e);
+    }
+
     return () => clearInterval(timer);
   }, []);
 
@@ -71,15 +83,13 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
   const getTotalStats = () => {
     const totalFlats = Object.values(HijibijiFlatData).reduce((sum, block) => 
       sum + (block.floors * block.flatsPerFloor.length), 0);
-    const totalOccupied = Object.values(HijibijiFlatData).reduce((sum, block) => 
-      sum + block.occupiedFlats.length, 0);
+    const totalOccupied = Object.values(flatData).filter(fd => fd.registered).length;
     return { totalFlats, totalOccupied, totalVacant: totalFlats - totalOccupied };
   };
 
   const stats = getTotalStats();
 
   const openFlatModal = (blockName: BlockName, floor: number, flat: string) => {
-    if (!isEditable) return;
     const flatId = `${blockName}-${floor}${flat}`;
     setSelectedFlat({ blockName, floor, flat, flatId });
   };
@@ -87,10 +97,18 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
   const saveFlatData = (data: FlatData) => {
     if(!selectedFlat) return;
     const flatId = selectedFlat.flatId;
-    setFlatData(prev => ({
-      ...prev,
+    const updatedFlatData = {
+      ...flatData,
       [flatId]: { ...data, lastUpdated: new Date().toISOString() }
-    }));
+    };
+    setFlatData(updatedFlatData);
+
+    try {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedFlatData));
+    } catch (e) {
+        console.error("Failed to save flat data to localStorage", e);
+    }
+
     setSelectedFlat(null);
   };
 
@@ -197,7 +215,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
             icon={Users}
             title="Occupied"
             value={stats.totalOccupied}
-            subtitle={`${((stats.totalOccupied / stats.totalFlats) * 100).toFixed(1)}% occupancy`}
+            subtitle={`${(stats.totalFlats > 0 ? (stats.totalOccupied / stats.totalFlats) * 100 : 0).toFixed(1)}% occupancy`}
             color="from-emerald-500 to-emerald-600"
           />
           <StatCard
@@ -265,7 +283,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
                           blockName={currentBlockName} 
                           blockData={currentBlockData} 
                           allFlatData={flatData}
-                          onFlatClick={isEditable ? openFlatModal : undefined}
+                          onFlatClick={openFlatModal}
                       />
                   </motion.div>
               </AnimatePresence>
@@ -282,37 +300,38 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
         </motion.div>
       </main>
 
-      {isEditable && (
-        <>
-          <div className="fixed bottom-6 right-6 flex flex-col gap-4 z-30">
-            <FloatingActionButton
-              icon={Bell}
-              onClick={() => alert('Notifications feature coming soon!')}
-              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
-              tooltip="Notifications"
-            />
-            <FloatingActionButton
-              icon={FileText}
-              onClick={() => alert('Reports feature coming soon!')}
-              className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700"
-              tooltip="Generate Reports"
-            />
-            <FloatingActionButton
-              icon={Settings}
-              onClick={() => alert('Settings feature coming soon!')}
-              className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
-              tooltip="Settings"
-            />
-          </div>
+      
+      <FlatModal 
+        isOpen={!!selectedFlat}
+        onClose={() => setSelectedFlat(null)}
+        flatInfo={selectedFlat}
+        flatData={selectedFlat ? flatData[selectedFlat.flatId] : undefined}
+        onSave={saveFlatData}
+        isEditable={isEditable}
+      />
+        
 
-          <FlatModal 
-            isOpen={!!selectedFlat}
-            onClose={() => setSelectedFlat(null)}
-            flatInfo={selectedFlat}
-            flatData={selectedFlat ? flatData[selectedFlat.flatId] : undefined}
-            onSave={saveFlatData}
+      {isEditable && (
+        <div className="fixed bottom-6 right-6 flex flex-col gap-4 z-30">
+          <FloatingActionButton
+            icon={Bell}
+            onClick={() => alert('Notifications feature coming soon!')}
+            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+            tooltip="Notifications"
           />
-        </>
+          <FloatingActionButton
+            icon={FileText}
+            onClick={() => alert('Reports feature coming soon!')}
+            className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700"
+            tooltip="Generate Reports"
+          />
+          <FloatingActionButton
+            icon={Settings}
+            onClick={() => alert('Settings feature coming soon!')}
+            className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
+            tooltip="Settings"
+          />
+        </div>
       )}
     </div>
   );

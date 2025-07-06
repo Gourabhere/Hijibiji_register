@@ -16,6 +16,7 @@ interface FlatModalProps {
     flatInfo: FlatInfo | null;
     flatData?: FlatData;
     onSave: (data: FlatData) => void;
+    isEditable?: boolean;
 }
 
 const initialFormData: FlatData = {
@@ -28,7 +29,7 @@ const initialFormData: FlatData = {
     registered: false,
 };
 
-export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave }: FlatModalProps) {
+export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave, isEditable = false }: FlatModalProps) {
     const [formData, setFormData] = useState<FlatData>(initialFormData);
 
     useEffect(() => {
@@ -87,6 +88,7 @@ export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave }: FlatM
                   onChange={(e) => setFormData({...formData, ownerName: e.target.value})}
                   className="rounded-xl"
                   placeholder="Enter owner name"
+                  disabled={!isEditable}
                 />
               </div>
 
@@ -99,6 +101,7 @@ export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave }: FlatM
                   onChange={(e) => setFormData({...formData, contactNumber: e.target.value})}
                   className="rounded-xl"
                   placeholder="Enter contact number"
+                  disabled={!isEditable}
                 />
               </div>
 
@@ -111,6 +114,7 @@ export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave }: FlatM
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                   className="rounded-xl"
                   placeholder="Enter email address"
+                  disabled={!isEditable}
                 />
               </div>
 
@@ -123,6 +127,7 @@ export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave }: FlatM
                   onChange={(e) => setFormData({...formData, familyMembers: e.target.value})}
                   className="rounded-xl"
                   placeholder="Number of family members"
+                  disabled={!isEditable}
                 />
               </div>
 
@@ -135,6 +140,7 @@ export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave }: FlatM
                   className="rounded-xl"
                   rows={3}
                   placeholder="Any issues or complaints..."
+                  disabled={!isEditable}
                 />
               </div>
 
@@ -143,6 +149,7 @@ export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave }: FlatM
                 <Select
                   value={formData.maintenanceStatus}
                   onValueChange={(value: 'paid' | 'pending' | 'overdue') => setFormData({...formData, maintenanceStatus: value})}
+                  disabled={!isEditable}
                 >
                   <SelectTrigger id="maintenanceStatus" className="rounded-xl">
                     <SelectValue placeholder="Select status" />
@@ -156,19 +163,25 @@ export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave }: FlatM
               </div>
 
               <div className="flex items-center space-x-2 pt-2">
-                <Checkbox id="registered" checked={formData.registered} onCheckedChange={(checked) => setFormData({ ...formData, registered: !!checked })} />
+                <Checkbox 
+                  id="registered" 
+                  checked={formData.registered} 
+                  onCheckedChange={(checked) => setFormData({ ...formData, registered: !!checked })}
+                  disabled={!isEditable}
+                />
                 <Label htmlFor="registered">Registered</Label>
               </div>
 
-
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                type="submit"
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 mt-4"
-              >
-                Save Details
-              </motion.button>
+              {isEditable && (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 mt-4"
+                >
+                  Save Details
+                </motion.button>
+              )}
             </form>
           </motion.div>
         </motion.div>
