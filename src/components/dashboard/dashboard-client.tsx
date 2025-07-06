@@ -34,6 +34,7 @@ export type FlatData = {
   familyMembers: string;
   issues: string;
   maintenanceStatus: 'paid' | 'pending' | 'overdue';
+  registered: boolean;
   lastUpdated?: string;
 }
 
@@ -63,12 +64,6 @@ export const DashboardClient = () => {
   };
 
   const stats = getTotalStats();
-
-  const isOccupied = (blockName: BlockName, floor: number, flat: string) => {
-    return HijibijiFlatData[blockName].occupiedFlats.some(
-      occupied => occupied.floor === floor && occupied.flat === flat
-    );
-  };
 
   const openFlatModal = (blockName: BlockName, floor: number, flat: string) => {
     const flatId = `${blockName}-${floor}${flat}`;
@@ -244,7 +239,7 @@ export const DashboardClient = () => {
                       <BlockCard 
                           blockName={currentBlockName} 
                           blockData={currentBlockData} 
-                          isOccupied={isOccupied}
+                          allFlatData={flatData}
                           onFlatClick={openFlatModal}
                       />
                   </motion.div>

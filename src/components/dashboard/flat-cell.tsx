@@ -6,11 +6,12 @@ interface FlatCellProps {
   blockName: string;
   floor: number;
   flat: string;
-  isOccupied: boolean;
+  isRegistered: boolean;
+  ownerInitials: string;
   onClick: () => void;
 }
 
-export function FlatCell({ isOccupied, onClick }: FlatCellProps) {
+export function FlatCell({ isRegistered, ownerInitials, onClick }: FlatCellProps) {
   return (
     <motion.div
       whileHover={{ scale: 1.1, zIndex: 10 }}
@@ -19,8 +20,8 @@ export function FlatCell({ isOccupied, onClick }: FlatCellProps) {
       className={`
         relative aspect-square flex items-center justify-center text-xs font-bold cursor-pointer
         rounded-lg border-2 transition-all duration-300 overflow-hidden
-        ${isOccupied 
-          ? 'bg-gradient-to-br from-emerald-500 to-teal-600 border-emerald-400 text-white shadow-lg' 
+        ${isRegistered 
+          ? 'bg-gradient-to-br from-green-500 to-emerald-600 border-green-400 text-white shadow-lg' 
           : 'bg-gradient-to-br from-slate-100 to-slate-200 border-slate-300 text-slate-600 hover:border-slate-400'
         }
       `}
@@ -31,14 +32,14 @@ export function FlatCell({ isOccupied, onClick }: FlatCellProps) {
         whileHover={{ x: '100%' }}
         transition={{ duration: 0.6 }}
       />
-      {isOccupied && (
+      {isRegistered && (
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white"
         />
       )}
-      <span className="z-10 relative"></span>
+      <span className="z-10 relative">{ownerInitials}</span>
     </motion.div>
   );
 }

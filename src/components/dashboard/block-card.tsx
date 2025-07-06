@@ -6,18 +6,30 @@ import { motion } from 'framer-motion';
 import { Building } from 'lucide-react';
 import type { BlockData, BlockName } from '@/data/flat-data';
 import { FlatCell } from './flat-cell';
+import type { FlatData } from './dashboard-client';
 
 interface BlockCardProps {
   blockName: BlockName;
   blockData: BlockData;
-  isOccupied: (blockName: BlockName, floor: number, flat: string) => boolean;
+  allFlatData: Record<string, FlatData>;
   onFlatClick: (blockName: BlockName, floor: number, flat: string) => void;
 }
 
-export function BlockCard({ blockName, blockData, isOccupied, onFlatClick }: BlockCardProps) {
+export function BlockCard({ blockName, blockData, allFlatData, onFlatClick }: BlockCardProps) {
     const occupiedCount = blockData.occupiedFlats.length;
     const totalFlats = blockData.floors * blockData.flatsPerFloor.length;
     const occupancyRate = totalFlats > 0 ? (occupiedCount / totalFlats) * 100 : 0;
+
+    const getOwnerInitials = (name: string | undefined) => {
+        if (!name) return '';
+        return name
+            .split(' ')
+            .map((n) => n[0])
+            .filter(c => c && c.match(/[a-zA-Z]/))
+            .slice(0, 2)
+            .join('')
+            .toUpperCase();
+    }
 
     return (
       <motion.div
@@ -56,16 +68,24 @@ export function BlockCard({ blockName, blockData, isOccupied, onFlatClick }: Blo
               <div className="flex items-center justify-center text-center text-xs font-semibold text-slate-500 p-1">
                 {floor}
               </div>
-              {blockData.flatsPerFloor.map(flat => (
-                <FlatCell
-                  key={`${floor}-${flat}`}
-                  blockName={blockName}
-                  floor={floor}
-                  flat={flat}
-                  isOccupied={isOccupied(blockName, floor, flat)}
-                  onClick={() => onFlatClick(blockName, floor, flat)}
-                />
-              ))}
+              {blockData.flatsPerFloor.map(flat => {
+                  const flatId = `${blockName}-${floor}${flat}`;
+                  const currentFlatData = allFlatData[flatId];
+                  const isRegistered = !!currentFlatData?.registered;
+                  const ownerInitials = getOwnerInitials(currentFlatData?.ownerName);
+
+                  return (
+                    <FlatCell
+                      key={`${floor}-${flat}`}
+                      blockName={blockName}
+                      floor={floor}
+                      flat={flat}
+                      isRegistered={isRegistered}
+                      ownerInitials={ownerInitials}
+                      onClick={() => onFlatClick(blockName, floor, flat)}
+                    />
+                  );
+              })}
             </React.Fragment>
           ))}
         </div>

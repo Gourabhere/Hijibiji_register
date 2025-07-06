@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface FlatModalProps {
     isOpen: boolean;
@@ -23,17 +24,16 @@ const initialFormData: FlatData = {
     email: '',
     familyMembers: '',
     issues: '',
-    maintenanceStatus: 'paid'
+    maintenanceStatus: 'paid',
+    registered: false,
 };
 
 export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave }: FlatModalProps) {
     const [formData, setFormData] = useState<FlatData>(initialFormData);
 
     useEffect(() => {
-        if (flatInfo && flatData) {
-            setFormData(flatData);
-        } else {
-            setFormData(initialFormData);
+        if (flatInfo) {
+            setFormData({ ...initialFormData, ...(flatData || {}) });
         }
     }, [flatInfo, flatData]);
 
@@ -154,6 +154,12 @@ export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave }: FlatM
                   </SelectContent>
                 </Select>
               </div>
+
+              <div className="flex items-center space-x-2 pt-2">
+                <Checkbox id="registered" checked={formData.registered} onCheckedChange={(checked) => setFormData({ ...formData, registered: !!checked })} />
+                <Label htmlFor="registered">Registered</Label>
+              </div>
+
 
               <motion.button
                 whileHover={{ scale: 1.02 }}
