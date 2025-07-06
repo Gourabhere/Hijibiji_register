@@ -45,8 +45,6 @@ export type FlatData = {
   lastUpdated?: string;
 }
 
-const LOCAL_STORAGE_KEY = 'hijibiji_flat_data';
-
 export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }) => {
   const [selectedFlat, setSelectedFlat] = useState<FlatInfo | null>(null);
   const [flatData, setFlatData] = useState<Record<string, FlatData>>({});
@@ -63,9 +61,10 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
   useEffect(() => {
     setIsClient(true);
     setCurrentTime(new Date());
-    const timer = setInterval(() => setCurrentTime(new Date()), 60000); // Update every minute
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     
     const fetchFlatData = async () => {
+      setIsLoading(true);
       try {
         const querySnapshot = await getDocs(collection(db, "flats"));
         const data: Record<string, FlatData> = {};
@@ -74,7 +73,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
         });
         setFlatData(data);
       } catch (e) {
-        console.error("Failed to load flat data from Firestore", e);
+        console.error("Failed to load flat data from Firestore. Please check your Firebase configuration in src/lib/firebase.ts", e);
       } finally {
         setIsLoading(false);
       }
@@ -111,6 +110,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
     const flatId = selectedFlat.flatId;
     const updatedDataWithTimestamp = { ...data, lastUpdated: new Date().toISOString() };
     
+    const previousState = flatData;
     // Optimistic UI update
     const updatedFlatData = {
       ...flatData,
@@ -120,13 +120,11 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
     setSelectedFlat(null);
 
     try {
-        await setDoc(doc(db, "flats", flatId), updatedDataWithTimestamp);
+        await setDoc(doc(db, "flats", flatId), updatedDataWithTimestamp, { merge: true });
     } catch (e) {
-        console.error("Failed to save flat data to Firestore", e);
+        console.error("Failed to save flat data to Firestore. Reverting UI.", e);
         // Revert UI on failure
-        const revertedData = { ...flatData };
-        delete revertedData[flatId];
-        setFlatData(revertedData);
+        setFlatData(previousState);
     }
   };
 
