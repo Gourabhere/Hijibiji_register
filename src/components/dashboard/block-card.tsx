@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -39,7 +40,10 @@ export function BlockCard({ blockName, blockData, isOccupied, onFlatClick }: Blo
           </div>
         </div>
 
-        <div className="grid grid-cols-[2rem_1fr_1fr_1fr_1fr_1fr] gap-1 mb-4">
+        <div 
+          className="grid gap-1 mb-4" 
+          style={{ gridTemplateColumns: `2rem repeat(${blockData.flatsPerFloor.length}, minmax(0, 1fr))` }}
+        >
           <div className="text-center text-xs font-semibold text-slate-500 p-1"></div>
           {blockData.flatsPerFloor.map(flat => (
             <div key={flat} className="text-center text-xs font-semibold text-slate-500 p-1">
