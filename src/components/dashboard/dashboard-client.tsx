@@ -23,6 +23,9 @@ import { FlatModal } from './flat-modal';
 import { FloatingActionButton } from './floating-action-button';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { db } from '@/lib/firebase';
+import { collection, doc, getDocs, setDoc } from 'firebase/firestore';
+
 
 export type FlatInfo = {
   blockName: BlockName;
@@ -49,6 +52,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
   const [flatData, setFlatData] = useState<Record<string, FlatData>>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [isClient, setIsClient] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
   const [currentBlockIndex, setCurrentBlockIndex] = useState(0);
@@ -61,14 +65,22 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
     setCurrentTime(new Date());
     const timer = setInterval(() => setCurrentTime(new Date()), 60000); // Update every minute
     
-    try {
-      const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (savedData) {
-        setFlatData(JSON.parse(savedData));
+    const fetchFlatData = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "flats"));
+        const data: Record<string, FlatData> = {};
+        querySnapshot.forEach((doc) => {
+            data[doc.id] = doc.data() as FlatData;
+        });
+        setFlatData(data);
+      } catch (e) {
+        console.error("Failed to load flat data from Firestore", e);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (e) {
-      console.error("Failed to load flat data from localStorage", e);
-    }
+    };
+
+    fetchFlatData();
 
     return () => clearInterval(timer);
   }, []);
@@ -94,22 +106,28 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
     setSelectedFlat({ blockName, floor, flat, flatId });
   };
 
-  const saveFlatData = (data: FlatData) => {
+  const saveFlatData = async (data: FlatData) => {
     if(!selectedFlat) return;
     const flatId = selectedFlat.flatId;
+    const updatedDataWithTimestamp = { ...data, lastUpdated: new Date().toISOString() };
+    
+    // Optimistic UI update
     const updatedFlatData = {
       ...flatData,
-      [flatId]: { ...data, lastUpdated: new Date().toISOString() }
+      [flatId]: updatedDataWithTimestamp
     };
     setFlatData(updatedFlatData);
+    setSelectedFlat(null);
 
     try {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedFlatData));
+        await setDoc(doc(db, "flats", flatId), updatedDataWithTimestamp);
     } catch (e) {
-        console.error("Failed to save flat data to localStorage", e);
+        console.error("Failed to save flat data to Firestore", e);
+        // Revert UI on failure
+        const revertedData = { ...flatData };
+        delete revertedData[flatId];
+        setFlatData(revertedData);
     }
-
-    setSelectedFlat(null);
   };
 
   const goToNextBlock = () => {
@@ -271,21 +289,31 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
 
             <div className="flex-grow max-w-2xl w-full">
               <AnimatePresence mode="wait">
-                  <motion.div
-                      key={currentBlockIndex}
-                      initial={{ opacity: 0, x: 50 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -50 }}
-                      transition={{ duration: 0.3 }}
-                      className="w-full"
-                  >
-                      <BlockCard 
-                          blockName={currentBlockName} 
-                          blockData={currentBlockData} 
-                          allFlatData={flatData}
-                          onFlatClick={openFlatModal}
-                      />
-                  </motion.div>
+                  {isLoading ? (
+                     <div className="flex justify-center items-center h-[400px]">
+                        <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                            className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full"
+                        />
+                     </div>
+                  ) : (
+                    <motion.div
+                        key={currentBlockIndex}
+                        initial={{ opacity: 0, x: 50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -50 }}
+                        transition={{ duration: 0.3 }}
+                        className="w-full"
+                    >
+                        <BlockCard 
+                            blockName={currentBlockName} 
+                            blockData={currentBlockData} 
+                            allFlatData={flatData}
+                            onFlatClick={openFlatModal}
+                        />
+                    </motion.div>
+                  )}
               </AnimatePresence>
             </div>
             
