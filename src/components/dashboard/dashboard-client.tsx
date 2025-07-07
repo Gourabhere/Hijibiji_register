@@ -25,8 +25,7 @@ import { FlatModal } from './flat-modal';
 import { FloatingActionButton } from './floating-action-button';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { db } from '@/lib/firebase';
-import { collection, doc, getDocs, setDoc } from 'firebase/firestore';
+import { getFlatsData, saveFlatDataAction } from '@/app/actions';
 
 
 export type FlatInfo = {
@@ -70,15 +69,11 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
       setIsLoading(true);
       setDbError(null);
       try {
-        const querySnapshot = await getDocs(collection(db, "flats"));
-        const data: Record<string, FlatData> = {};
-        querySnapshot.forEach((doc) => {
-            data[doc.id] = doc.data() as FlatData;
-        });
+        const data = await getFlatsData();
         setFlatData(data);
-      } catch (e) {
-        console.error("Failed to load flat data from Firestore.", e);
-        setDbError("Could not connect to the database. Please ensure your Firebase configuration is correct in 'src/lib/firebase.ts'. The page will not work correctly until this is resolved.");
+      } catch (e: any) {
+        console.error("Failed to load flat data.", e);
+        setDbError(e.message || "An unknown error occurred while fetching data.");
       } finally {
         setIsLoading(false);
       }
@@ -125,10 +120,10 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
     setSelectedFlat(null);
 
     try {
-        await setDoc(doc(db, "flats", flatId), updatedDataWithTimestamp, { merge: true });
-    } catch (e) {
-        console.error("Failed to save flat data to Firestore. Reverting UI.", e);
-        setDbError("Failed to save data. Please check your database connection and permissions.");
+        await saveFlatDataAction(flatId, updatedDataWithTimestamp);
+    } catch (e: any) {
+        console.error("Failed to save flat data. Reverting UI.", e);
+        setDbError(e.message || "Failed to save data. Please check your connection and permissions.");
         // Revert UI on failure
         setFlatData(previousState);
     }
