@@ -74,26 +74,22 @@ export default function OwnerLoginPage() {
 
     try {
       const result = await signupOwnerAction(selectedBlock, selectedFloor, selectedFlat, signupPassword);
-      if (result.success) {
+      if (result.success && result.flatId) {
         toast({
           title: 'Signup Successful!',
-          description: result.message,
+          description: "Redirecting to your dashboard...",
         });
-        setMode('login'); // Switch to the login tab
-        if(result.flatId) {
-          setIdentifier(result.flatId); // Pre-fill flat ID
-        }
-        // Reset signup form fields
-        setSelectedBlock('');
-        setSelectedFloor('');
-        setSelectedFlat('');
-        setSignupPassword('');
-        setConfirmPassword('');
+        
+        // Automatically log the user in after successful signup
+        localStorage.setItem('isOwnerLoggedIn', 'true');
+        localStorage.setItem('ownerFlatId', result.flatId);
+        router.push('/owner');
 
       } else {
         setError(result.message);
       }
-    } catch (err: any) {
+    } catch (err: any)
+      {
       setError(err.message || 'An unexpected error occurred during signup.');
     } finally {
       setIsSigningUp(false);
