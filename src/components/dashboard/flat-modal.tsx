@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -122,11 +123,11 @@ export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave, isEdita
                 <Label htmlFor="familyMembers" className="flex items-center"><Users className="w-4 h-4 mr-2" />Family Members</Label>
                 <Input
                   id="familyMembers"
-                  type="number"
+                  type="text"
                   value={formData.familyMembers}
                   onChange={(e) => setFormData({...formData, familyMembers: e.target.value})}
                   className="rounded-xl"
-                  placeholder="Number of family members"
+                  placeholder="e.g., 2 Adults, 1 Child"
                   disabled={!isEditable}
                 />
               </div>

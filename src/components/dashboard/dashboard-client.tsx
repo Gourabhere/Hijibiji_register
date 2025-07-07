@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -66,6 +66,20 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
   const router = useRouter();
   const pathname = usePathname();
 
+  const fetchFlatData = useCallback(async () => {
+    setIsLoading(true);
+    setDbError(null);
+    try {
+      const data = await getFlatsData();
+      setFlatData(data);
+    } catch (e: any) {
+      console.error("Failed to load flat data.", e);
+      setDbError(e.message || "An unknown error occurred while fetching data.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     setIsClient(true);
     setCurrentTime(new Date());
@@ -75,7 +89,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
         const isAdminLoggedIn = localStorage.getItem('isAdmin') === 'true';
         setIsOwnerLoggedIn(ownerLoggedIn);
 
-        if (ownerLoggedIn && pathname.startsWith('/admin')) {
+        if (ownerLoggedIn && pathname !== '/owner') {
             router.replace('/owner');
         }
 
@@ -89,24 +103,10 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
 
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     
-    const fetchFlatData = async () => {
-      setIsLoading(true);
-      setDbError(null);
-      try {
-        const data = await getFlatsData();
-        setFlatData(data);
-      } catch (e: any) {
-        console.error("Failed to load flat data.", e);
-        setDbError(e.message || "An unknown error occurred while fetching data.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchFlatData();
 
     return () => clearInterval(timer);
-  }, [pathname, router]);
+  }, [pathname, router, fetchFlatData]);
 
   const handleAdminLogout = () => {
     if (typeof window !== 'undefined') {
@@ -150,19 +150,17 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
   const saveFlatData = async (data: FlatData) => {
     if(!selectedFlat) return;
     const flatId = selectedFlat.flatId;
-    const updatedDataWithTimestamp = { ...data, lastUpdated: new Date().toISOString() };
+    const dataToSave = { ...data, lastUpdated: new Date().toISOString() };
     
     const previousState = flatData;
-    // Optimistic UI update
-    const updatedFlatData = {
-      ...flatData,
-      [flatId]: updatedDataWithTimestamp
-    };
-    setFlatData(updatedFlatData);
+    // Optimistic UI update for responsiveness
+    setFlatData(prev => ({ ...prev, [flatId]: dataToSave }));
     setSelectedFlat(null);
 
     try {
-        await saveFlatDataAction(flatId, updatedDataWithTimestamp);
+        await saveFlatDataAction(flatId, dataToSave);
+        // Re-fetch on success to ensure data is in sync with the source of truth
+        await fetchFlatData();
     } catch (e: any) {
         console.error("Failed to save flat data. Reverting UI.", e);
         setDbError(e.message || "Failed to save data. Please check your connection and permissions.");
@@ -210,14 +208,12 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
             </div>
             
             <div className="hidden md:flex items-center space-x-2">
-              {pathname !== '/' && (
-                <Button asChild variant="ghost" size="sm" className="space-x-2">
-                  <Link href="/">
-                    <Home className="w-4 h-4" />
-                    <span>Home</span>
-                  </Link>
-                </Button>
-              )}
+              <Button asChild variant="ghost" size="sm" className="space-x-2">
+                <Link href="/">
+                  <Home className="w-4 h-4" />
+                  <span>Home</span>
+                </Link>
+              </Button>
               <div className="text-right hidden sm:block">
                  {currentTime && (
                   <>
@@ -252,14 +248,14 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
                       </Button>
                     </>
                   ) : (
-                    <Button asChild variant="ghost" size="sm">
-                      <Link href="/owner-login">Owner Login</Link>
-                    </Button>
-                  )}
-                  {!isOwnerLoggedIn && (
-                    <Button asChild variant="ghost" size="sm">
-                      <Link href="/login">Admin Login</Link>
-                    </Button>
+                    <>
+                      <Button asChild variant="ghost" size="sm">
+                        <Link href="/owner-login">Owner Login</Link>
+                      </Button>
+                      <Button asChild variant="ghost" size="sm">
+                        <Link href="/login">Admin Login</Link>
+                      </Button>
+                    </>
                   )}
                 </>
               )}
@@ -504,7 +500,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
         flatInfo={selectedFlat}
         flatData={selectedFlat ? flatData[selectedFlat.flatId] : undefined}
         onSave={saveFlatData}
-        isEditable={isEditable && !isOwnerLoggedIn}
+        isEditable={isEditable}
       />
         
 
