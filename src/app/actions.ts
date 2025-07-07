@@ -14,18 +14,22 @@ import type { FlatData } from '@/components/dashboard/dashboard-client';
 //    - Create a new service account.
 //    - Grant it the "Editor" role (for reading and writing).
 //    - Create a key for the service account (JSON format). It will download a file.
-// 4. Create your Google Sheet:
-//    - Use the template you provided. Make sure to add a 'Registered' column.
-//    - The columns should be: Flat ID, Block, Floor, Flat, Owner Name, Contact Number, Email, Family Members, Issues / Complaints, Maintenance Status, Registered, Last Updated
-// 5. Share the Sheet:
+// 4. Share your Google Sheet:
 //    - Share your Google Sheet with the service account's email address (found in its details).
-// 6. Set Environment Variables:
+// 5. Set Environment Variables:
 //    - Create a file named `.env.local` in the root of your project.
 //    - Add the following variables, replacing with your actual values:
 //
 // GOOGLE_SHEET_ID="YOUR_SPREADSHEET_ID"
 // GOOGLE_SERVICE_ACCOUNT_EMAIL="your-service-account-email@your-project.iam.gserviceaccount.com"
 // GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY_FROM_JSON_FILE\n-----END PRIVATE KEY-----\n"
+//
+// For example, if your sheet URL is:
+// https://docs.google.com/spreadsheets/d/1z_6CN-5qHWvnphs8H3fNSldQVQHc9X6qxutyW66MwUw/edit
+// Then your GOOGLE_SHEET_ID is "1z_6CN-5qHWvnphs8H3fNSldQVQHc9X6qxutyW66MwUw"
+//
+// IMPORTANT: Make sure your Google Sheet has a 'Registered' column.
+// The expected columns are: Flat ID, Block, Floor, Flat, Owner Name, Contact Number, Email, Family Members, Issues / Complaints, Maintenance Status, Registered, Last Updated
 //
 // NOTE: Copy the entire private key from the downloaded JSON file, including the
 // -----BEGIN... and -----END... lines. Make sure to format it with `\n` for newlines.
@@ -76,8 +80,14 @@ export async function getFlatsData(): Promise<Record<string, FlatData>> {
         });
 
         const rows = response.data.values;
-        if (!rows || rows.length < 2) {
+        if (!rows || rows.length < 2) { // Need at least a header and one data row
+            console.log("Sheet is empty or only has a header row.");
             return {};
+        }
+
+        const headerRow = rows[0];
+        if (!headerRow.includes('Registered')) {
+            throw new Error("Your Google Sheet is missing the 'Registered' column, which is required. Please add it after 'Maintenance Status'. The expected columns are: Flat ID, Block, Floor, Flat, Owner Name, Contact Number, Email, Family Members, Issues / Complaints, Maintenance Status, Registered, Last Updated.");
         }
 
         const flatData: Record<string, FlatData> = {};
@@ -96,6 +106,10 @@ export async function getFlatsData(): Promise<Record<string, FlatData>> {
         }
         if (e.message.includes('Requested entity was not found')) {
             throw new Error(`Could not find the Google Sheet. Please make sure the GOOGLE_SHEET_ID is correct and the range ('${RANGE}') exists.`);
+        }
+        // Re-throw specific errors
+        if (e.message.includes("missing the 'Registered' column")) {
+            throw e;
         }
         throw new Error("Could not connect to Google Sheets. Please ensure your configuration is correct and environment variables are set.");
     }
