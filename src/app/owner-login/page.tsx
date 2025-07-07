@@ -74,14 +74,22 @@ export default function OwnerLoginPage() {
 
     try {
       const result = await signupOwnerAction(selectedBlock, selectedFloor, selectedFlat, signupPassword);
-      if (result.success && result.flatId) {
+      if (result.success) {
         toast({
           title: 'Signup Successful!',
-          description: 'You are now logged in.',
+          description: result.message,
         });
-        localStorage.setItem('isOwnerLoggedIn', 'true');
-        localStorage.setItem('ownerFlatId', result.flatId);
-        router.push('/owner');
+        setMode('login'); // Switch to the login tab
+        if(result.flatId) {
+          setIdentifier(result.flatId); // Pre-fill flat ID
+        }
+        // Reset signup form fields
+        setSelectedBlock('');
+        setSelectedFloor('');
+        setSelectedFlat('');
+        setSignupPassword('');
+        setConfirmPassword('');
+
       } else {
         setError(result.message);
       }
@@ -110,7 +118,7 @@ export default function OwnerLoginPage() {
             <p className="text-gray-500 mt-2 text-sm">Sign in or create your account</p>
           </div>
           
-          <Tabs defaultValue="login" className="w-full" onValueChange={setMode}>
+          <Tabs defaultValue="login" value={mode} className="w-full" onValueChange={setMode}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login"><LogIn className="mr-2 h-4 w-4"/>Sign In</TabsTrigger>
               <TabsTrigger value="signup"><UserPlus className="mr-2 h-4 w-4"/>Sign Up</TabsTrigger>

@@ -107,9 +107,12 @@ export async function saveFlatDataAction(flatId: string, data: FlatData): Promis
             throw new Error("Your Google Sheet is missing the 'Registered' column, which is required for the app to function correctly.");
         }
         const passwordIndex = headerRow.indexOf('Password');
+        const flatIdIndex = headerRow.indexOf('Flat ID');
+        if (flatIdIndex === -1) {
+            throw new Error("Your Google Sheet is missing the 'Flat ID' column.");
+        }
 
-
-        const rowIndex = rows.findIndex(row => row[0] === flatId);
+        const rowIndex = rows.findIndex(row => row[flatIdIndex] === flatId);
         
         const updatedDataWithTimestamp = { ...data, lastUpdated: new Date().toISOString() };
         
@@ -288,8 +291,12 @@ export async function updateOwnerDataAction(flatId: string, data: OwnerEditableD
         }
 
         const headerRow = rows[0];
+        const flatIdIndex = headerRow.indexOf('Flat ID');
+        if (flatIdIndex === -1) {
+            throw new Error("Sheet is missing 'Flat ID' column.");
+        }
         const passwordIndex = headerRow.indexOf('Password');
-        const rowIndex = rows.findIndex(row => row[0] === flatId);
+        const rowIndex = rows.findIndex(row => row[flatIdIndex] === flatId);
         
         if (rowIndex === -1) {
             throw new Error(`Flat ID "${flatId}" not found in the sheet.`);
@@ -377,13 +384,19 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
         const rowIndex = rows.findIndex(row => row[flatIdIndex] === flatId);
         
         if (rowIndex === -1) {
-            // This case means the admin hasn't pre-filled the row for this flat yet.
-            // We will append it.
+            const blockIndex = headerRow.indexOf('Block');
+            const floorIndex = headerRow.indexOf('Floor');
+            const flatIndex_col = headerRow.indexOf('Flat');
+
+            if (blockIndex === -1 || floorIndex === -1 || flatIndex_col === -1) {
+                return { success: false, message: "Your Google Sheet must have 'Block', 'Floor', and 'Flat' columns to sign up a new flat." };
+            }
+
             const newRowData = Array(headerRow.length).fill('');
             newRowData[flatIdIndex] = flatId;
-            newRowData[headerRow.indexOf('Block')] = block;
-            newRowData[headerRow.indexOf('Floor')] = floor;
-            newRowData[headerRow.indexOf('Flat')] = flat;
+            newRowData[blockIndex] = block;
+            newRowData[floorIndex] = floor;
+            newRowData[flatIndex_col] = flat;
             newRowData[passwordIndex] = password_from_user;
             newRowData[registeredIndex] = 'FALSE';
             newRowData[lastUpdatedIndex] = new Date().toISOString();
