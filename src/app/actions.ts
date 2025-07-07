@@ -344,3 +344,96 @@ export async function updateOwnerDataAction(flatId: string, data: OwnerEditableD
         return { success: false, message: e.message || "Failed to save data. Please check your Google Sheets configuration and permissions." };
     }
 }
+
+export async function signupOwnerAction(block: string, floor: string, flat: string, password_from_user: string): Promise<{ success: boolean; message: string; flatId?: string }> {
+    if (!SPREADSHEET_ID) {
+        return { success: false, message: "GOOGLE_SHEET_ID environment variable not set." };
+    }
+    
+    const flatId = `${block}-${floor}${flat}`;
+
+    try {
+        const sheets = getSheetsApi();
+        const getResponse = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: RANGE,
+        });
+
+        const rows = getResponse.data.values;
+        if (!rows) {
+            throw new Error("Sheet is empty or could not be read.");
+        }
+
+        const headerRow = rows[0];
+        const flatIdIndex = headerRow.indexOf('Flat ID');
+        const passwordIndex = headerRow.indexOf('Password');
+        const registeredIndex = headerRow.indexOf('Registered');
+        const lastUpdatedIndex = headerRow.indexOf('Last Updated');
+
+        if (flatIdIndex === -1 || passwordIndex === -1 || registeredIndex === -1 || lastUpdatedIndex === -1) {
+            return { success: false, message: "Your Google Sheet must have the following columns: 'Flat ID', 'Password', 'Registered', 'Last Updated'." };
+        }
+        
+        const rowIndex = rows.findIndex(row => row[flatIdIndex] === flatId);
+        
+        if (rowIndex === -1) {
+            // This case means the admin hasn't pre-filled the row for this flat yet.
+            // We will append it.
+            const newRowData = Array(headerRow.length).fill('');
+            newRowData[flatIdIndex] = flatId;
+            newRowData[headerRow.indexOf('Block')] = block;
+            newRowData[headerRow.indexOf('Floor')] = floor;
+            newRowData[headerRow.indexOf('Flat')] = flat;
+            newRowData[passwordIndex] = password_from_user;
+            newRowData[registeredIndex] = 'TRUE';
+            newRowData[lastUpdatedIndex] = new Date().toISOString();
+
+            await sheets.spreadsheets.values.append({
+                spreadsheetId: SPREADSHEET_ID,
+                range: RANGE,
+                valueInputOption: 'USER_ENTERED',
+                requestBody: {
+                    values: [newRowData],
+                },
+            });
+
+            return { success: true, message: 'Signup successful!', flatId };
+
+        } else {
+            const flatRow = rows[rowIndex];
+            const isRegistered = flatRow[registeredIndex] === 'TRUE';
+
+            if (isRegistered) {
+                return { success: false, message: "This flat is already registered. Please log in or contact administration if you believe this is an error." };
+            }
+
+            // Update existing row for an unregistered flat
+            const updatedRow = [...flatRow];
+            
+            const maxIndex = Math.max(passwordIndex, registeredIndex, lastUpdatedIndex);
+            while (updatedRow.length <= maxIndex) {
+                updatedRow.push('');
+            }
+
+            updatedRow[passwordIndex] = password_from_user;
+            updatedRow[registeredIndex] = 'TRUE';
+            updatedRow[lastUpdatedIndex] = new Date().toISOString();
+            
+            const updateRange = `${RANGE}!A${rowIndex + 1}`;
+            await sheets.spreadsheets.values.update({
+                spreadsheetId: SPREADSHEET_ID,
+                range: updateRange,
+                valueInputOption: 'USER_ENTERED',
+                requestBody: {
+                    values: [updatedRow],
+                },
+            });
+            
+            return { success: true, message: 'Signup successful!', flatId };
+        }
+
+    } catch (e: any) {
+        console.error("Owner signup failed.", e);
+        return { success: false, message: e.message || "An error occurred during signup. Please try again." };
+    }
+}
