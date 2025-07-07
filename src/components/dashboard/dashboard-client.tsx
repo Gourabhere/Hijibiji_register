@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -14,7 +15,8 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
-  LogOut
+  LogOut,
+  AlertTriangle
 } from 'lucide-react';
 import { HijibijiFlatData, BlockName } from '@/data/flat-data';
 import { StatCard } from './stat-card';
@@ -51,6 +53,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
   const [searchTerm, setSearchTerm] = useState('');
   const [isClient, setIsClient] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [dbError, setDbError] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
   const [currentBlockIndex, setCurrentBlockIndex] = useState(0);
@@ -65,6 +68,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
     
     const fetchFlatData = async () => {
       setIsLoading(true);
+      setDbError(null);
       try {
         const querySnapshot = await getDocs(collection(db, "flats"));
         const data: Record<string, FlatData> = {};
@@ -73,7 +77,8 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
         });
         setFlatData(data);
       } catch (e) {
-        console.error("Failed to load flat data from Firestore. Please check your Firebase configuration in src/lib/firebase.ts", e);
+        console.error("Failed to load flat data from Firestore.", e);
+        setDbError("Could not connect to the database. Please ensure your Firebase configuration is correct in 'src/lib/firebase.ts'. The page will not work correctly until this is resolved.");
       } finally {
         setIsLoading(false);
       }
@@ -123,6 +128,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
         await setDoc(doc(db, "flats", flatId), updatedDataWithTimestamp, { merge: true });
     } catch (e) {
         console.error("Failed to save flat data to Firestore. Reverting UI.", e);
+        setDbError("Failed to save data. Please check your database connection and permissions.");
         // Revert UI on failure
         setFlatData(previousState);
     }
@@ -295,6 +301,24 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
                             className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full"
                         />
                      </div>
+                  ) : dbError ? (
+                     <motion.div 
+                        key="error"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="bg-red-100/80 border-l-4 border-red-500 text-red-800 p-6 rounded-2xl shadow-lg max-w-2xl mx-auto text-left backdrop-blur-sm"
+                     >
+                        <div className="flex">
+                            <div className="py-1">
+                                <AlertTriangle className="w-6 h-6 text-red-500 mr-4" />
+                            </div>
+                            <div>
+                                <p className="font-bold text-lg font-headline">Database Connection Error</p>
+                                <p className="text-sm mt-1">{dbError}</p>
+                            </div>
+                        </div>
+                     </motion.div>
                   ) : (
                     <motion.div
                         key={currentBlockIndex}
