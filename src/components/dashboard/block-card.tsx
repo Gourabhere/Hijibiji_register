@@ -75,7 +75,8 @@ export function BlockCard({ blockName, blockData, allFlatData, onFlatClick }: Bl
                   const flatId = `${blockName}-${floor}${flat}`;
                   const currentFlatData = allFlatData[flatId];
                   const isRegistered = !!currentFlatData?.registered;
-                  const ownerInitials = getOwnerInitials(currentFlatData?.ownerName);
+                  const ownerName = currentFlatData?.ownerName || '';
+                  const ownerInitials = getOwnerInitials(ownerName);
 
                   return (
                     <FlatCell
@@ -85,6 +86,8 @@ export function BlockCard({ blockName, blockData, allFlatData, onFlatClick }: Bl
                       flat={flat}
                       isRegistered={isRegistered}
                       ownerInitials={ownerInitials}
+                      ownerName={ownerName}
+                      flatId={flatId}
                       onClick={() => onFlatClick(blockName, floor, flat)}
                     />
                   );
