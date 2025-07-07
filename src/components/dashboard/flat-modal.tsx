@@ -182,6 +182,12 @@ export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave, isEdita
                   Save Details
                 </motion.button>
               )}
+               
+              {flatData?.lastUpdated && (
+                <div className="text-center text-xs text-slate-500 pt-4">
+                  Last updated: {new Date(flatData.lastUpdated).toLocaleString()}
+                </div>
+              )}
             </form>
           </motion.div>
         </motion.div>
