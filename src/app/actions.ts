@@ -4,43 +4,47 @@ import { google } from 'googleapis';
 import type { FlatData } from '@/components/dashboard/dashboard-client';
 
 // =================================================================================
-//  ACTION REQUIRED: Google Sheets API Configuration
+//  ACTION REQUIRED: Set Up Your Google Sheets API Credentials
 // =================================================================================
-// To connect your app to Google Sheets, you need to:
-// 1. Create a Google Cloud Project: https://console.cloud.google.com/
-// 2. Enable the Google Sheets API for your project.
-// 3. Create a Service Account:
-//    - Go to "IAM & Admin" > "Service Accounts".
-//    - Create a new service account.
-//    - Grant it the "Editor" role (for reading and writing).
-//    - Create a key for the service account (JSON format). It will download a file.
-// 4. Share your Google Sheet:
-//    - Share your Google Sheet with the service account's email address (found in its details).
-// 5. Set Environment Variables:
-//    - Create a file named `.env.local` in the root of your project.
-//    - Add Gtthe following variables, replacing with your actual values:
+// Your app is configured to use Google Sheets as a database, but it's not yet
+// connected. To get it working, follow these steps:
 //
-// GOOGLE_SHEET_ID="YOUR_SPREADSHEET_ID"
-// GOOGLE_SERVICE_ACCOUNT_EMAIL="your-service-account-email@your-project.iam.gserviceaccount.com"
-// GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY_FROM_JSON_FILE\n-----END PRIVATE KEY-----\n"
+// 1. Create a `.env.local` file:
+//    - In the main directory of your project, find the `env.local.example` file.
+//    - Make a copy of it and rename the copy to `.env.local`.
 //
-// For example, if your sheet URL is:
-// https://docs.google.com/spreadsheets/d/1z_6CN-5qHWvnphs8H3fNSldQVQHc9X6qxutyW66MwUw/edit
-// Then your GOOGLE_SHEET_ID is "1z_6CN-5qHWvnphs8H3fNSldQVQHc9X6qxutyW66MwUw"
+// 2. Get Your Private Key:
+//    - If you haven't already, create a service account key in your Google Cloud
+//      project. This will download a JSON file.
+//    - Open the JSON file and find the `private_key`.
 //
-// IMPORTANT: Make sure your Google Sheet has a 'Registered' and 'Password' column.
-// The expected columns are: Flat ID, Block, Floor, Flat, Owner Name, Contact Number, Email, Family Members, Issues / Complaints, Maintenance Status, Registered, Last Updated, Password
+// 3. Update `.env.local`:
+//    - Open your new `.env.local` file.
+//    - The `GOOGLE_SHEET_ID` and `GOOGLE_SERVICE_ACCOUNT_EMAIL` variables have
+//      been pre-filled for you.
+//    - Copy the `private_key` from your JSON file and paste it as the value for
+//      the `GOOGLE_PRIVATE_KEY` variable.
+//    - IMPORTANT: The key must be on a single line, with newline characters
+//      represented as `\n`.
 //
-// NOTE: Copy the entire private key from the downloaded JSON file, including the
-// -----BEGIN... and -----END... lines. Make sure to format it with `\n` for newlines.
+//      It should look like this:
+//      GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_KEY_CONTENT_HERE\n-----END PRIVATE KEY-----\n"
+//
+// 4. Check Your Sheet:
+//    - Make sure your Google Sheet has been shared with your service account's email:
+//      `hijibijiappservice@test-57ce3.iam.gserviceaccount.com`
+//    - Ensure your sheet has columns named `Registered` and `Password`.
+//
+// Once you've saved your `.env.local` file, the app should connect to your sheet.
 // =================================================================================
+
 
 const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID;
 const RANGE = 'Sheet1'; // Assumes data is on 'Sheet1'. Change if needed.
 
 const getSheetsApi = () => {
     if (!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
-        throw new Error('Google Sheets API credentials are not set in environment variables.');
+        throw new Error('Google Sheets API credentials are not set in environment variables. Please create a .env.local file and add your credentials.');
     }
 
     const auth = new google.auth.GoogleAuth({
@@ -69,7 +73,7 @@ const mapRowToFlatData = (row: any[]): FlatData => {
 
 export async function getFlatsData(): Promise<Record<string, FlatData>> {
     if (!SPREADSHEET_ID) {
-        throw new Error("The GOOGLE_SHEET_ID is not configured. Please set it up in your environment variables. You can find instructions in src/app/actions.ts.");
+        throw new Error("The GOOGLE_SHEET_ID is not configured. Please set it up in your .env.local file. You can find instructions in src/app/actions.ts.");
     }
 
     try {
@@ -105,13 +109,13 @@ export async function getFlatsData(): Promise<Record<string, FlatData>> {
              throw new Error("Could not connect to Google Sheets. Please ensure you have shared your sheet with the service account's email address and that the Sheets API is enabled.");
         }
         if (e.message.includes('Requested entity was not found')) {
-            throw new Error(`Could not find the Google Sheet. Please make sure the GOOGLE_SHEET_ID is correct and the range ('${RANGE}') exists.`);
+            throw new Error(`Could not find the Google Sheet. Please make sure the GOOGLE_SHEET_ID in your .env.local file is correct and the range ('${RANGE}') exists.`);
         }
         // Re-throw specific errors
         if (e.message.includes("missing the 'Registered' column")) {
             throw e;
         }
-        throw new Error("Could not connect to Google Sheets. Please ensure your configuration is correct and environment variables are set.");
+        throw new Error("Could not connect to Google Sheets. Please ensure your configuration in .env.local is correct and the service account has permission.");
     }
 }
 
