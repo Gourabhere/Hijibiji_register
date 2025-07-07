@@ -286,6 +286,7 @@ export type OwnerEditableData = {
     email: string;
     familyMembers: string;
     issues: string;
+    registered: boolean;
 };
 
 export async function updateOwnerDataAction(flatId: string, data: OwnerEditableData): Promise<{ success: boolean; message: string }> {
@@ -322,7 +323,6 @@ export async function updateOwnerDataAction(flatId: string, data: OwnerEditableD
         const existingRow = rows[rowIndex];
         
         const maintenanceStatus = existingRow[9] || 'pending';
-        const registered = existingRow[10] === 'TRUE';
         const password = (passwordIndex !== -1 && existingRow[passwordIndex]) ? existingRow[passwordIndex] : '';
 
         const [block, floorAndFlat] = normalizedFlatId.split('-');
@@ -340,7 +340,7 @@ export async function updateOwnerDataAction(flatId: string, data: OwnerEditableD
             data.familyMembers,
             data.issues,
             maintenanceStatus,
-            registered ? 'TRUE' : 'FALSE',
+            data.registered ? 'TRUE' : 'FALSE',
             new Date().toISOString()
         ];
 

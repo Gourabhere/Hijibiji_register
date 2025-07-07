@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { AlertTriangle, Home, User } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function OwnerDashboardPage() {
     const router = useRouter();
@@ -28,6 +29,7 @@ export default function OwnerDashboardPage() {
         email: '',
         familyMembers: '',
         issues: '',
+        registered: false,
     });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -52,6 +54,7 @@ export default function OwnerDashboardPage() {
                         email: data.email,
                         familyMembers: data.familyMembers,
                         issues: data.issues,
+                        registered: data.registered,
                     });
                 } else {
                     setError('Could not find details for your flat.');
@@ -209,6 +212,16 @@ export default function OwnerDashboardPage() {
                                     <div className="space-y-2">
                                         <Label>Maintenance Status</Label>
                                         <div>{getMaintenanceBadge(flatData.maintenanceStatus)}</div>
+                                    </div>
+                                    <div className="flex items-center space-x-2 pt-2 md:col-span-2">
+                                        <Checkbox 
+                                            id="registered" 
+                                            checked={formData.registered} 
+                                            onCheckedChange={(checked) => setFormData(prev => ({ ...prev, registered: !!checked }))}
+                                        />
+                                        <Label htmlFor="registered" className="font-normal text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                            My flat is registered and my details are correct.
+                                        </Label>
                                     </div>
                                     <div className="space-y-2 md:col-span-2">
                                         <Label htmlFor="issues">Issues / Complaints</Label>
