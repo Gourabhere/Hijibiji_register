@@ -3,6 +3,7 @@
 
 import React, { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { getOwnerFlatData, updateOwnerDataAction, type OwnerFlatData, type OwnerEditableData } from '@/app/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -142,6 +143,12 @@ export default function OwnerDashboardPage() {
                 >
                      <h1 className="text-3xl font-bold text-gray-800 mb-2 sm:mb-0">My Dashboard</h1>
                      <div className="flex items-center gap-4">
+                        <Button asChild variant="outline" size="sm">
+                           <Link href="/">
+                              <Home className="w-4 h-4 mr-2"/>
+                              Home
+                           </Link>
+                        </Button>
                         <div className="text-right">
                            <p className="font-semibold text-gray-800">{flatData?.ownerName}</p>
                            <p className="text-xs text-gray-500">{flatData?.flatId}</p>

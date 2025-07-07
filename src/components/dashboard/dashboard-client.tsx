@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { 
   Building, 
@@ -61,6 +61,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
   const blockNames = Object.keys(HijibijiFlatData) as BlockName[];
   
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     setIsClient(true);
@@ -191,6 +192,14 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
             </div>
             
             <div className="flex items-center space-x-2">
+              {pathname !== '/' && (
+                <Button asChild variant="ghost" size="sm" className="space-x-2">
+                  <Link href="/">
+                    <Home className="w-4 h-4" />
+                    <span>Home</span>
+                  </Link>
+                </Button>
+              )}
               <div className="text-right hidden sm:block">
                  {currentTime && (
                   <>
