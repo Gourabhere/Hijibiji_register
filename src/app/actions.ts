@@ -385,7 +385,7 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
             newRowData[headerRow.indexOf('Floor')] = floor;
             newRowData[headerRow.indexOf('Flat')] = flat;
             newRowData[passwordIndex] = password_from_user;
-            newRowData[registeredIndex] = 'TRUE';
+            newRowData[registeredIndex] = 'FALSE';
             newRowData[lastUpdatedIndex] = new Date().toISOString();
 
             await sheets.spreadsheets.values.append({
@@ -397,15 +397,21 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
                 },
             });
 
-            return { success: true, message: 'Signup successful!', flatId };
+            return { success: true, message: 'Signup successful! Please log in to update your details.', flatId };
 
         } else {
             const flatRow = rows[rowIndex];
             const isRegistered = flatRow[registeredIndex] === 'TRUE';
+            const hasPassword = flatRow[passwordIndex] && flatRow[passwordIndex].length > 0;
 
             if (isRegistered) {
                 return { success: false, message: "This flat is already registered. Please log in or contact administration if you believe this is an error." };
             }
+            
+            if (hasPassword) {
+                 return { success: false, message: "An account for this flat already exists. Please log in or contact administration." };
+            }
+
 
             // Update existing row for an unregistered flat
             const updatedRow = [...flatRow];
@@ -416,7 +422,7 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
             }
 
             updatedRow[passwordIndex] = password_from_user;
-            updatedRow[registeredIndex] = 'TRUE';
+            updatedRow[registeredIndex] = 'FALSE';
             updatedRow[lastUpdatedIndex] = new Date().toISOString();
             
             const updateRange = `${RANGE}!A${rowIndex + 1}`;
@@ -429,7 +435,7 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
                 },
             });
             
-            return { success: true, message: 'Signup successful!', flatId };
+            return { success: true, message: 'Signup successful! Please log in to update your details.', flatId };
         }
 
     } catch (e: any) {
