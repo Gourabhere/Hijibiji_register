@@ -9,7 +9,7 @@ const RANGE = 'Sheet1'; // Assumes data is on 'Sheet1'. Change if needed.
 
 const getSheetsApi = () => {
     if (!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
-        throw new Error('Google Sheets API credentials are not set in environment variables. Please create a .env.local file and add your credentials.');
+        throw new Error('Google Sheets API credentials are not set. Please configure GOOGLE_SERVICE_ACCOUNT_EMAIL and GOOGLE_PRIVATE_KEY in your hosting environment variables.');
     }
 
     const auth = new google.auth.GoogleAuth({
@@ -38,7 +38,7 @@ const mapRowToFlatData = (row: any[]): FlatData => {
 
 export async function getFlatsData(): Promise<Record<string, FlatData>> {
     if (!SPREADSHEET_ID) {
-        throw new Error("The GOOGLE_SHEET_ID is not configured. Please set it up in your .env.local file. You can find instructions in src/app/actions.ts.");
+        throw new Error("The GOOGLE_SHEET_ID is not configured. Please set it up in your hosting environment variables.");
     }
 
     try {
@@ -74,20 +74,20 @@ export async function getFlatsData(): Promise<Record<string, FlatData>> {
              throw new Error("Could not connect to Google Sheets. Please ensure you have shared your sheet with the service account's email address and that the Sheets API is enabled.");
         }
         if (e.message.includes('Requested entity was not found')) {
-            throw new Error(`Could not find the Google Sheet. Please make sure the GOOGLE_SHEET_ID in your .env.local file is correct and the range ('${RANGE}') exists.`);
+            throw new Error(`Could not find the Google Sheet. Please make sure the GOOGLE_SHEET_ID in your hosting environment is correct and the range ('${RANGE}') exists.`);
         }
         // Re-throw specific errors
         if (e.message.includes("missing the 'Registered' column")) {
             throw e;
         }
-        throw new Error("Could not connect to Google Sheets. Please ensure your configuration in .env.local is correct and the service account has permission.");
+        throw new Error("Could not connect to Google Sheets. Please ensure your environment variables are correct and the service account has permission to access the sheet.");
     }
 }
 
 
 export async function saveFlatDataAction(flatId: string, data: FlatData): Promise<void> {
     if (!SPREADSHEET_ID) {
-        throw new Error("GOOGLE_SHEET_ID environment variable not set.");
+        throw new Error("The GOOGLE_SHEET_ID is not configured. Please set it up in your hosting environment variables.");
     }
     
     try {
@@ -167,7 +167,7 @@ export async function saveFlatDataAction(flatId: string, data: FlatData): Promis
 
 export async function loginOwnerAction(flatId: string, password_from_user: string): Promise<{ success: boolean; message: string }> {
     if (!SPREADSHEET_ID) {
-        return { success: false, message: "GOOGLE_SHEET_ID environment variable not set." };
+        return { success: false, message: "Server is not configured correctly. Please contact support." };
     }
     
     try {
@@ -217,7 +217,7 @@ export type OwnerFlatData = FlatData & {
 
 export async function getOwnerFlatData(flatId: string): Promise<OwnerFlatData | null> {
     if (!SPREADSHEET_ID) {
-        throw new Error("GOOGLE_SHEET_ID environment variable not set.");
+        throw new Error("The GOOGLE_SHEET_ID is not configured. Please set it up in your hosting environment variables.");
     }
 
     try {
@@ -275,7 +275,7 @@ export type OwnerEditableData = {
 
 export async function updateOwnerDataAction(flatId: string, data: OwnerEditableData): Promise<{ success: boolean; message: string }> {
     if (!SPREADSHEET_ID) {
-        return { success: false, message: "GOOGLE_SHEET_ID environment variable not set." };
+        return { success: false, message: "Server is not configured correctly. Please contact support." };
     }
     
     try {
@@ -354,7 +354,7 @@ export async function updateOwnerDataAction(flatId: string, data: OwnerEditableD
 
 export async function signupOwnerAction(block: string, floor: string, flat: string, password_from_user: string): Promise<{ success: boolean; message: string; flatId?: string }> {
     if (!SPREADSHEET_ID) {
-        return { success: false, message: "GOOGLE_SHEET_ID environment variable not set." };
+        return { success: false, message: "Server is not configured correctly. Please contact support." };
     }
     
     const flatId = `${block}-${floor}${flat}`;
