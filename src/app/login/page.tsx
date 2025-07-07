@@ -21,6 +21,8 @@ export default function LoginPage() {
     if (email === 'admin@hijibiji.com' && password === 'password') {
       try {
         localStorage.setItem('isAdmin', 'true');
+        localStorage.removeItem('isOwnerLoggedIn');
+        localStorage.removeItem('ownerFlatId');
         router.push('/admin');
       } catch (e) {
         toast({
