@@ -68,7 +68,13 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
     setCurrentTime(new Date());
     
     try {
-        setIsOwnerLoggedIn(localStorage.getItem('isOwnerLoggedIn') === 'true');
+        const ownerLoggedIn = localStorage.getItem('isOwnerLoggedIn') === 'true';
+        setIsOwnerLoggedIn(ownerLoggedIn);
+
+        if (ownerLoggedIn && pathname.startsWith('/admin')) {
+            router.replace('/owner');
+        }
+
     } catch(e) {
         setIsOwnerLoggedIn(false);
     }
@@ -92,7 +98,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
     fetchFlatData();
 
     return () => clearInterval(timer);
-  }, []);
+  }, [pathname, router]);
 
   const handleAdminLogout = () => {
     if (typeof window !== 'undefined') {
@@ -218,23 +224,30 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
                   <LogOut className="w-4 h-4"/>
                   <span>Logout</span>
                 </Button>
-              ) : isOwnerLoggedIn ? (
+              ) : (
                 <>
-                  <Button asChild variant="ghost" size="sm" className="space-x-2">
-                    <Link href="/owner">
-                      <User className="w-4 h-4" />
-                      <span>My Dashboard</span>
-                    </Link>
-                  </Button>
-                  <Button onClick={handleOwnerLogout} variant="ghost" size="sm" className="space-x-2">
-                    <LogOut className="w-4 h-4" />
-                    <span>Logout</span>
+                  {isOwnerLoggedIn ? (
+                    <>
+                      <Button asChild variant="ghost" size="sm" className="space-x-2">
+                        <Link href="/owner">
+                          <User className="w-4 h-4" />
+                          <span>My Dashboard</span>
+                        </Link>
+                      </Button>
+                      <Button onClick={handleOwnerLogout} variant="ghost" size="sm" className="space-x-2">
+                        <LogOut className="w-4 h-4" />
+                        <span>Logout</span>
+                      </Button>
+                    </>
+                  ) : (
+                    <Button asChild variant="ghost" size="sm">
+                      <Link href="/owner-login">Owner Login</Link>
+                    </Button>
+                  )}
+                  <Button asChild variant="ghost" size="sm">
+                    <Link href="/login">Admin Login</Link>
                   </Button>
                 </>
-              ) : (
-                <Button asChild variant="ghost" size="sm">
-                  <Link href="/login">Admin Login</Link>
-                </Button>
               )}
 
 
