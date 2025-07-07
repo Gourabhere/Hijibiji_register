@@ -16,7 +16,8 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
-  AlertTriangle
+  AlertTriangle,
+  User
 } from 'lucide-react';
 import { HijibijiFlatData, BlockName } from '@/data/flat-data';
 import { StatCard } from './stat-card';
@@ -54,6 +55,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
   const [isLoading, setIsLoading] = useState(true);
   const [dbError, setDbError] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
+  const [isOwnerLoggedIn, setIsOwnerLoggedIn] = useState(false);
 
   const [currentBlockIndex, setCurrentBlockIndex] = useState(0);
   const blockNames = Object.keys(HijibijiFlatData) as BlockName[];
@@ -63,6 +65,13 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
   useEffect(() => {
     setIsClient(true);
     setCurrentTime(new Date());
+    
+    try {
+        setIsOwnerLoggedIn(localStorage.getItem('isOwnerLoggedIn') === 'true');
+    } catch(e) {
+        setIsOwnerLoggedIn(false);
+    }
+
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     
     const fetchFlatData = async () => {
@@ -84,10 +93,19 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
     return () => clearInterval(timer);
   }, []);
 
-  const handleLogout = () => {
+  const handleAdminLogout = () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('isAdmin');
       router.push('/');
+    }
+  };
+
+  const handleOwnerLogout = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('isOwnerLoggedIn');
+      localStorage.removeItem('ownerFlatId');
+      setIsOwnerLoggedIn(false);
+      router.push('/owner-login');
     }
   };
 
@@ -102,6 +120,15 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
 
   const openFlatModal = (blockName: BlockName, floor: number, flat: string) => {
     const flatId = `${blockName}-${floor}${flat}`;
+    
+    if (isOwnerLoggedIn) {
+        const ownerFlatId = localStorage.getItem('ownerFlatId');
+        if (flatId === ownerFlatId) {
+            router.push('/owner');
+            return;
+        }
+    }
+
     setSelectedFlat({ blockName, floor, flat, flatId });
   };
 
@@ -178,15 +205,29 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
               </div>
               
               {isEditable ? (
-                <Button onClick={handleLogout} variant="ghost" size="sm" className="space-x-2">
+                <Button onClick={handleAdminLogout} variant="ghost" size="sm" className="space-x-2">
                   <LogOut className="w-4 h-4"/>
                   <span>Logout</span>
                 </Button>
+              ) : isOwnerLoggedIn ? (
+                <>
+                  <Button asChild variant="ghost" size="sm" className="space-x-2">
+                    <Link href="/owner">
+                      <User className="w-4 h-4" />
+                      <span>My Dashboard</span>
+                    </Link>
+                  </Button>
+                  <Button onClick={handleOwnerLogout} variant="ghost" size="sm" className="space-x-2">
+                    <LogOut className="w-4 h-4" />
+                    <span>Logout</span>
+                  </Button>
+                </>
               ) : (
                 <Button asChild variant="ghost" size="sm">
                   <Link href="/login">Admin Login</Link>
                 </Button>
               )}
+
 
               <motion.button
                 whileHover={{ scale: 1.05 }}

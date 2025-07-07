@@ -47,7 +47,7 @@ export default function OwnerLoginPage() {
       if (result.success) {
         localStorage.setItem('isOwnerLoggedIn', 'true');
         localStorage.setItem('ownerFlatId', identifier);
-        router.push('/owner');
+        router.push('/');
       } else {
         setError(result.message);
       }
@@ -83,7 +83,7 @@ export default function OwnerLoginPage() {
         // Automatically log the user in after successful signup
         localStorage.setItem('isOwnerLoggedIn', 'true');
         localStorage.setItem('ownerFlatId', result.flatId);
-        router.push('/owner');
+        router.push('/');
 
       } else {
         setError(result.message);
