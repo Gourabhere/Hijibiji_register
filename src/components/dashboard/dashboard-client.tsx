@@ -89,14 +89,6 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
         const isAdminLoggedIn = localStorage.getItem('isAdmin') === 'true';
         setIsOwnerLoggedIn(ownerLoggedIn);
 
-        if (ownerLoggedIn && pathname !== '/owner') {
-            router.replace('/owner');
-        }
-
-        if (isAdminLoggedIn && pathname.startsWith('/owner')) {
-          router.replace('/admin');
-        }
-
     } catch(e) {
         setIsOwnerLoggedIn(false);
     }
@@ -495,6 +487,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
 
       
       <FlatModal 
+        key={selectedFlat?.flatId}
         isOpen={!!selectedFlat}
         onClose={() => setSelectedFlat(null)}
         flatInfo={selectedFlat}
