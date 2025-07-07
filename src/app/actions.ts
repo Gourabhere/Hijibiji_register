@@ -7,6 +7,13 @@ import type { FlatData } from '@/components/dashboard/dashboard-client';
 const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID;
 const RANGE = 'Sheet1'; // Assumes data is on 'Sheet1'. Change if needed.
 
+// Helper function to ensure Flat IDs are consistent for lookups.
+// e.g. "Block 1 - 1A " => "Block 1-1A"
+const normalizeFlatId = (id: any): string => {
+    if (!id) return '';
+    return id.toString().trim().replace(/\s*-\s*/g, "-");
+};
+
 const getSheetsApi = () => {
     if (!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
         throw new Error('Google Sheets API credentials are not set. Please configure GOOGLE_SERVICE_ACCOUNT_EMAIL and GOOGLE_PRIVATE_KEY in your hosting environment variables.');
@@ -62,9 +69,11 @@ export async function getFlatsData(): Promise<Record<string, FlatData>> {
         const flatData: Record<string, FlatData> = {};
         for (let i = 1; i < rows.length; i++) {
             const row = rows[i];
-            const flatId = row[0];
-            if (flatId) {
-                flatData[flatId] = mapRowToFlatData(row);
+            const flatIdFromSheet = row[0];
+            if (flatIdFromSheet) {
+                // Normalize the Flat ID from the sheet to handle inconsistencies
+                // like "Block 3 - 2B" vs the app's "Block 3-2B".
+                flatData[normalizeFlatId(flatIdFromSheet)] = mapRowToFlatData(row);
             }
         }
         return flatData;
@@ -112,16 +121,17 @@ export async function saveFlatDataAction(flatId: string, data: FlatData): Promis
             throw new Error("Your Google Sheet is missing the 'Flat ID' column.");
         }
 
-        const rowIndex = rows.findIndex(row => row[flatIdIndex] === flatId);
+        const normalizedFlatId = normalizeFlatId(flatId);
+        const rowIndex = rows.findIndex(row => normalizeFlatId(row[flatIdIndex]) === normalizedFlatId);
         
         const updatedDataWithTimestamp = { ...data, lastUpdated: new Date().toISOString() };
         
-        const [block, floorAndFlat] = flatId.split('-');
+        const [block, floorAndFlat] = normalizedFlatId.split('-');
         const floor = floorAndFlat.match(/\d+/)?.[0] || '';
         const flat = floorAndFlat.match(/[A-Z]/)?.[0] || '';
 
         const rowData = [
-            flatId,
+            normalizedFlatId,
             block,
             floor,
             flat,
@@ -168,7 +178,7 @@ export async function saveFlatDataAction(flatId: string, data: FlatData): Promis
     }
 }
 
-export async function loginOwnerAction(flatId: string, password_from_user: string): Promise<{ success: boolean; message: string }> {
+export async function loginOwnerAction(flatId: string, password_from_user: string): Promise<{ success: boolean; message: string; flatId?: string }> {
     if (!SPREADSHEET_ID) {
         return { success: false, message: "Server is not configured correctly. Please contact support." };
     }
@@ -193,7 +203,8 @@ export async function loginOwnerAction(flatId: string, password_from_user: strin
             return { success: false, message: "Sheet is missing 'Flat ID' or 'Password' column." };
         }
         
-        const ownerRow = rows.slice(1).find(row => row[flatIdIndex] === flatId);
+        const normalizedFlatId = normalizeFlatId(flatId);
+        const ownerRow = rows.slice(1).find(row => normalizeFlatId(row[flatIdIndex]) === normalizedFlatId);
 
         if (!ownerRow) {
             return { success: false, message: "Flat ID not found." };
@@ -201,7 +212,7 @@ export async function loginOwnerAction(flatId: string, password_from_user: strin
 
         const correctPassword = ownerRow[passwordIndex];
         if (correctPassword === password_from_user) {
-            return { success: true, message: "Login successful." };
+            return { success: true, message: "Login successful.", flatId: normalizedFlatId };
         } else {
             return { success: false, message: "Incorrect password." };
         }
@@ -242,7 +253,8 @@ export async function getOwnerFlatData(flatId: string): Promise<OwnerFlatData | 
              throw new Error("Sheet is missing 'Flat ID' column.");
         }
 
-        const ownerRow = rows.slice(1).find(row => row[flatIdIndex] === flatId);
+        const normalizedFlatId = normalizeFlatId(flatId);
+        const ownerRow = rows.slice(1).find(row => normalizeFlatId(row[flatIdIndex]) === normalizedFlatId);
         
         if (!ownerRow) {
             return null;
@@ -299,7 +311,9 @@ export async function updateOwnerDataAction(flatId: string, data: OwnerEditableD
             throw new Error("Sheet is missing 'Flat ID' column.");
         }
         const passwordIndex = headerRow.indexOf('Password');
-        const rowIndex = rows.findIndex(row => row[flatIdIndex] === flatId);
+        
+        const normalizedFlatId = normalizeFlatId(flatId);
+        const rowIndex = rows.findIndex(row => normalizeFlatId(row[flatIdIndex]) === normalizedFlatId);
         
         if (rowIndex === -1) {
             throw new Error(`Flat ID "${flatId}" not found in the sheet.`);
@@ -311,12 +325,12 @@ export async function updateOwnerDataAction(flatId: string, data: OwnerEditableD
         const registered = existingRow[10] === 'TRUE';
         const password = (passwordIndex !== -1 && existingRow[passwordIndex]) ? existingRow[passwordIndex] : '';
 
-        const [block, floorAndFlat] = flatId.split('-');
+        const [block, floorAndFlat] = normalizedFlatId.split('-');
         const floor = floorAndFlat.match(/\d+/)?.[0] || '';
         const flat = floorAndFlat.match(/[A-Z]/)?.[0] || '';
         
         const rowData = [
-            flatId,
+            normalizedFlatId,
             block,
             floor,
             flat,
@@ -384,7 +398,7 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
             return { success: false, message: "Your Google Sheet must have the following columns: 'Flat ID', 'Password', 'Registered', 'Last Updated'." };
         }
         
-        const rowIndex = rows.findIndex(row => row[flatIdIndex] === flatId);
+        const rowIndex = rows.findIndex(row => normalizeFlatId(row[flatIdIndex]) === flatId);
         
         if (rowIndex === -1) {
             const blockIndex = headerRow.indexOf('Block');

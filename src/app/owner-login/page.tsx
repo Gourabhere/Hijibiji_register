@@ -44,9 +44,9 @@ export default function OwnerLoginPage() {
 
     try {
       const result = await loginOwnerAction(identifier, password);
-      if (result.success) {
+      if (result.success && result.flatId) {
         localStorage.setItem('isOwnerLoggedIn', 'true');
-        localStorage.setItem('ownerFlatId', identifier);
+        localStorage.setItem('ownerFlatId', result.flatId);
         localStorage.removeItem('isAdmin');
         router.push('/');
       } else {
