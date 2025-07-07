@@ -138,6 +138,9 @@ export async function saveFlatDataAction(flatId: string, data: FlatData): Promis
         if (rowIndex > 0) {
              // Preserve existing password if it exists
             if (passwordIndex !== -1 && rows[rowIndex][passwordIndex]) {
+                 while (rowData.length <= passwordIndex) {
+                    rowData.push('');
+                 }
                 rowData[passwordIndex] = rows[rowIndex][passwordIndex];
             }
             const updateRange = `${RANGE}!A${rowIndex + 1}`;
