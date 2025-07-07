@@ -69,10 +69,15 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
     
     try {
         const ownerLoggedIn = localStorage.getItem('isOwnerLoggedIn') === 'true';
+        const isAdminLoggedIn = localStorage.getItem('isAdmin') === 'true';
         setIsOwnerLoggedIn(ownerLoggedIn);
 
         if (ownerLoggedIn && pathname.startsWith('/admin')) {
             router.replace('/owner');
+        }
+
+        if (isAdminLoggedIn && pathname.startsWith('/owner')) {
+          router.replace('/admin');
         }
 
     } catch(e) {
@@ -103,7 +108,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
   const handleAdminLogout = () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('isAdmin');
-      router.push('/');
+      router.push('/login');
     }
   };
 
@@ -248,9 +253,11 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
                       <Link href="/owner-login">Owner Login</Link>
                     </Button>
                   )}
-                  <Button asChild variant="ghost" size="sm">
-                    <Link href="/login">Admin Login</Link>
-                  </Button>
+                  {!isOwnerLoggedIn && (
+                    <Button asChild variant="ghost" size="sm">
+                      <Link href="/login">Admin Login</Link>
+                    </Button>
+                  )}
                 </>
               )}
 
@@ -419,7 +426,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
         flatInfo={selectedFlat}
         flatData={selectedFlat ? flatData[selectedFlat.flatId] : undefined}
         onSave={saveFlatData}
-        isEditable={isEditable}
+        isEditable={isEditable && !isOwnerLoggedIn}
       />
         
 
