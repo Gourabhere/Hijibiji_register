@@ -261,3 +261,86 @@ export async function getOwnerFlatData(flatId: string): Promise<OwnerFlatData | 
         throw new Error("Could not retrieve flat details. Please check configuration.");
     }
 }
+
+export type OwnerEditableData = {
+    ownerName: string;
+    contactNumber: string;
+    email: string;
+    familyMembers: string;
+    issues: string;
+};
+
+export async function updateOwnerDataAction(flatId: string, data: OwnerEditableData): Promise<{ success: boolean; message: string }> {
+    if (!SPREADSHEET_ID) {
+        return { success: false, message: "GOOGLE_SHEET_ID environment variable not set." };
+    }
+    
+    try {
+        const sheets = getSheetsApi();
+        const getResponse = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: RANGE,
+        });
+
+        const rows = getResponse.data.values;
+        if (!rows) {
+            throw new Error("Sheet is empty or could not be read.");
+        }
+
+        const headerRow = rows[0];
+        const passwordIndex = headerRow.indexOf('Password');
+        const rowIndex = rows.findIndex(row => row[0] === flatId);
+        
+        if (rowIndex === -1) {
+            throw new Error(`Flat ID "${flatId}" not found in the sheet.`);
+        }
+
+        const existingRow = rows[rowIndex];
+        
+        const maintenanceStatus = existingRow[9] || 'pending';
+        const registered = existingRow[10] === 'TRUE';
+        const password = (passwordIndex !== -1 && existingRow[passwordIndex]) ? existingRow[passwordIndex] : '';
+
+        const [block, floorAndFlat] = flatId.split('-');
+        const floor = floorAndFlat.match(/\d+/)?.[0] || '';
+        const flat = floorAndFlat.match(/[A-Z]/)?.[0] || '';
+        
+        const rowData = [
+            flatId,
+            block,
+            floor,
+            flat,
+            data.ownerName,
+            data.contactNumber,
+            data.email,
+            data.familyMembers,
+            data.issues,
+            maintenanceStatus,
+            registered ? 'TRUE' : 'FALSE',
+            new Date().toISOString()
+        ];
+
+        if (passwordIndex !== -1) {
+             while (rowData.length <= passwordIndex) {
+                rowData.push('');
+             }
+             rowData[passwordIndex] = password;
+        }
+
+        const updateRange = `${RANGE}!A${rowIndex + 1}`;
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: updateRange,
+            valueInputOption: 'USER_ENTERED',
+            requestBody: {
+                values: [rowData],
+            },
+        });
+
+        return { success: true, message: 'Details updated successfully!' };
+
+    } catch(e: any) {
+        console.error("Failed to save owner data to Google Sheets.", e);
+        return { success: false, message: e.message || "Failed to save data. Please check your Google Sheets configuration and permissions." };
+    }
+}
