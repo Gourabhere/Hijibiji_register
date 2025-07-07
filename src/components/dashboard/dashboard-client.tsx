@@ -192,8 +192,12 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
                 <Building className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-slate-800 font-headline">Hijibiji Society</h1>
-                <p className="text-xs text-slate-600">Management Dashboard</p>
+                <h1 className="text-xl font-bold text-slate-800 font-headline">
+                  {isEditable ? 'Hijibiji Society - Admin' : 'Hijibiji Society'}
+                </h1>
+                <p className="text-xs text-slate-600">
+                  {isEditable ? 'Full Control Panel' : 'Management Dashboard'}
+                </p>
               </div>
             </div>
             
@@ -271,10 +275,10 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
           className="text-center mb-8"
         >
           <h2 className="text-4xl font-bold text-slate-800 mb-2 font-headline">
-            Welcome to Your Society Dashboard
+            {isEditable ? 'Admin Control Center' : 'Welcome to Your Society Dashboard'}
           </h2>
           <p className="text-slate-600 text-lg">
-            Manage your flats, residents, and society operations seamlessly
+            {isEditable ? 'View and manage all flats and resident information.' : 'Manage your flats, residents, and society operations seamlessly'}
           </p>
         </motion.div>
 
