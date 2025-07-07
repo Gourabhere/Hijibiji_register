@@ -3,41 +3,6 @@
 import { google } from 'googleapis';
 import type { FlatData } from '@/components/dashboard/dashboard-client';
 
-// =================================================================================
-//  ACTION REQUIRED: Set Up Your Google Sheets API Credentials
-// =================================================================================
-// Your app is configured to use Google Sheets as a database, but it's not yet
-// connected. To get it working, follow these steps:
-//
-// 1. Create a `.env.local` file:
-//    - In the main directory of your project, find the `env.local.example` file.
-//    - Make a copy of it and rename the copy to `.env.local`.
-//
-// 2. Get Your Private Key:
-//    - If you haven't already, create a service account key in your Google Cloud
-//      project. This will download a JSON file.
-//    - Open the JSON file and find the `private_key`.
-//
-// 3. Update `.env.local`:
-//    - Open your new `.env.local` file.
-//    - The `GOOGLE_SHEET_ID` and `GOOGLE_SERVICE_ACCOUNT_EMAIL` variables have
-//      been pre-filled for you.
-//    - Copy the `private_key` from your JSON file and paste it as the value for
-//      the `GOOGLE_PRIVATE_KEY` variable.
-//    - IMPORTANT: The key must be on a single line, with newline characters
-//      represented as `\n`.
-//
-//      It should look like this:
-//      GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_KEY_CONTENT_HERE\n-----END PRIVATE KEY-----\n"
-//
-// 4. Check Your Sheet:
-//    - Make sure your Google Sheet has been shared with your service account's email:
-//      `hijibijiappservice@test-57ce3.iam.gserviceaccount.com`
-//    - Ensure your sheet has columns named `Registered` and `Password`.
-//
-// Once you've saved your `.env.local` file, the app should connect to your sheet.
-// =================================================================================
-
 
 const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID;
 const RANGE = 'Sheet1'; // Assumes data is on 'Sheet1'. Change if needed.
