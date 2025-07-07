@@ -17,7 +17,8 @@ import {
   ChevronRight,
   LogOut,
   AlertTriangle,
-  User
+  User,
+  Menu
 } from 'lucide-react';
 import { HijibijiFlatData, BlockName } from '@/data/flat-data';
 import { StatCard } from './stat-card';
@@ -25,8 +26,10 @@ import { BlockCard } from './block-card';
 import { FlatModal } from './flat-modal';
 import { FloatingActionButton } from './floating-action-button';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { getFlatsData, saveFlatDataAction } from '@/app/actions';
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
+import { Separator } from '@/components/ui/separator';
 
 
 export type FlatInfo = {
@@ -206,7 +209,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
               </div>
             </div>
             
-            <div className="flex items-center space-x-2">
+            <div className="hidden md:flex items-center space-x-2">
               {pathname !== '/' && (
                 <Button asChild variant="ghost" size="sm" className="space-x-2">
                   <Link href="/">
@@ -270,6 +273,81 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
                 <Bell className="w-5 h-5" />
                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
               </motion.button>
+            </div>
+
+            <div className="md:hidden">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Menu className="h-6 w-6" />
+                    <span className="sr-only">Open Menu</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent className="w-[280px] sm:w-[320px]">
+                  <SheetHeader>
+                    <SheetTitle>Menu</SheetTitle>
+                  </SheetHeader>
+                  <nav className="flex flex-col gap-2 mt-4">
+                    <SheetClose asChild>
+                      <Link href="/" className={buttonVariants({ variant: "ghost", className: "justify-start gap-2" })}>
+                        <Home className="h-5 w-5" />
+                        <span>Home</span>
+                      </Link>
+                    </SheetClose>
+
+                    {isOwnerLoggedIn && (
+                      <SheetClose asChild>
+                          <Link href="/owner" className={buttonVariants({ variant: "ghost", className: "justify-start gap-2" })}>
+                              <User className="h-5 w-5" />
+                              My Flat
+                          </Link>
+                      </SheetClose>
+                    )}
+
+                    {!isEditable && !isOwnerLoggedIn && (
+                      <>
+                        <SheetClose asChild>
+                          <Link href="/login" className={buttonVariants({ variant: "ghost", className: "justify-start gap-2" })}>
+                            <User className="h-5 w-5" />
+                            Admin Login
+                          </Link>
+                        </SheetClose>
+                        <SheetClose asChild>
+                          <Link href="/owner-login" className={buttonVariants({ variant: "ghost", className: "justify-start gap-2" })}>
+                            <User className="h-5 w-5" />
+                            Owner Login
+                          </Link>
+                        </SheetClose>
+                      </>
+                    )}
+
+                    <Separator className="my-2" />
+                    
+                    <Button variant="ghost" onClick={() => alert('Notifications feature coming soon!')} className="justify-start gap-2">
+                        <Bell className="h-5 w-5" />
+                        Notifications
+                    </Button>
+                    <Button variant="ghost" onClick={() => alert('Reports feature coming soon!')} className="justify-start gap-2">
+                        <FileText className="h-5 w-5" />
+                        Reports
+                    </Button>
+                    <Button variant="ghost" onClick={() => alert('Settings feature coming soon!')} className="justify-start gap-2">
+                        <Settings className="h-5 w-5" />
+                        Settings
+                    </Button>
+
+                    {(isEditable || isOwnerLoggedIn) && (
+                      <>
+                        <Separator className="my-2" />
+                        <Button variant="ghost" onClick={isEditable ? handleAdminLogout : handleOwnerLogout} className="justify-start gap-2">
+                            <LogOut className="h-5 w-5" />
+                            Logout
+                        </Button>
+                      </>
+                    )}
+                  </nav>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
         </div>
