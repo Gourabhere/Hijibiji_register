@@ -17,11 +17,12 @@ interface FlatCellProps {
   ownerInitials: string;
   ownerName: string;
   flatId: string;
+  existsInSheet: boolean;
   onClick: () => void;
 }
 
-export function FlatCell({ isRegistered, ownerInitials, ownerName, flatId, onClick }: FlatCellProps) {
-  const hasSignedUpButNotRegistered = !isRegistered && !!ownerName;
+export function FlatCell({ isRegistered, ownerInitials, ownerName, flatId, onClick, existsInSheet }: FlatCellProps) {
+  const hasSignedUpButNotRegistered = existsInSheet && !isRegistered;
 
   const getCellStateClasses = () => {
     if (isRegistered) {
@@ -34,7 +35,17 @@ export function FlatCell({ isRegistered, ownerInitials, ownerName, flatId, onCli
     return 'bg-gradient-to-br from-slate-100 to-slate-200 border-slate-300 text-slate-600 hover:border-slate-400';
   };
 
-  const tooltipContent = ownerName ? `${ownerName} (${flatId})` : `Vacant (${flatId})`;
+  const getTooltipContent = () => {
+    if (isRegistered) {
+      return ownerName ? `${ownerName} (${flatId})` : `Registered (${flatId})`;
+    }
+    if (hasSignedUpButNotRegistered) {
+      return `Pending Registration (${flatId})`;
+    }
+    return `Vacant (${flatId})`;
+  }
+  
+  const tooltipContent = getTooltipContent();
 
   return (
     <TooltipProvider>
