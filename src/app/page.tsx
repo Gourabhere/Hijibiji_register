@@ -86,7 +86,7 @@ function HomePageContent() {
         localStorage.setItem('isOwnerLoggedIn', 'true');
         localStorage.setItem('ownerFlatId', result.flatId);
         localStorage.removeItem('isAdmin');
-        router.push('/dashboard');
+        router.push('/owner');
       } else {
         setError(result.message);
       }
@@ -122,7 +122,7 @@ function HomePageContent() {
         localStorage.setItem('isOwnerLoggedIn', 'true');
         localStorage.setItem('ownerFlatId', result.flatId);
         localStorage.removeItem('isAdmin');
-        router.push('/dashboard');
+        router.push('/owner');
 
       } else {
         setError(result.message);
