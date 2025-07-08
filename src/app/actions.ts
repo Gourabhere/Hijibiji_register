@@ -1,3 +1,4 @@
+
 'use server';
 
 import { google } from 'googleapis';
@@ -6,6 +7,27 @@ import type { FlatData } from '@/components/dashboard/dashboard-client';
 
 const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID;
 const RANGE = 'Sheet1'; // Assumes data is on 'Sheet1'. Change if needed.
+
+// Helper to handle Google Sheets API errors consistently.
+const handleSheetError = (e: any, context: string): Error => {
+    console.error(`Failed to ${context} from Google Sheets.`, e);
+    const message = e.message || '';
+
+    if (message.includes('permission') || message.includes('Permission denied') || message.includes('PERMISSION_DENIED')) {
+         return new Error("Could not connect to Google Sheets. Please ensure you have shared your sheet with the service account's email address (with Editor role) and that the Google Sheets API is enabled in your Google Cloud project.");
+    }
+    if (message.includes('Requested entity was not found')) {
+        return new Error(`Could not find the Google Sheet. Please make sure the GOOGLE_SHEET_ID in your hosting environment is correct and the range ('${RANGE}') exists.`);
+    }
+    // Re-throw specific, actionable errors from our own validation
+    const knownErrors = ["missing the 'Registered' column", "missing the 'Flat ID' column", "Your Google Sheet must have"];
+    if (knownErrors.some(err => message.includes(err))) {
+        return new Error(message);
+    }
+    // For other errors, return a generic message but include the original error text
+    return new Error(`An unexpected error occurred with Google Sheets. Please check your configuration and permissions. Original error: ${message}`);
+};
+
 
 // Helper to convert from various formats to the standard '{blockNumber}{flat}{floor}'
 const normalizeFlatId = (id: any): string => {
@@ -101,18 +123,7 @@ export async function getFlatsData(): Promise<Record<string, FlatData>> {
         }
         return flatData;
     } catch (e: any) {
-        console.error("Failed to load flat data from Google Sheets.", e);
-        if (e.message.includes('permission') || e.message.includes('Permission denied')) {
-             throw new Error("Could not connect to Google Sheets. Please ensure you have shared your sheet with the service account's email address and that the Sheets API is enabled.");
-        }
-        if (e.message.includes('Requested entity was not found')) {
-            throw new Error(`Could not find the Google Sheet. Please make sure the GOOGLE_SHEET_ID in your hosting environment is correct and the range ('${RANGE}') exists.`);
-        }
-        // Re-throw specific errors
-        if (e.message.includes("missing the 'Registered' column")) {
-            throw e;
-        }
-        throw new Error("Could not connect to Google Sheets. Please ensure your environment variables are correct and the service account has permission to access the sheet.");
+        throw handleSheetError(e, 'load flat data');
     }
 }
 
@@ -200,8 +211,7 @@ export async function saveFlatDataAction(flatId: string, data: FlatData): Promis
             });
         }
     } catch(e: any) {
-        console.error("Failed to save flat data to Google Sheets.", e);
-        throw new Error(e.message || "Failed to save data. Please check your Google Sheets configuration and permissions.");
+        throw handleSheetError(e, 'save flat data');
     }
 }
 
@@ -244,8 +254,7 @@ export async function loginOwnerAction(flatId: string, password_from_user: strin
             return { success: false, message: "Incorrect password." };
         }
     } catch (e: any) {
-        console.error("Owner login failed.", e);
-        return { success: false, message: "An error occurred during login. Please check server logs." };
+        return { success: false, message: handleSheetError(e, 'process owner login').message };
     }
 }
 
@@ -302,8 +311,7 @@ export async function getOwnerFlatData(flatId: string): Promise<OwnerFlatData | 
             lastUpdated: ownerRow[11] || '',
         };
     } catch(e: any) {
-        console.error("Failed to fetch owner flat data", e);
-        throw new Error("Could not retrieve flat details. Please check configuration.");
+        throw handleSheetError(e, 'fetch owner flat data');
     }
 }
 
@@ -395,8 +403,7 @@ export async function updateOwnerDataAction(flatId: string, data: OwnerEditableD
         return { success: true, message: 'Details updated successfully!' };
 
     } catch(e: any) {
-        console.error("Failed to save owner data to Google Sheets.", e);
-        return { success: false, message: e.message || "Failed to save data. Please check your Google Sheets configuration and permissions." };
+        return { success: false, message: handleSheetError(e, 'update owner data').message };
     }
 }
 
@@ -501,7 +508,6 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
         }
 
     } catch (e: any) {
-        console.error("Owner signup failed.", e);
-        return { success: false, message: e.message || "An error occurred during signup. Please try again." };
+        return { success: false, message: handleSheetError(e, 'process owner signup').message };
     }
 }
