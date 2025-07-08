@@ -131,7 +131,7 @@ export async function saveFlatDataAction(flatId: string, data: FlatData): Promis
         let response;
         if (existingData.length > 0) {
             // Flat exists, use PATCH to update the specific row.
-            const url = `${SHEETDB_API_URL}/Flat ID/${normalizedFlatId}`;
+            const url = `${SHEETDB_API_URL}/Flat%20ID/${encodeURIComponent(normalizedFlatId)}`;
             response = await fetch(url, {
                 method: 'PATCH',
                 headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
@@ -251,7 +251,7 @@ export async function updateOwnerDataAction(flatId: string, data: OwnerEditableD
             'Last Updated': new Date().toISOString(),
         };
 
-        const url = `${SHEETDB_API_URL}/Flat ID/${normalizedFlatId}`;
+        const url = `${SHEETDB_API_URL}/Flat%20ID/${encodeURIComponent(normalizedFlatId)}`;
         const response = await fetch(url, {
             method: 'PATCH',
             headers: {
@@ -295,7 +295,7 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
             }
 
             // Flat exists but is unregistered and has no password. Update it.
-            const updateUrl = `${SHEETDB_API_URL}/Flat ID/${flatId}`;
+            const updateUrl = `${SHEETDB_API_URL}/Flat%20ID/${encodeURIComponent(flatId)}`;
             const updateResponse = await fetch(updateUrl, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
