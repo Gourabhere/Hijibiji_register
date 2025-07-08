@@ -133,18 +133,18 @@ export async function loginOwnerAction(flatId: string, password_from_user: strin
     }
 
     try {
-        const url = `${SHEETDB_API_URL}/search?Flat ID=${normalizedFlatId}`;
-        const response = await fetch(url);
+        const response = await fetch(SHEETDB_API_URL);
         if (!response.ok) {
              throw new Error(`API responded with status ${response.status}`);
         }
         const data: any[] = await response.json();
+        
+        const ownerRow = data.find(row => normalizeFlatId(row['Flat ID']) === normalizedFlatId);
 
-        if (data.length === 0) {
+        if (!ownerRow) {
             return { success: false, message: "Flat ID not found." };
         }
 
-        const ownerRow = data[0];
         const correctPassword = ownerRow['Password'];
         if (correctPassword && correctPassword === password_from_user) {
             return { success: true, message: "Login successful.", flatId: normalizedFlatId };
@@ -166,19 +166,19 @@ export type OwnerFlatData = FlatData & {
 export async function getOwnerFlatData(flatId: string): Promise<OwnerFlatData | null> {
     const normalizedFlatId = normalizeFlatId(flatId);
     try {
-        const url = `${SHEETDB_API_URL}/search?Flat ID=${normalizedFlatId}`;
-        const response = await fetch(url);
+        const response = await fetch(SHEETDB_API_URL);
 
         if (!response.ok) {
             throw new Error(`API responded with status ${response.status}`);
         }
         const data: any[] = await response.json();
         
-        if (data.length === 0) {
+        const ownerRow = data.find(row => normalizeFlatId(row['Flat ID']) === normalizedFlatId);
+        
+        if (!ownerRow) {
             return null;
         }
 
-        const ownerRow = data[0];
         return {
             flatId: ownerRow['Flat ID'] || '',
             block: ownerRow['Block'] || '',
@@ -246,16 +246,16 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
     const flatId = `${blockNumber}${flat}${floor}`.toUpperCase();
 
     try {
-        const searchUrl = `${SHEETDB_API_URL}/search?Flat ID=${flatId}`;
-        const searchResponse = await fetch(searchUrl);
-        if (!searchResponse.ok) {
-            throw new Error(`API search responded with status ${searchResponse.status}`);
+        const response = await fetch(SHEETDB_API_URL);
+        if (!response.ok) {
+            throw new Error(`API search responded with status ${response.status}`);
         }
-        const data: any[] = await searchResponse.json();
+        const data: any[] = await response.json();
+
+        const flatRow = data.find(row => normalizeFlatId(row['Flat ID']) === flatId);
 
         // Case 1: Flat exists in the sheet
-        if (data.length > 0) {
-            const flatRow = data[0];
+        if (flatRow) {
             if (flatRow['Registered'] === 'TRUE') {
                 return { success: false, message: "This flat is already registered. Please log in or contact administration if you believe this is an error." };
             }
