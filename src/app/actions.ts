@@ -7,11 +7,20 @@ import type { FlatData } from '@/components/dashboard/dashboard-client';
 const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID;
 const RANGE = 'Sheet1'; // Assumes data is on 'Sheet1'. Change if needed.
 
-// Helper function to ensure Flat IDs are consistent for lookups.
-// e.g. "Block 1 - 1A " => "Block 1-1A"
+// Helper to convert from various formats to the standard '{floor}{flat}{blockNumber}'
 const normalizeFlatId = (id: any): string => {
     if (!id) return '';
-    return id.toString().trim().replace(/\s*-\s*/g, "-");
+    const strId = id.toString().trim().toUpperCase();
+
+    // Check for old format: "Block 1-1A" or "Block 1 - 1A" etc.
+    const oldFormatMatch = strId.match(/^BLOCK\s*(\d+)\s*-\s*(\d+)([A-Z])$/);
+    if (oldFormatMatch) {
+        const [, block, floor, flat] = oldFormatMatch;
+        return `${floor}${flat}${block}`;
+    }
+
+    // Assume it's the new format, just remove spaces. e.g. "1 A 1" -> "1A1"
+    return strId.replace(/\s+/g, "");
 };
 
 const getSheetsApi = () => {
@@ -126,9 +135,13 @@ export async function saveFlatDataAction(flatId: string, data: FlatData): Promis
         
         const updatedDataWithTimestamp = { ...data, lastUpdated: new Date().toISOString() };
         
-        const [block, floorAndFlat] = normalizedFlatId.split('-');
-        const floor = floorAndFlat.match(/\d+/)?.[0] || '';
-        const flat = floorAndFlat.match(/[A-Z]/)?.[0] || '';
+        const parts = normalizedFlatId.match(/^(\d+)([A-Z])(\d+)$/);
+        if (!parts) {
+            throw new Error(`Invalid flat ID format: ${flatId}`);
+        }
+        const floor = parts[1];
+        const flat = parts[2];
+        const block = `Block ${parts[3]}`;
 
         const rowData = [
             normalizedFlatId,
@@ -325,9 +338,13 @@ export async function updateOwnerDataAction(flatId: string, data: OwnerEditableD
         const maintenanceStatus = existingRow[9] || 'pending';
         const password = (passwordIndex !== -1 && existingRow[passwordIndex]) ? existingRow[passwordIndex] : '';
 
-        const [block, floorAndFlat] = normalizedFlatId.split('-');
-        const floor = floorAndFlat.match(/\d+/)?.[0] || '';
-        const flat = floorAndFlat.match(/[A-Z]/)?.[0] || '';
+        const parts = normalizedFlatId.match(/^(\d+)([A-Z])(\d+)$/);
+        if (!parts) {
+            throw new Error(`Invalid flat ID format: ${flatId}`);
+        }
+        const floor = parts[1];
+        const flat = parts[2];
+        const block = `Block ${parts[3]}`;
         
         const rowData = [
             normalizedFlatId,
@@ -374,7 +391,8 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
         return { success: false, message: "Server is not configured correctly. Please contact support." };
     }
     
-    const flatId = `${block}-${floor}${flat}`;
+    const blockNumber = block.replace('Block ', '');
+    const flatId = `${floor}${flat}${blockNumber}`.toUpperCase();
 
     try {
         const sheets = getSheetsApi();

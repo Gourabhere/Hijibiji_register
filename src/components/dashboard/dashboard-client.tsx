@@ -126,7 +126,8 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
   const stats = getTotalStats();
 
   const openFlatModal = (blockName: BlockName, floor: number, flat: string) => {
-    const flatId = `${blockName}-${floor}${flat}`;
+    const blockNumber = blockName.replace('Block ', '');
+    const flatId = `${floor}${flat}${blockNumber}`;
     
     if (isOwnerLoggedIn) {
         const ownerFlatId = localStorage.getItem('ownerFlatId');
@@ -144,9 +145,6 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
     const flatId = selectedFlat.flatId;
     const dataToSave = { ...data, lastUpdated: new Date().toISOString() };
     
-    const previousState = flatData;
-    // Optimistic UI update for responsiveness
-    setFlatData(prev => ({ ...prev, [flatId]: dataToSave }));
     setSelectedFlat(null);
 
     try {
@@ -156,8 +154,8 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
     } catch (e: any) {
         console.error("Failed to save flat data. Reverting UI.", e);
         setDbError(e.message || "Failed to save data. Please check your connection and permissions.");
-        // Revert UI on failure
-        setFlatData(previousState);
+        // Re-fetch even on failure to get the true state back
+        await fetchFlatData();
     }
   };
 
@@ -522,5 +520,3 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
     </div>
   );
 };
-
-    

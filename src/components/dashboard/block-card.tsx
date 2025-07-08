@@ -16,9 +16,12 @@ interface BlockCardProps {
 }
 
 export function BlockCard({ blockName, blockData, allFlatData, onFlatClick }: BlockCardProps) {
-    const occupiedCount = Object.keys(allFlatData).filter(key => 
-      key.startsWith(blockName) && allFlatData[key].registered
-    ).length;
+    const blockNumber = blockName.replace('Block ', '');
+
+    const occupiedCount = Object.keys(allFlatData).filter(key => {
+        const parts = key.match(/^(\d+)([A-Z])(\d+)$/);
+        return parts && parts[3] === blockNumber && allFlatData[key].registered;
+    }).length;
 
     const totalFlats = blockData.floors * blockData.flatsPerFloor.length;
     const occupancyRate = totalFlats > 0 ? (occupiedCount / totalFlats) * 100 : 0;
@@ -72,7 +75,7 @@ export function BlockCard({ blockName, blockData, allFlatData, onFlatClick }: Bl
                 {floor}
               </div>
               {blockData.flatsPerFloor.map(flat => {
-                  const flatId = `${blockName}-${floor}${flat}`;
+                  const flatId = `${floor}${flat}${blockNumber}`;
                   const currentFlatData = allFlatData[flatId];
                   const isRegistered = !!currentFlatData?.registered;
                   const ownerName = currentFlatData?.ownerName || '';

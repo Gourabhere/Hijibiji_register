@@ -213,7 +213,7 @@ function LoginPageContent() {
                       <form onSubmit={handleOwnerLogin} className="space-y-4 pt-4">
                         <div>
                           <Label htmlFor="flatId">Flat ID</Label>
-                          <Input id="flatId" type="text" placeholder="e.g., Block 1-1A" value={ownerIdentifier} onChange={(e) => setOwnerIdentifier(e.target.value)} required className="mt-1 h-12 bg-gray-50" />
+                          <Input id="flatId" type="text" placeholder="e.g., 1A1" value={ownerIdentifier} onChange={(e) => setOwnerIdentifier(e.target.value)} required className="mt-1 h-12 bg-gray-50" />
                         </div>
                         <div>
                           <Label htmlFor="ownerPassword">Password</Label>
