@@ -5,6 +5,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Building } from 'lucide-react';
 import type { BlockData, BlockName } from '@/data/flat-data';
+import { getFlatsForFloor, getTotalFlatsInBlock, getAllFlatLettersInBlock } from '@/data/flat-data';
 import { FlatCell } from './flat-cell';
 import type { FlatData } from './dashboard-client';
 
@@ -23,8 +24,9 @@ export function BlockCard({ blockName, blockData, allFlatData, onFlatClick }: Bl
         return parts && parts[1] === blockNumber && allFlatData[key].registered;
     }).length;
 
-    const totalFlats = blockData.floors * blockData.flatsPerFloor.length;
+    const totalFlats = getTotalFlatsInBlock(blockData);
     const occupancyRate = totalFlats > 0 ? (occupiedCount / totalFlats) * 100 : 0;
+    const allFlatLetters = getAllFlatLettersInBlock(blockData);
 
     const getOwnerInitials = (name: string | undefined) => {
         if (!name) return '';
@@ -60,43 +62,51 @@ export function BlockCard({ blockName, blockData, allFlatData, onFlatClick }: Bl
 
         <div 
           className="grid gap-1 mb-4" 
-          style={{ gridTemplateColumns: `2rem repeat(${blockData.flatsPerFloor.length}, minmax(0, 1fr))` }}
+          style={{ gridTemplateColumns: `2rem repeat(${allFlatLetters.length}, minmax(0, 1fr))` }}
         >
           <div className="text-center text-xs font-semibold text-slate-500 p-1"></div>
-          {blockData.flatsPerFloor.map(flat => (
+          {allFlatLetters.map(flat => (
             <div key={flat} className="text-center text-xs font-semibold text-slate-500 p-1">
               {flat}
             </div>
           ))}
           
-          {Array.from({ length: blockData.floors }, (_, i) => blockData.floors - i).map(floor => (
-            <React.Fragment key={floor}>
-              <div className="flex items-center justify-center text-center text-xs font-semibold text-slate-500 p-1">
-                {floor}
-              </div>
-              {blockData.flatsPerFloor.map(flat => {
-                  const flatId = `${blockNumber}${flat}${floor}`;
-                  const currentFlatData = allFlatData[flatId];
-                  const isRegistered = !!currentFlatData?.registered;
-                  const ownerName = currentFlatData?.ownerName || '';
-                  const ownerInitials = getOwnerInitials(ownerName);
+          {Array.from({ length: blockData.floors }, (_, i) => blockData.floors - i).map(floor => {
+            const flatsOnThisFloor = getFlatsForFloor(blockData, floor);
+            return (
+              <React.Fragment key={floor}>
+                <div className="flex items-center justify-center text-center text-xs font-semibold text-slate-500 p-1">
+                  {floor}
+                </div>
+                {allFlatLetters.map(flatLetter => {
+                    if (flatsOnThisFloor.includes(flatLetter)) {
+                        const flatId = `${blockNumber}${flatLetter}${floor}`;
+                        const currentFlatData = allFlatData[flatId];
+                        const isRegistered = !!currentFlatData?.registered;
+                        const ownerName = currentFlatData?.ownerName || '';
+                        const ownerInitials = getOwnerInitials(ownerName);
 
-                  return (
-                    <FlatCell
-                      key={`${floor}-${flat}`}
-                      blockName={blockName}
-                      floor={floor}
-                      flat={flat}
-                      isRegistered={isRegistered}
-                      ownerInitials={ownerInitials}
-                      ownerName={ownerName}
-                      flatId={flatId}
-                      onClick={() => onFlatClick(blockName, floor, flat)}
-                    />
-                  );
-              })}
-            </React.Fragment>
-          ))}
+                        return (
+                          <FlatCell
+                            key={`${floor}-${flatLetter}`}
+                            blockName={blockName}
+                            floor={floor}
+                            flat={flatLetter}
+                            isRegistered={isRegistered}
+                            ownerInitials={ownerInitials}
+                            ownerName={ownerName}
+                            flatId={flatId}
+                            onClick={() => onFlatClick(blockName, floor, flatLetter)}
+                          />
+                        );
+                    } else {
+                        // Render an empty placeholder for non-existent flats
+                        return <div key={`${floor}-${flatLetter}`} className="aspect-square" />;
+                    }
+                })}
+              </React.Fragment>
+            );
+          })}
         </div>
 
         <div className="bg-gradient-to-r from-slate-100 to-slate-200 rounded-lg p-2">

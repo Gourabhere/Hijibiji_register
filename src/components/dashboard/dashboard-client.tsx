@@ -20,7 +20,7 @@ import {
   User,
   Menu
 } from 'lucide-react';
-import { HijibijiFlatData, BlockName } from '@/data/flat-data';
+import { HijibijiFlatData, BlockName, getTotalFlatsInBlock } from '@/data/flat-data';
 import { StatCard } from './stat-card';
 import { BlockCard } from './block-card';
 import { FlatModal } from './flat-modal';
@@ -117,8 +117,9 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
   };
 
   const getTotalStats = () => {
-    const totalFlats = Object.values(HijibijiFlatData).reduce((sum, block) => 
-      sum + (block.floors * block.flatsPerFloor.length), 0);
+    const totalFlats = Object.values(HijibijiFlatData).reduce((sum, blockData) => {
+        return sum + getTotalFlatsInBlock(blockData);
+    }, 0);
     const totalOccupied = Object.values(flatData).filter(fd => fd.registered).length;
     return { totalFlats, totalOccupied, totalVacant: totalFlats - totalOccupied };
   };

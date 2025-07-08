@@ -16,7 +16,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { loginOwnerAction, signupOwnerAction } from '@/app/actions';
-import { HijibijiFlatData, BlockName } from '@/data/flat-data';
+import { HijibijiFlatData, BlockName, getFlatsForFloor } from '@/data/flat-data';
 
 function LoginPageContent() {
   const router = useRouter();
@@ -136,7 +136,9 @@ function LoginPageContent() {
 
   const blockOptions = Object.keys(HijibijiFlatData) as BlockName[];
   const floorOptions = selectedBlock ? Array.from({ length: HijibijiFlatData[selectedBlock as BlockName].floors }, (_, i) => String(i + 1)) : [];
-  const flatOptions = selectedBlock ? HijibijiFlatData[selectedBlock as BlockName].flatsPerFloor : [];
+  const flatOptions = (selectedBlock && selectedFloor)
+    ? getFlatsForFloor(HijibijiFlatData[selectedBlock as BlockName], Number(selectedFloor))
+    : [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 flex items-center justify-center p-4">
@@ -237,14 +239,14 @@ function LoginPageContent() {
                             </div>
                             <div className="col-span-3 sm:col-span-1">
                                 <Label>Floor</Label>
-                                <Select onValueChange={setSelectedFloor} value={selectedFloor} disabled={!selectedBlock}>
+                                <Select onValueChange={(v) => {setSelectedFloor(v); setSelectedFlat('');}} value={selectedFloor} disabled={!selectedBlock}>
                                 <SelectTrigger className="mt-1"><SelectValue placeholder="Floor"/></SelectTrigger>
                                 <SelectContent>{floorOptions.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
                                 </Select>
                             </div>
                             <div className="col-span-3 sm:col-span-1">
                                 <Label>Flat</Label>
-                                <Select onValueChange={setSelectedFlat} value={selectedFlat} disabled={!selectedBlock}>
+                                <Select onValueChange={setSelectedFlat} value={selectedFlat} disabled={!selectedFloor}>
                                 <SelectTrigger className="mt-1"><SelectValue placeholder="Flat"/></SelectTrigger>
                                 <SelectContent>{flatOptions.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
                                 </Select>
