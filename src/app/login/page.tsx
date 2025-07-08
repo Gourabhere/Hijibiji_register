@@ -141,7 +141,10 @@ function LoginPageContent() {
     : [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 flex items-center justify-center p-4">
+    <div 
+      className="min-h-screen flex items-center justify-center p-4 bg-cover bg-center"
+      style={{ backgroundImage: "url('https://ik.imagekit.io/gourabhere/Screenshot_20250708_095402_Samsung%20Notes.jpg?updatedAt=1751950131538')" }}
+    >
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -292,5 +295,3 @@ export default function LoginPage() {
     </Suspense>
   )
 }
-
-    
