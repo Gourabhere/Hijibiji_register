@@ -133,13 +133,14 @@ export async function loginOwnerAction(flatId: string, password_from_user: strin
     }
 
     try {
-        const response = await fetch(SHEETDB_API_URL);
+        const searchUrl = `${SHEETDB_API_URL}/search?Flat%20ID=${encodeURIComponent(normalizedFlatId)}`;
+        const response = await fetch(searchUrl);
         if (!response.ok) {
              throw new Error(`API responded with status ${response.status}`);
         }
         const data: any[] = await response.json();
         
-        const ownerRow = data.find(row => normalizeFlatId(row['Flat ID']) === normalizedFlatId);
+        const ownerRow = data.length > 0 ? data[0] : null;
 
         if (!ownerRow) {
             return { success: false, message: "Flat ID not found." };
@@ -166,14 +167,15 @@ export type OwnerFlatData = FlatData & {
 export async function getOwnerFlatData(flatId: string): Promise<OwnerFlatData | null> {
     const normalizedFlatId = normalizeFlatId(flatId);
     try {
-        const response = await fetch(SHEETDB_API_URL);
+        const searchUrl = `${SHEETDB_API_URL}/search?Flat%20ID=${encodeURIComponent(normalizedFlatId)}`;
+        const response = await fetch(searchUrl);
 
         if (!response.ok) {
             throw new Error(`API responded with status ${response.status}`);
         }
         const data: any[] = await response.json();
         
-        const ownerRow = data.find(row => normalizeFlatId(row['Flat ID']) === normalizedFlatId);
+        const ownerRow = data.length > 0 ? data[0] : null;
         
         if (!ownerRow) {
             return null;
@@ -187,11 +189,11 @@ export async function getOwnerFlatData(flatId: string): Promise<OwnerFlatData | 
             ownerName: ownerRow['Owner Name'] || '',
             contactNumber: ownerRow['Contact Number'] || '',
             email: ownerRow['Email'] || '',
-            familyMembers: ownerRow['Family Members'] || '',
-            issues: ownerRow['Issues / Complaints'] || '',
-            maintenanceStatus: ownerRow['Maintenance Status'] || 'pending',
-            registered: ownerRow['Registered'] === 'TRUE',
-            lastUpdated: ownerRow['Last Updated'] || '',
+            familyMembers: row['Family Members'] || '',
+            issues: row['Issues / Complaints'] || '',
+            maintenanceStatus: row['Maintenance Status'] || 'pending',
+            registered: row['Registered'] === 'TRUE',
+            lastUpdated: row['Last Updated'] || '',
         };
     } catch(e: any) {
         throw handleApiError(e, 'fetch owner flat data');
@@ -246,13 +248,13 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
     const flatId = `${blockNumber}${flat}${floor}`.toUpperCase();
 
     try {
-        const response = await fetch(SHEETDB_API_URL);
-        if (!response.ok) {
-            throw new Error(`API search responded with status ${response.status}`);
+        const searchUrl = `${SHEETDB_API_URL}/search?Flat%20ID=${encodeURIComponent(flatId)}`;
+        const searchResponse = await fetch(searchUrl);
+        if (!searchResponse.ok) {
+            throw new Error(`API search responded with status ${searchResponse.status}`);
         }
-        const data: any[] = await response.json();
-
-        const flatRow = data.find(row => normalizeFlatId(row['Flat ID']) === flatId);
+        const data: any[] = await searchResponse.json();
+        const flatRow = data.length > 0 ? data[0] : null;
 
         // Case 1: Flat exists in the sheet
         if (flatRow) {
