@@ -120,7 +120,7 @@ export async function saveFlatDataAction(flatId: string, data: FlatData): Promis
         };
 
         // Check if the flat exists to decide between PATCH (update) and POST (create)
-        const searchUrl = `${SHEETDB_API_URL}/search?Flat ID=${encodeURIComponent(normalizedFlatId)}&casesensitive=false`;
+        const searchUrl = `${SHEETDB_API_URL}/search?Flat%20ID=${encodeURIComponent(normalizedFlatId)}&casesensitive=false`;
         const searchResponse = await fetch(searchUrl, { cache: 'no-store' });
         if (!searchResponse.ok) {
             throw new Error(`API search responded with status ${searchResponse.status}`);
@@ -162,7 +162,7 @@ export async function loginOwnerAction(flatId: string, password_from_user: strin
     }
 
     try {
-        const searchUrl = `${SHEETDB_API_URL}/search?Flat ID=${encodeURIComponent(normalizedFlatId)}&casesensitive=false`;
+        const searchUrl = `${SHEETDB_API_URL}/search?Flat%20ID=${encodeURIComponent(normalizedFlatId)}&casesensitive=false`;
         const response = await fetch(searchUrl, { cache: 'no-store' });
         if (!response.ok) {
              throw new Error(`API responded with status ${response.status}`);
@@ -196,7 +196,7 @@ export type OwnerFlatData = FlatData & {
 export async function getOwnerFlatData(flatId: string): Promise<OwnerFlatData | null> {
     const normalizedFlatId = normalizeFlatId(flatId);
     try {
-        const searchUrl = `${SHEETDB_API_URL}/search?Flat ID=${encodeURIComponent(normalizedFlatId)}&casesensitive=false`;
+        const searchUrl = `${SHEETDB_API_URL}/search?Flat%20ID=${encodeURIComponent(normalizedFlatId)}&casesensitive=false`;
         const response = await fetch(searchUrl, { cache: 'no-store' });
 
         if (!response.ok) {
@@ -216,7 +216,7 @@ export async function getOwnerFlatData(flatId: string): Promise<OwnerFlatData | 
             floor: ownerRow['Floor'] || '',
             flat: ownerRow['Flat'] || '',
             ownerName: ownerRow['Owner Name'] || '',
-            contactNumber: ownerRow['Contact Number'] || '',
+            contactNumber: row['Contact Number'] || '',
             email: ownerRow['Email'] || '',
             familyMembers: ownerRow['Family Members'] || '',
             issues: ownerRow['Issues / Complaints'] || '',
@@ -277,7 +277,7 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
     const flatId = `${blockNumber}${flat}${floor}`.toUpperCase();
 
     try {
-        const searchUrl = `${SHEETDB_API_URL}/search?Flat ID=${encodeURIComponent(flatId)}&casesensitive=false`;
+        const searchUrl = `${SHEETDB_API_URL}/search?Flat%20ID=${encodeURIComponent(flatId)}&casesensitive=false`;
         const searchResponse = await fetch(searchUrl, { cache: 'no-store' });
         if (!searchResponse.ok) {
             throw new Error(`API search responded with status ${searchResponse.status}`);
