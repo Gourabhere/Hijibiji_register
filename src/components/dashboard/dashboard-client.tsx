@@ -112,7 +112,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
       localStorage.removeItem('isOwnerLoggedIn');
       localStorage.removeItem('ownerFlatId');
       setIsOwnerLoggedIn(false);
-      router.push('/owner-login');
+      router.push('/login');
     }
   };
 
@@ -242,10 +242,10 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
                   ) : (
                     <>
                       <Button asChild variant="ghost" size="sm">
-                        <Link href="/owner-login">Owner Login</Link>
+                        <Link href="/login?role=owner">Owner Login</Link>
                       </Button>
                       <Button asChild variant="ghost" size="sm">
-                        <Link href="/login">Admin Login</Link>
+                        <Link href="/login?role=admin">Admin Login</Link>
                       </Button>
                     </>
                   )}
@@ -295,13 +295,13 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
                     {!isEditable && !isOwnerLoggedIn && (
                       <>
                         <SheetClose asChild>
-                          <Link href="/login" className={buttonVariants({ variant: "ghost", className: "justify-start gap-2" })}>
+                          <Link href="/login?role=admin" className={buttonVariants({ variant: "ghost", className: "justify-start gap-2" })}>
                             <User className="h-5 w-5" />
                             Admin Login
                           </Link>
                         </SheetClose>
                         <SheetClose asChild>
-                          <Link href="/owner-login" className={buttonVariants({ variant: "ghost", className: "justify-start gap-2" })}>
+                          <Link href="/login?role=owner" className={buttonVariants({ variant: "ghost", className: "justify-start gap-2" })}>
                             <User className="h-5 w-5" />
                             Owner Login
                           </Link>
@@ -522,3 +522,5 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
     </div>
   );
 };
+
+    

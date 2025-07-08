@@ -14,12 +14,12 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
         const isOwner = localStorage.getItem('isOwnerLoggedIn') === 'true';
         const flatId = localStorage.getItem('ownerFlatId');
         if (!isOwner || !flatId) {
-          router.replace('/owner-login');
+          router.replace('/login');
         } else {
           setIsAuth(true);
         }
     } catch (e) {
-        router.replace('/owner-login');
+        router.replace('/login');
     }
   }, [router]);
 
@@ -37,3 +37,5 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
 
   return <>{children}</>;
 }
+
+    

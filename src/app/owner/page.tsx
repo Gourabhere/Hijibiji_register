@@ -37,7 +37,7 @@ export default function OwnerDashboardPage() {
     useEffect(() => {
         const flatId = localStorage.getItem('ownerFlatId');
         if (!flatId) {
-            router.replace('/owner-login');
+            router.replace('/login');
             return;
         }
 
@@ -103,7 +103,7 @@ export default function OwnerDashboardPage() {
     const handleLogout = () => {
         localStorage.removeItem('isOwnerLoggedIn');
         localStorage.removeItem('ownerFlatId');
-        router.push('/owner-login');
+        router.push('/login');
     };
 
     const getAvatarInitials = (name: string) => {
@@ -242,3 +242,5 @@ export default function OwnerDashboardPage() {
         </div>
     );
 }
+
+    
