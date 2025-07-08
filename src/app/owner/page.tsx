@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState, useTransition } from 'react';
@@ -220,7 +219,7 @@ export default function OwnerDashboardPage() {
                                             onCheckedChange={(checked) => setFormData(prev => ({ ...prev, registered: !!checked }))}
                                         />
                                         <Label htmlFor="registered" className="font-normal text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                            My flat is registered and my details are correct.
+                                            My flat is registered
                                         </Label>
                                     </div>
                                     <div className="space-y-2 md:col-span-2">
@@ -242,5 +241,3 @@ export default function OwnerDashboardPage() {
         </div>
     );
 }
-
-    
