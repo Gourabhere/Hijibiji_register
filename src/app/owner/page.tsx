@@ -34,6 +34,7 @@ export default function OwnerDashboardPage() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        let isMounted = true;
         const flatId = localStorage.getItem('ownerFlatId');
         if (!flatId) {
             router.replace('/');
@@ -45,27 +46,37 @@ export default function OwnerDashboardPage() {
             setError(null);
             try {
                 const data = await getOwnerFlatData(flatId);
-                if (data) {
-                    setFlatData(data);
-                    setFormData({
-                        ownerName: data.ownerName,
-                        contactNumber: data.contactNumber,
-                        email: data.email,
-                        familyMembers: data.familyMembers,
-                        issues: data.issues,
-                        registered: data.registered,
-                    });
-                } else {
-                    setError('Could not find details for your flat.');
+                if (isMounted) {
+                    if (data) {
+                        setFlatData(data);
+                        setFormData({
+                            ownerName: data.ownerName,
+                            contactNumber: data.contactNumber,
+                            email: data.email,
+                            familyMembers: data.familyMembers,
+                            issues: data.issues,
+                            registered: data.registered,
+                        });
+                    } else {
+                        setError('Could not find details for your flat.');
+                    }
                 }
             } catch (e: any) {
-                setError(e.message || 'An error occurred while fetching your data.');
+                if (isMounted) {
+                    setError(e.message || 'An error occurred while fetching your data.');
+                }
             } finally {
-                setIsLoading(false);
+                if (isMounted) {
+                    setIsLoading(false);
+                }
             }
         };
 
         fetchData();
+
+        return () => {
+            isMounted = false;
+        };
     }, [router]);
     
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -78,7 +89,10 @@ export default function OwnerDashboardPage() {
         if (!flatData) return;
 
         startTransition(async () => {
-            const result = await updateOwnerDataAction(flatData.flatId, formData);
+            // Ensure `registered` status is also updated upon saving any detail.
+            const dataToSave = { ...formData, registered: true };
+
+            const result = await updateOwnerDataAction(flatData.flatId, dataToSave);
             if (result.success) {
                 toast({
                     title: 'Success!',
@@ -87,8 +101,15 @@ export default function OwnerDashboardPage() {
                 const updatedData = await getOwnerFlatData(flatData.flatId);
                 if(updatedData) {
                     setFlatData(updatedData);
+                    setFormData({
+                        ownerName: updatedData.ownerName,
+                        contactNumber: updatedData.contactNumber,
+                        email: updatedData.email,
+                        familyMembers: updatedData.familyMembers,
+                        issues: updatedData.issues,
+                        registered: updatedData.registered,
+                    });
                 }
-
             } else {
                 toast({
                     title: 'Update Failed',
@@ -181,7 +202,7 @@ export default function OwnerDashboardPage() {
                             <Card className="shadow-lg rounded-2xl">
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-3 text-xl"><User className="text-primary"/>My Profile</CardTitle>
-                                    <CardDescription>Update your personal and contact details here.</CardDescription>
+                                    <CardDescription>Update your personal and contact details here. Saving any change will mark your flat as registered.</CardDescription>
                                 </CardHeader>
                                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
@@ -216,7 +237,7 @@ export default function OwnerDashboardPage() {
                                         <Checkbox 
                                             id="registered" 
                                             checked={formData.registered} 
-                                            onCheckedChange={(checked) => setFormData(prev => ({ ...prev, registered: !!checked }))}
+                                            disabled
                                         />
                                         <Label htmlFor="registered" className="font-normal text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                             My flat is registered

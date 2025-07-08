@@ -16,10 +16,10 @@ const handleApiError = (e: any, context: string): Error => {
 // Helper to convert from various formats to the standard '{blockNumber}{flat}{floor}'
 const normalizeFlatId = (id: any): string => {
     if (!id) return '';
-    const strId = id.toString().trim().toUpperCase();
+    const strId = id.toString().trim().toUpperCase().replace(/\s+/g, "");
 
-    // Check for old format: "Block 1-1A" or "Block 1 - 1A" etc. or "{floor}{flat}{block}"
-    const oldFormatMatch1 = strId.match(/^BLOCK\s*(\d+)\s*-\s*(\d+)([A-Z])$/);
+    // Check for old format: "Block 1-1A" or "Block 1 - 1A" etc.
+    const oldFormatMatch1 = strId.match(/^BLOCK(\d+)-(\d+)([A-Z])$/);
     if (oldFormatMatch1) {
         const [, block, floor, flat] = oldFormatMatch1;
         return `${block}${flat}${floor}`;
@@ -39,8 +39,8 @@ const normalizeFlatId = (id: any): string => {
     }
 
 
-    // Assume it's the new format, just remove spaces. e.g. "1 A 1" -> "1A1"
-    return strId.replace(/\s+/g, "");
+    // Assume it's the new format
+    return strId;
 };
 
 // Maps a row object from SheetDB to the app's FlatData type.
@@ -87,39 +87,54 @@ export async function saveFlatDataAction(flatId: string, data: FlatData): Promis
         if (!parts) {
             throw new Error(`Invalid flat ID format: ${flatId}`);
         }
-        const block = `Block ${parts[1]}`;
-        const flat = parts[2];
-        const floor = parts[3];
-        
-        const updatedDataWithTimestamp = { ...data, lastUpdated: new Date().toISOString() };
-        
+        const [, blockNum, flatLetter, floorNum] = parts;
+        const block = `Block ${blockNum}`;
+
         const rowData = {
             'Flat ID': normalizedFlatId,
             'Block': block,
-            'Floor': floor,
-            'Flat': flat,
-            'Owner Name': updatedDataWithTimestamp.ownerName,
-            'Contact Number': updatedDataWithTimestamp.contactNumber,
-            'Email': updatedDataWithTimestamp.email,
-            'Family Members': updatedDataWithTimestamp.familyMembers,
-            'Issues / Complaints': updatedDataWithTimestamp.issues,
-            'Maintenance Status': updatedDataWithTimestamp.maintenanceStatus,
-            'Registered': updatedDataWithTimestamp.registered ? 'TRUE' : 'FALSE',
-            'Last Updated': updatedDataWithTimestamp.lastUpdated,
+            'Floor': floorNum,
+            'Flat': flatLetter,
+            'Owner Name': data.ownerName,
+            'Contact Number': data.contactNumber,
+            'Email': data.email,
+            'Family Members': data.familyMembers,
+            'Issues / Complaints': data.issues,
+            'Maintenance Status': data.maintenanceStatus,
+            'Registered': data.registered ? 'TRUE' : 'FALSE',
+            'Last Updated': new Date().toISOString(),
         };
+
+        // Check if the flat exists to decide between PATCH (update) and POST (create)
+        const searchUrl = `${SHEETDB_API_URL}/search?Flat ID=${encodeURIComponent(normalizedFlatId)}&casesensitive=false`;
+        const searchResponse = await fetch(searchUrl);
+        if (!searchResponse.ok) {
+            throw new Error(`API search responded with status ${searchResponse.status}`);
+        }
         
-        const url = `${SHEETDB_API_URL}/Flat ID/${normalizedFlatId}`;
-        const response = await fetch(url, {
-            method: 'PATCH',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(rowData)
-        });
+        const existingData: any[] = await searchResponse.json();
+
+        let response;
+        if (existingData.length > 0) {
+            // Flat exists, use PATCH to update the specific row.
+            const url = `${SHEETDB_API_URL}/Flat ID/${normalizedFlatId}`;
+            response = await fetch(url, {
+                method: 'PATCH',
+                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                body: JSON.stringify(rowData)
+            });
+        } else {
+            // Flat does not exist, use POST to create a new row.
+            response = await fetch(SHEETDB_API_URL, {
+                method: 'POST',
+                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ data: [rowData] }) // SheetDB expects a 'data' property for POST
+            });
+        }
 
         if (!response.ok) {
-            throw new Error(`API responded with status ${response.status}`);
+            const errorBody = await response.text();
+            throw new Error(`API responded with status ${response.status}: ${errorBody}`);
         }
     } catch (e: any) {
         throw handleApiError(e, `save data for flat ${flatId}`);
@@ -133,7 +148,7 @@ export async function loginOwnerAction(flatId: string, password_from_user: strin
     }
 
     try {
-        const searchUrl = `${SHEETDB_API_URL}/search?Flat%20ID=${encodeURIComponent(normalizedFlatId)}&casesensitive=false`;
+        const searchUrl = `${SHEETDB_API_URL}/search?Flat ID=${encodeURIComponent(normalizedFlatId)}&casesensitive=false`;
         const response = await fetch(searchUrl);
         if (!response.ok) {
              throw new Error(`API responded with status ${response.status}`);
@@ -167,7 +182,7 @@ export type OwnerFlatData = FlatData & {
 export async function getOwnerFlatData(flatId: string): Promise<OwnerFlatData | null> {
     const normalizedFlatId = normalizeFlatId(flatId);
     try {
-        const searchUrl = `${SHEETDB_API_URL}/search?Flat%20ID=${encodeURIComponent(normalizedFlatId)}&casesensitive=false`;
+        const searchUrl = `${SHEETDB_API_URL}/search?Flat ID=${encodeURIComponent(normalizedFlatId)}&casesensitive=false`;
         const response = await fetch(searchUrl);
 
         if (!response.ok) {
@@ -189,11 +204,11 @@ export async function getOwnerFlatData(flatId: string): Promise<OwnerFlatData | 
             ownerName: ownerRow['Owner Name'] || '',
             contactNumber: ownerRow['Contact Number'] || '',
             email: ownerRow['Email'] || '',
-            familyMembers: ownerRow['Family Members'] || '',
-            issues: ownerRow['Issues / Complaints'] || '',
-            maintenanceStatus: ownerRow['Maintenance Status'] || 'pending',
-            registered: ownerRow['Registered'] === 'TRUE',
-            lastUpdated: ownerRow['Last Updated'] || '',
+            familyMembers: row['Family Members'] || '',
+            issues: row['Issues / Complaints'] || '',
+            maintenanceStatus: row['Maintenance Status'] || 'pending',
+            registered: row['Registered'] === 'TRUE',
+            lastUpdated: row['Last Updated'] || '',
         };
     } catch(e: any) {
         throw handleApiError(e, 'fetch owner flat data');
@@ -248,7 +263,7 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
     const flatId = `${blockNumber}${flat}${floor}`.toUpperCase();
 
     try {
-        const searchUrl = `${SHEETDB_API_URL}/search?Flat%20ID=${encodeURIComponent(flatId)}&casesensitive=false`;
+        const searchUrl = `${SHEETDB_API_URL}/search?Flat ID=${encodeURIComponent(flatId)}&casesensitive=false`;
         const searchResponse = await fetch(searchUrl);
         if (!searchResponse.ok) {
             throw new Error(`API search responded with status ${searchResponse.status}`);
@@ -272,7 +287,7 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     'Password': password_from_user,
-                    'Registered': 'FALSE',
+                    'Registered': 'FALSE', // Still not fully registered until details are filled
                     'Last Updated': new Date().toISOString()
                 })
             });
