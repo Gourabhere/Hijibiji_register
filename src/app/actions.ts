@@ -73,7 +73,7 @@ const mapRowToFlatData = (row: any): FlatData => {
 
 export async function getFlatsData(): Promise<Record<string, FlatData>> {
     try {
-        const response = await fetch(SHEETDB_API_URL);
+        const response = await fetch(SHEETDB_API_URL, { cache: 'no-store' });
         if (!response.ok) {
             throw new Error(`API responded with status ${response.status}`);
         }
@@ -121,7 +121,7 @@ export async function saveFlatDataAction(flatId: string, data: FlatData): Promis
 
         // Check if the flat exists to decide between PATCH (update) and POST (create)
         const searchUrl = `${SHEETDB_API_URL}/search?Flat ID=${encodeURIComponent(normalizedFlatId)}&casesensitive=false`;
-        const searchResponse = await fetch(searchUrl);
+        const searchResponse = await fetch(searchUrl, { cache: 'no-store' });
         if (!searchResponse.ok) {
             throw new Error(`API search responded with status ${searchResponse.status}`);
         }
@@ -163,7 +163,7 @@ export async function loginOwnerAction(flatId: string, password_from_user: strin
 
     try {
         const searchUrl = `${SHEETDB_API_URL}/search?Flat ID=${encodeURIComponent(normalizedFlatId)}&casesensitive=false`;
-        const response = await fetch(searchUrl);
+        const response = await fetch(searchUrl, { cache: 'no-store' });
         if (!response.ok) {
              throw new Error(`API responded with status ${response.status}`);
         }
@@ -197,7 +197,7 @@ export async function getOwnerFlatData(flatId: string): Promise<OwnerFlatData | 
     const normalizedFlatId = normalizeFlatId(flatId);
     try {
         const searchUrl = `${SHEETDB_API_URL}/search?Flat ID=${encodeURIComponent(normalizedFlatId)}&casesensitive=false`;
-        const response = await fetch(searchUrl);
+        const response = await fetch(searchUrl, { cache: 'no-store' });
 
         if (!response.ok) {
             throw new Error(`API responded with status ${response.status}`);
@@ -278,7 +278,7 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
 
     try {
         const searchUrl = `${SHEETDB_API_URL}/search?Flat ID=${encodeURIComponent(flatId)}&casesensitive=false`;
-        const searchResponse = await fetch(searchUrl);
+        const searchResponse = await fetch(searchUrl, { cache: 'no-store' });
         if (!searchResponse.ok) {
             throw new Error(`API search responded with status ${searchResponse.status}`);
         }
