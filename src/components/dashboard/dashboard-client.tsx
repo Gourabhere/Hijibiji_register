@@ -103,7 +103,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
   const handleAdminLogout = () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('isAdmin');
-      router.push('/login');
+      router.push('/');
     }
   };
 
@@ -112,7 +112,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
       localStorage.removeItem('isOwnerLoggedIn');
       localStorage.removeItem('ownerFlatId');
       setIsOwnerLoggedIn(false);
-      router.push('/login');
+      router.push('/');
     }
   };
 
@@ -200,7 +200,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
             
             <div className="hidden md:flex items-center space-x-2">
               <Button asChild variant="ghost" size="sm" className="space-x-2">
-                <Link href="/">
+                <Link href="/dashboard">
                   <Home className="w-4 h-4" />
                   <span>Home</span>
                 </Link>
@@ -241,10 +241,10 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
                   ) : (
                     <>
                       <Button asChild variant="ghost" size="sm">
-                        <Link href="/login?role=owner">Owner Login</Link>
+                        <Link href="/?role=owner">Owner Login</Link>
                       </Button>
                       <Button asChild variant="ghost" size="sm">
-                        <Link href="/login?role=admin">Admin Login</Link>
+                        <Link href="/?role=admin">Admin Login</Link>
                       </Button>
                     </>
                   )}
@@ -276,7 +276,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
                   </SheetHeader>
                   <nav className="flex flex-col gap-2 mt-4">
                     <SheetClose asChild>
-                      <Link href="/" className={buttonVariants({ variant: "ghost", className: "justify-start gap-2" })}>
+                      <Link href="/dashboard" className={buttonVariants({ variant: "ghost", className: "justify-start gap-2" })}>
                         <Home className="h-5 w-5" />
                         <span>Home</span>
                       </Link>
@@ -294,13 +294,13 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
                     {!isEditable && !isOwnerLoggedIn && (
                       <>
                         <SheetClose asChild>
-                          <Link href="/login?role=admin" className={buttonVariants({ variant: "ghost", className: "justify-start gap-2" })}>
+                          <Link href="/?role=admin" className={buttonVariants({ variant: "ghost", className: "justify-start gap-2" })}>
                             <User className="h-5 w-5" />
                             Admin Login
                           </Link>
                         </SheetClose>
                         <SheetClose asChild>
-                          <Link href="/login?role=owner" className={buttonVariants({ variant: "ghost", className: "justify-start gap-2" })}>
+                          <Link href="/?role=owner" className={buttonVariants({ variant: "ghost", className: "justify-start gap-2" })}>
                             <User className="h-5 w-5" />
                             Owner Login
                           </Link>

@@ -12,12 +12,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     try {
         const isAdmin = localStorage.getItem('isAdmin') === 'true';
         if (!isAdmin) {
-          router.replace('/login');
+          router.replace('/');
         } else {
           setIsAuth(true);
         }
     } catch (e) {
-        router.replace('/login');
+        router.replace('/');
     }
   }, [router]);
 

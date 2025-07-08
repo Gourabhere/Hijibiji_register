@@ -36,7 +36,7 @@ export default function OwnerDashboardPage() {
     useEffect(() => {
         const flatId = localStorage.getItem('ownerFlatId');
         if (!flatId) {
-            router.replace('/login');
+            router.replace('/');
             return;
         }
 
@@ -102,7 +102,7 @@ export default function OwnerDashboardPage() {
     const handleLogout = () => {
         localStorage.removeItem('isOwnerLoggedIn');
         localStorage.removeItem('ownerFlatId');
-        router.push('/login');
+        router.push('/');
     };
 
     const getAvatarInitials = (name: string) => {
@@ -146,7 +146,7 @@ export default function OwnerDashboardPage() {
                      <h1 className="text-3xl font-bold text-gray-800 mb-2 sm:mb-0">My Dashboard</h1>
                      <div className="flex items-center gap-4">
                         <Button asChild variant="outline" size="sm">
-                           <Link href="/">
+                           <Link href="/dashboard">
                               <Home className="w-4 h-4 mr-2"/>
                               Home
                            </Link>
