@@ -25,23 +25,12 @@ const normalizeFlatId = (id: any): string => {
         return `${block}${flat}${floor}`;
     }
     
-    // Check for previous format: "{floor}{flat}{blockNumber}"
-    const oldFormatMatch2 = strId.match(/^(\d+)([A-Z])(\d+)$/);
-    if (oldFormatMatch2) {
-        const strFloor = oldFormatMatch2[1];
-        const strFlat = oldFormatMatch2[2];
-        const strBlock = oldFormatMatch2[3];
-        // This is a simple heuristic. If floor part has more digits, it's likely the old format.
-        // This might not be perfect for all cases but handles floor > 9 vs block > 9.
-        if (strFloor.length > strBlock.length) {
-            return `${strBlock}${strFlat}${strFloor}`;
-        }
-    }
-
-
-    // Assume it's the new format
-    return strId;
+    // The previous logic for swapping ID parts was buggy and has been removed.
+    // We now assume that any ID not in the "BLOCK..." format is already in the correct
+    // {block}{flat}{floor} order. The case-insensitive search handles capitalization.
+    return strId.replace(/-/g, '');
 };
+
 
 // Maps a row object from SheetDB to the app's FlatData type.
 const mapRowToFlatData = (row: any): FlatData => {
