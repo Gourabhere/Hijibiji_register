@@ -16,18 +16,43 @@ const handleApiError = (e: any, context: string): Error => {
 // Helper to convert from various formats to the standard '{blockNumber}{flat}{floor}'
 const normalizeFlatId = (id: any): string => {
     if (!id) return '';
-    const strId = id.toString().trim().toUpperCase().replace(/\s+/g, "");
+    // Initial cleanup: uppercase, remove spaces
+    let strId = id.toString().trim().toUpperCase().replace(/\s+/g, "");
 
-    // Check for old format: "Block 1-1A" or "Block 1 - 1A" etc.
-    const oldFormatMatch1 = strId.match(/^BLOCK(\d+)-(\d+)([A-Z])$/);
-    if (oldFormatMatch1) {
-        const [, block, floor, flat] = oldFormatMatch1;
-        return `${block}${flat}${floor}`;
+    // Case 1: Standard app format like "1A10" - no hyphens after removing spaces
+    if (!strId.includes('-')) {
+        // May still have "BLOCK" prefix from manual entry
+        return strId.replace(/^BLOCK/, ''); // "BLOCK1A10" -> "1A10"
     }
     
-    // The previous logic for swapping ID parts was buggy and has been removed.
-    // We now assume that any ID not in the "BLOCK..." format is already in the correct
-    // {block}{flat}{floor} order. The case-insensitive search handles capitalization.
+    // Case 2: Formats with hyphens
+    // Remove BLOCK prefix to simplify regexes
+    strId = strId.replace(/^BLOCK/, ''); // "BLOCK1-10-A" -> "1-10-A"
+
+    // Format: <block>-<floor>-<flat> e.g. 1-10-A
+    const bff = strId.match(/^(\d+)-(\d+)-([A-Z])$/);
+    if (bff) {
+        const [, block, floor, flat] = bff;
+        return `${block}${flat}${floor}`; // -> 1A10
+    }
+
+    // Format: <block>-<flat>-<floor> e.g. 1-A-10
+    const bfl = strId.match(/^(\d+)-([A-Z])-(\d+)$/);
+    if (bfl) {
+        const [, block, flat, floor] = bfl;
+        return `${block}${flat}${floor}`; // -> 1A10
+    }
+
+    // Format: <block>-<floor><flat> e.g. 1-10A
+    const bf = strId.match(/^(\d+)-(\d+)([A-Z])$/);
+    if (bf) {
+        const [, block, floor, flat] = bf;
+        return `${block}${flat}${floor}`; // -> 1A10
+    }
+
+    // Fallback: If we still have hyphens, we couldn't parse it.
+    // The most robust thing is to remove them and hope for the best.
+    // This would turn "1-A10" into "1A10".
     return strId.replace(/-/g, '');
 };
 
@@ -152,7 +177,7 @@ export async function loginOwnerAction(flatId: string, password_from_user: strin
 
         const correctPassword = ownerRow['Password'];
         if (correctPassword && correctPassword === password_from_user) {
-            return { success: true, message: "Login successful.", flatId: normalizedFlatId };
+            return { success: true, message: "Login successful.", flatId: normalizeFlatId(ownerRow['Flat ID']) };
         } else {
             return { success: false, message: "Incorrect password." };
         }
@@ -193,11 +218,11 @@ export async function getOwnerFlatData(flatId: string): Promise<OwnerFlatData | 
             ownerName: ownerRow['Owner Name'] || '',
             contactNumber: ownerRow['Contact Number'] || '',
             email: ownerRow['Email'] || '',
-            familyMembers: ownerRow['Family Members'] || '',
-            issues: ownerRow['Issues / Complaints'] || '',
-            maintenanceStatus: ownerRow['Maintenance Status'] || 'pending',
-            registered: ownerRow['Registered'] === 'TRUE',
-            lastUpdated: ownerRow['Last Updated'] || '',
+            familyMembers: row['Family Members'] || '',
+            issues: row['Issues / Complaints'] || '',
+            maintenanceStatus: row['Maintenance Status'] || 'pending',
+            registered: row['Registered'] === 'TRUE',
+            lastUpdated: row['Last Updated'] || '',
         };
     } catch(e: any) {
         throw handleApiError(e, 'fetch owner flat data');
@@ -316,3 +341,4 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
         return { success: false, message: handleApiError(e, 'process owner signup').message };
     }
 }
+
