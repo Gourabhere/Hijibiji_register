@@ -20,7 +20,7 @@ export function BlockCard({ blockName, blockData, allFlatData, onFlatClick }: Bl
 
     const occupiedCount = Object.keys(allFlatData).filter(key => {
         const parts = key.match(/^(\d+)([A-Z])(\d+)$/);
-        return parts && parts[3] === blockNumber && allFlatData[key].registered;
+        return parts && parts[1] === blockNumber && allFlatData[key].registered;
     }).length;
 
     const totalFlats = blockData.floors * blockData.flatsPerFloor.length;
@@ -75,7 +75,7 @@ export function BlockCard({ blockName, blockData, allFlatData, onFlatClick }: Bl
                 {floor}
               </div>
               {blockData.flatsPerFloor.map(flat => {
-                  const flatId = `${floor}${flat}${blockNumber}`;
+                  const flatId = `${blockNumber}${flat}${floor}`;
                   const currentFlatData = allFlatData[flatId];
                   const isRegistered = !!currentFlatData?.registered;
                   const ownerName = currentFlatData?.ownerName || '';

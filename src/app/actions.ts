@@ -7,17 +7,31 @@ import type { FlatData } from '@/components/dashboard/dashboard-client';
 const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID;
 const RANGE = 'Sheet1'; // Assumes data is on 'Sheet1'. Change if needed.
 
-// Helper to convert from various formats to the standard '{floor}{flat}{blockNumber}'
+// Helper to convert from various formats to the standard '{blockNumber}{flat}{floor}'
 const normalizeFlatId = (id: any): string => {
     if (!id) return '';
     const strId = id.toString().trim().toUpperCase();
 
-    // Check for old format: "Block 1-1A" or "Block 1 - 1A" etc.
-    const oldFormatMatch = strId.match(/^BLOCK\s*(\d+)\s*-\s*(\d+)([A-Z])$/);
-    if (oldFormatMatch) {
-        const [, block, floor, flat] = oldFormatMatch;
-        return `${floor}${flat}${block}`;
+    // Check for old format: "Block 1-1A" or "Block 1 - 1A" etc. or "{floor}{flat}{block}"
+    const oldFormatMatch1 = strId.match(/^BLOCK\s*(\d+)\s*-\s*(\d+)([A-Z])$/);
+    if (oldFormatMatch1) {
+        const [, block, floor, flat] = oldFormatMatch1;
+        return `${block}${flat}${floor}`;
     }
+    
+    // Check for previous format: "{floor}{flat}{blockNumber}"
+    const oldFormatMatch2 = strId.match(/^(\d+)([A-Z])(\d+)$/);
+    if (oldFormatMatch2) {
+        const strFloor = oldFormatMatch2[1];
+        const strFlat = oldFormatMatch2[2];
+        const strBlock = oldFormatMatch2[3];
+        // This is a simple heuristic. If floor part has more digits, it's likely the old format.
+        // This might not be perfect for all cases but handles floor > 9 vs block > 9.
+        if (strFloor.length > strBlock.length) {
+            return `${strBlock}${strFlat}${strFloor}`;
+        }
+    }
+
 
     // Assume it's the new format, just remove spaces. e.g. "1 A 1" -> "1A1"
     return strId.replace(/\s+/g, "");
@@ -81,7 +95,7 @@ export async function getFlatsData(): Promise<Record<string, FlatData>> {
             const flatIdFromSheet = row[0];
             if (flatIdFromSheet) {
                 // Normalize the Flat ID from the sheet to handle inconsistencies
-                // like "Block 3 - 2B" vs the app's "Block 3-2B".
+                // like "Block 3 - 2B" vs the app's "3B2".
                 flatData[normalizeFlatId(flatIdFromSheet)] = mapRowToFlatData(row);
             }
         }
@@ -139,9 +153,9 @@ export async function saveFlatDataAction(flatId: string, data: FlatData): Promis
         if (!parts) {
             throw new Error(`Invalid flat ID format: ${flatId}`);
         }
-        const floor = parts[1];
+        const block = `Block ${parts[1]}`;
         const flat = parts[2];
-        const block = `Block ${parts[3]}`;
+        const floor = parts[3];
 
         const rowData = [
             normalizedFlatId,
@@ -342,9 +356,9 @@ export async function updateOwnerDataAction(flatId: string, data: OwnerEditableD
         if (!parts) {
             throw new Error(`Invalid flat ID format: ${flatId}`);
         }
-        const floor = parts[1];
+        const block = `Block ${parts[1]}`;
         const flat = parts[2];
-        const block = `Block ${parts[3]}`;
+        const floor = parts[3];
         
         const rowData = [
             normalizedFlatId,
@@ -392,7 +406,7 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
     }
     
     const blockNumber = block.replace('Block ', '');
-    const flatId = `${floor}${flat}${blockNumber}`.toUpperCase();
+    const flatId = `${blockNumber}${flat}${floor}`.toUpperCase();
 
     try {
         const sheets = getSheetsApi();

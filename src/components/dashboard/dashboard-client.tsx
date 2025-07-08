@@ -127,7 +127,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
 
   const openFlatModal = (blockName: BlockName, floor: number, flat: string) => {
     const blockNumber = blockName.replace('Block ', '');
-    const flatId = `${floor}${flat}${blockNumber}`;
+    const flatId = `${blockNumber}${flat}${floor}`;
     
     if (isOwnerLoggedIn) {
         const ownerFlatId = localStorage.getItem('ownerFlatId');
