@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useTransition } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, User, Phone, Mail, Users, MessageSquare, Wrench } from 'lucide-react';
 import type { FlatInfo, FlatData } from './dashboard-client';
@@ -32,6 +32,7 @@ const initialFormData: FlatData = {
 
 export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave, isEditable = false }: FlatModalProps) {
     const [formData, setFormData] = useState<FlatData>(initialFormData);
+    const [, startTransition] = useTransition();
 
     useEffect(() => {
         if (flatInfo) {
@@ -167,7 +168,11 @@ export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave, isEdita
                 <Checkbox 
                   id="registered" 
                   checked={formData.registered} 
-                  onCheckedChange={(checked) => setFormData({ ...formData, registered: !!checked })}
+                  onCheckedChange={(checked) => {
+                    startTransition(() => {
+                        setFormData({ ...formData, registered: !!checked });
+                    });
+                  }}
                   disabled={!isEditable}
                 />
                 <Label htmlFor="registered">Registered</Label>
