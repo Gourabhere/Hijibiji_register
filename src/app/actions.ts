@@ -16,13 +16,14 @@ const handleApiError = (e: any, context: string): Error => {
 // Helper to convert from various formats to the standard '{blockNumber}{flat}{floor}'
 const normalizeFlatId = (id: any): string => {
     if (!id) return '';
-    // This implementation is more robust against various string formats in the sheet.
-    // It trims whitespace first to correctly handle IDs with leading/trailing spaces.
+    // This implementation is more robust against various string formats in the sheet,
+    // including descriptive ones like "Block 1 - Flat A - Floor 1".
     return id.toString()
         .trim()
         .toUpperCase()
         .replace(/^BLOCK\s*/, '')
-        .replace(/[\s-]+/g, '');
+        .replace(/FLAT|FLOOR/g, '') // Remove keywords to isolate numbers/letters
+        .replace(/[\s-]+/g, '');      // Remove all whitespace and hyphens
 };
 
 
@@ -187,9 +188,9 @@ export async function getOwnerFlatData(flatId: string): Promise<OwnerFlatData | 
             ownerName: ownerRow['Owner Name'] || '',
             contactNumber: ownerRow['Contact Number'] || '',
             email: ownerRow['Email'] || '',
-            familyMembers: row['Family Members'] || '',
-            issues: row['Issues / Complaints'] || '',
-            maintenanceStatus: row['Maintenance Status'] || 'pending',
+            familyMembers: ownerRow['Family Members'] || '',
+            issues: ownerRow['Issues / Complaints'] || '',
+            maintenanceStatus: ownerRow['Maintenance Status'] || 'pending',
             registered: ownerRow['Registered'] === 'TRUE',
             lastUpdated: ownerRow['Last Updated'] || '',
         };
@@ -310,3 +311,5 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
         return { success: false, message: handleApiError(e, 'process owner signup').message };
     }
 }
+
+    
