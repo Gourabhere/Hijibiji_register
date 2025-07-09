@@ -32,7 +32,7 @@ const initialFormData: FlatData = {
 
 export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave, isEditable = false }: FlatModalProps) {
     const [formData, setFormData] = useState<FlatData>(initialFormData);
-    const [, startTransition] = useTransition();
+    const [isPending, startTransition] = useTransition();
 
     useEffect(() => {
         if (flatInfo) {
@@ -42,7 +42,9 @@ export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave, isEdita
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave(formData);
+        startTransition(() => {
+            onSave(formData);
+        });
     };
 
     if (!isOpen || !flatInfo) return null;
@@ -66,10 +68,10 @@ export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave, isEdita
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h2 className="text-2xl font-bold text-slate-800 font-headline">
-                  {flatInfo.blockName}
+                  {flatInfo.blockName} - Flat {flatInfo.flat}
                 </h2>
                 <p className="text-slate-600">
-                  Floor {flatInfo.floor}, Flat {flatInfo.flat}
+                  Floor {flatInfo.floor} &bull; Flat ID: {flatInfo.flatId}
                 </p>
               </div>
               <button
@@ -183,9 +185,10 @@ export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave, isEdita
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   type="submit"
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 mt-4"
+                  disabled={isPending}
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 mt-4 disabled:opacity-50"
                 >
-                  Save Details
+                  {isPending ? 'Saving...' : 'Save Details'}
                 </motion.button>
               )}
                
