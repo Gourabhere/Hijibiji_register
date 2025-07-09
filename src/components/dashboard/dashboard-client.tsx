@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -61,8 +61,10 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [isOwnerLoggedIn, setIsOwnerLoggedIn] = useState(false);
 
-  const [currentBlockIndex, setCurrentBlockIndex] = useState(0);
-  const blockNames = Object.keys(HijibijiFlatData) as BlockName[];
+  const [currentPage, setCurrentPage] = useState(0);
+  const [windowWidth, setWindowWidth] = useState(0);
+
+  const blockNames = useMemo(() => Object.keys(HijibijiFlatData) as BlockName[], []);
   
   const router = useRouter();
   const pathname = usePathname();
@@ -82,14 +84,19 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
   }, []);
 
   useEffect(() => {
-    setIsClient(true);
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    
+    if (typeof window !== 'undefined') {
+        setIsClient(true);
+        handleResize();
+        window.addEventListener('resize', handleResize);
+    }
+
     setCurrentTime(new Date());
     
     try {
         const ownerLoggedIn = localStorage.getItem('isOwnerLoggedIn') === 'true';
-        const isAdminLoggedIn = localStorage.getItem('isAdmin') === 'true';
         setIsOwnerLoggedIn(ownerLoggedIn);
-
     } catch(e) {
         setIsOwnerLoggedIn(false);
     }
@@ -98,8 +105,41 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
     
     fetchFlatData();
 
-    return () => clearInterval(timer);
+    return () => {
+        clearInterval(timer);
+        if (typeof window !== 'undefined') {
+            window.removeEventListener('resize', handleResize);
+        }
+    };
   }, [pathname, router, fetchFlatData]);
+  
+  // --- Pagination Logic ---
+  const blocksPerPage = useMemo(() => {
+    if (!isClient) return 3; // Default for SSR to avoid layout shift
+    if (windowWidth < 768) return 1;    // Mobile (sm)
+    if (windowWidth < 1280) return 2;   // Tablet/Laptop (md, lg)
+    return 3;                           // Large Desktop (xl)
+  }, [isClient, windowWidth]);
+  
+  const totalPages = Math.ceil(blockNames.length / blocksPerPage);
+
+  const goToNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1));
+  };
+
+  const goToPrevPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 0));
+  };
+
+  const startIndex = currentPage * blocksPerPage;
+  const currentBlocks = useMemo(() => blockNames.slice(startIndex, startIndex + blocksPerPage), [blockNames, startIndex, blocksPerPage]);
+
+  // Reset to first page if screen size changes and current page becomes invalid
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [blocksPerPage]);
+  // --- End Pagination Logic ---
+
 
   const handleAdminLogout = () => {
     if (typeof window !== 'undefined') {
@@ -161,20 +201,17 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
     }
   };
 
-  const goToNextBlock = () => {
-    setCurrentBlockIndex((prevIndex) => (prevIndex + 1) % blockNames.length);
-  };
-
-  const goToPrevBlock = () => {
-    setCurrentBlockIndex((prevIndex) => (prevIndex - 1 + blockNames.length) % blockNames.length);
-  };
-
   if (!isClient) {
-    return null;
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 flex items-center justify-center">
+            <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full"
+            />
+        </div>
+    );
   }
-  
-  const currentBlockName = blockNames[currentBlockIndex];
-  const currentBlockData = HijibijiFlatData[currentBlockName];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 font-body">
@@ -425,83 +462,60 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
               </div>
           </motion.div>
         ) : (
-          <>
-            {/* Mobile Carousel View */}
-            <motion.div
-              className="flex items-center justify-center gap-4 md:hidden"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
+          <motion.div
+            className="flex items-stretch justify-center gap-2 sm:gap-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            <motion.button 
+                onClick={goToPrevPage} 
+                whileHover={{ scale: 1.1 }} 
+                whileTap={{ scale: 0.9 }}
+                className="p-2 sm:p-3 bg-white/80 rounded-full shadow-lg border border-white/20 backdrop-blur-sm self-center shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={currentPage === 0}
+                aria-label="Previous page"
             >
-              <motion.button 
-                  onClick={goToPrevBlock} 
-                  whileHover={{ scale: 1.1 }} 
-                  whileTap={{ scale: 0.9 }}
-                  className="p-3 bg-white/80 rounded-full shadow-lg border border-white/20 backdrop-blur-sm"
-              >
-                  <ChevronLeft className="w-6 h-6 text-slate-600" />
-              </motion.button>
-              <div className="flex-grow max-w-2xl w-full">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                      key={currentBlockIndex}
-                      initial={{ opacity: 0, x: 50 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -50 }}
-                      transition={{ duration: 0.3 }}
-                      className="w-full"
-                  >
-                      <BlockCard 
-                          blockName={currentBlockName} 
-                          blockData={currentBlockData} 
-                          allFlatData={flatData}
-                          onFlatClick={openFlatModal}
-                      />
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-              <motion.button 
-                  onClick={goToNextBlock} 
-                  whileHover={{ scale: 1.1 }} 
-                  whileTap={{ scale: 0.9 }}
-                  className="p-3 bg-white/80 rounded-full shadow-lg border border-white/20 backdrop-blur-sm"
-              >
-                  <ChevronRight className="w-6 h-6 text-slate-600" />
-              </motion.button>
-            </motion.div>
+                <ChevronLeft className="w-6 h-6 text-slate-600" />
+            </motion.button>
 
-            {/* Desktop Grid View */}
-            <motion.div
-              className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-8"
-              initial="hidden"
-              animate="visible"
-              variants={{
-                visible: {
-                  opacity: 1,
-                  y: 0,
-                  transition: {
-                    delay: 0.3,
-                    when: "beforeChildren",
-                    staggerChildren: 0.1,
-                  }
-                },
-                hidden: { opacity: 0, y: 20 },
-              }}
+            <div className="flex-grow max-w-7xl w-full">
+              <AnimatePresence mode="wait">
+                <motion.div
+                    key={currentPage}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-8"
+                >
+                  {currentBlocks.map((blockName) => {
+                      const blockData = HijibijiFlatData[blockName];
+                      return (
+                          <BlockCard
+                              key={blockName}
+                              blockName={blockName}
+                              blockData={blockData}
+                              allFlatData={flatData}
+                              onFlatClick={openFlatModal}
+                          />
+                      );
+                  })}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            <motion.button 
+                onClick={goToNextPage} 
+                whileHover={{ scale: 1.1 }} 
+                whileTap={{ scale: 0.9 }}
+                className="p-2 sm:p-3 bg-white/80 rounded-full shadow-lg border border-white/20 backdrop-blur-sm self-center shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={currentPage >= totalPages - 1}
+                aria-label="Next page"
             >
-              {blockNames.map((blockName) => {
-                  const blockData = HijibijiFlatData[blockName];
-                  return (
-                      <BlockCard
-                          key={blockName}
-                          blockName={blockName}
-                          blockData={blockData}
-                          allFlatData={flatData}
-                          onFlatClick={openFlatModal}
-                      />
-                  );
-              })}
-            </motion.div>
-          </>
+                <ChevronRight className="w-6 h-6 text-slate-600" />
+            </motion.button>
+          </motion.div>
         )}
       </main>
 
