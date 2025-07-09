@@ -161,8 +161,8 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
     const totalFlats = Object.values(HijibijiFlatData).reduce((sum, blockData) => {
         return sum + getTotalFlatsInBlock(blockData);
     }, 0);
-    const totalOccupied = Object.values(flatData).filter(fd => fd.registered).length;
-    return { totalFlats, totalOccupied, totalVacant: totalFlats - totalOccupied };
+    const totalRegistered = Object.values(flatData).filter(fd => fd.registered).length;
+    return { totalFlats, totalRegistered, totalUnregistered: totalFlats - totalRegistered };
   };
 
   const stats = getTotalStats();
@@ -394,16 +394,16 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
           />
           <StatCard
             icon={Users}
-            title="Occupied"
-            value={stats.totalOccupied}
-            subtitle={`${(stats.totalFlats > 0 ? (stats.totalOccupied / stats.totalFlats) * 100 : 0).toFixed(1)}% occupancy`}
+            title="Registered"
+            value={stats.totalRegistered}
+            subtitle={`${(stats.totalFlats > 0 ? (stats.totalRegistered / stats.totalFlats) * 100 : 0).toFixed(1)}% registration rate`}
             color="from-emerald-500 to-emerald-600"
           />
           <StatCard
             icon={Home}
-            title="Vacant"
-            value={stats.totalVacant}
-            subtitle="Available for rent"
+            title="Yet to Register"
+            value={stats.totalUnregistered}
+            subtitle="Flats pending registration"
             color="from-amber-500 to-amber-600"
           />
           <StatCard

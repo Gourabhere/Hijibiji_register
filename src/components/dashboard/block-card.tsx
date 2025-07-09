@@ -19,13 +19,13 @@ interface BlockCardProps {
 export function BlockCard({ blockName, blockData, allFlatData, onFlatClick }: BlockCardProps) {
     const blockNumber = blockName.replace('Block ', '');
 
-    const occupiedCount = Object.keys(allFlatData).filter(key => {
+    const registeredCount = Object.keys(allFlatData).filter(key => {
         const parts = key.match(/^(\d+)([A-Z])(\d+)$/);
         return parts && parts[1] === blockNumber && allFlatData[key].registered;
     }).length;
 
     const totalFlats = getTotalFlatsInBlock(blockData);
-    const occupancyRate = totalFlats > 0 ? (occupiedCount / totalFlats) * 100 : 0;
+    const registrationRate = totalFlats > 0 ? (registeredCount / totalFlats) * 100 : 0;
     const allFlatLetters = getAllFlatLettersInBlock(blockData);
 
     const getOwnerInitials = (name: string | undefined) => {
@@ -50,7 +50,7 @@ export function BlockCard({ blockName, blockData, allFlatData, onFlatClick }: Bl
           <div>
             <h3 className="text-xl font-bold text-slate-800 font-headline">{blockName}</h3>
             <p className="text-slate-600 text-sm">
-              {occupiedCount}/{totalFlats} occupied ({occupancyRate.toFixed(1)}%)
+              {registeredCount}/{totalFlats} registered ({registrationRate.toFixed(1)}%)
             </p>
           </div>
           <div className="text-right">
@@ -113,13 +113,13 @@ export function BlockCard({ blockName, blockData, allFlatData, onFlatClick }: Bl
 
         <div className="bg-gradient-to-r from-slate-100 to-slate-200 rounded-lg p-2">
           <div className="flex justify-between text-xs">
-            <span className="text-slate-600">Occupancy Rate</span>
-            <span className="font-bold text-slate-800">{occupancyRate.toFixed(1)}%</span>
+            <span className="text-slate-600">Registration Rate</span>
+            <span className="font-bold text-slate-800">{registrationRate.toFixed(1)}%</span>
           </div>
           <div className="mt-1 bg-white rounded-full h-2 overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
-              animate={{ width: `${occupancyRate}%` }}
+              animate={{ width: `${registrationRate}%` }}
               transition={{ duration: 1, ease: "easeOut" }}
               className="h-full bg-gradient-to-r from-emerald-500 to-teal-600"
             />

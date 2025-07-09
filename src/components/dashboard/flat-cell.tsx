@@ -42,7 +42,7 @@ export function FlatCell({ isRegistered, ownerInitials, ownerName, flatId, onCli
     if (hasSignedUpButNotRegistered) {
       return `Pending Registration (${flatId})`;
     }
-    return `Vacant (${flatId})`;
+    return `Yet to Register (${flatId})`;
   }
   
   const tooltipContent = getTooltipContent();
