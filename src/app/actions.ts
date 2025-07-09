@@ -23,7 +23,7 @@ const normalizeFlatId = (id: any): string => {
         .toUpperCase()
         .replace(/^BLOCK\s*/, '')
         .replace(/FLAT|FLOOR/g, '') // Remove keywords to isolate numbers/letters
-        .replace(/[\s-]+/g, '');      // Remove all whitespace and hyphens
+        .replace(/[\s,-]+/g, '');      // Remove all whitespace, hyphens, and commas
 };
 
 
@@ -189,10 +189,10 @@ export async function getOwnerFlatData(flatId: string): Promise<OwnerFlatData | 
             contactNumber: ownerRow['Contact Number'] || '',
             email: ownerRow['Email'] || '',
             familyMembers: ownerRow['Family Members'] || '',
-            issues: ownerRow['Issues / Complaints'] || '',
-            maintenanceStatus: ownerRow['Maintenance Status'] || 'pending',
+            issues: row['Issues / Complaints'] || '',
+            maintenanceStatus: row['Maintenance Status'] || 'pending',
             registered: ownerRow['Registered'] === 'TRUE',
-            lastUpdated: ownerRow['Last Updated'] || '',
+            lastUpdated: row['Last Updated'] || '',
         };
     } catch(e: any) {
         throw handleApiError(e, 'fetch owner flat data');
@@ -311,5 +311,3 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
         return { success: false, message: handleApiError(e, 'process owner signup').message };
     }
 }
-
-    
