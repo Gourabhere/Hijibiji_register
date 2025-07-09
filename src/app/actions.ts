@@ -216,7 +216,7 @@ export async function getOwnerFlatData(flatId: string): Promise<OwnerFlatData | 
             floor: ownerRow['Floor'] || '',
             flat: ownerRow['Flat'] || '',
             ownerName: ownerRow['Owner Name'] || '',
-            contactNumber: row['Contact Number'] || '',
+            contactNumber: ownerRow['Contact Number'] || '',
             email: ownerRow['Email'] || '',
             familyMembers: ownerRow['Family Members'] || '',
             issues: ownerRow['Issues / Complaints'] || '',
