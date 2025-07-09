@@ -284,11 +284,11 @@ function HomePageContent() {
                               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                             >
                               I agree to the{' '}
-                              <Link href="#" className="font-medium text-primary underline-offset-4 hover:underline">
+                              <Link href="/terms" className="font-medium text-primary underline-offset-4 hover:underline">
                                 Terms of Service
                               </Link>{' '}
                               and{' '}
-                              <Link href="#" className="font-medium text-primary underline-offset-4 hover:underline">
+                              <Link href="/privacy" className="font-medium text-primary underline-offset-4 hover:underline">
                                 Privacy Policy
                               </Link>
                               . I consent to the collection and processing of my personal data.
