@@ -397,79 +397,112 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
             </div>
           </div>
         </motion.div>
-
-        <motion.div
-            className="flex items-center justify-center gap-4 lg:gap-8"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-        >
-            <motion.button 
-                onClick={goToPrevBlock} 
-                whileHover={{ scale: 1.1 }} 
-                whileTap={{ scale: 0.9 }}
-                className="p-3 bg-white/80 rounded-full shadow-lg border border-white/20 backdrop-blur-sm"
+        
+        {isLoading ? (
+          <div className="flex justify-center items-center h-[400px]">
+            <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full"
+            />
+          </div>
+        ) : dbError ? (
+          <motion.div 
+              key="error"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="bg-red-100/80 border-l-4 border-red-500 text-red-800 p-6 rounded-2xl shadow-lg max-w-2xl mx-auto text-left backdrop-blur-sm"
+          >
+              <div className="flex">
+                  <div className="py-1">
+                      <AlertTriangle className="w-6 h-6 text-red-500 mr-4" />
+                  </div>
+                  <div>
+                      <p className="font-bold text-lg font-headline">Database Connection Error</p>
+                      <p className="text-sm mt-1">{dbError}</p>
+                  </div>
+              </div>
+          </motion.div>
+        ) : (
+          <>
+            {/* Mobile Carousel View */}
+            <motion.div
+              className="flex items-center justify-center gap-4 lg:hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
             >
-                <ChevronLeft className="w-6 h-6 lg:w-8 lg:h-8 text-slate-600" />
-            </motion.button>
+              <motion.button 
+                  onClick={goToPrevBlock} 
+                  whileHover={{ scale: 1.1 }} 
+                  whileTap={{ scale: 0.9 }}
+                  className="p-3 bg-white/80 rounded-full shadow-lg border border-white/20 backdrop-blur-sm"
+              >
+                  <ChevronLeft className="w-6 h-6 text-slate-600" />
+              </motion.button>
+              <div className="flex-grow max-w-2xl w-full">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                      key={currentBlockIndex}
+                      initial={{ opacity: 0, x: 50 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -50 }}
+                      transition={{ duration: 0.3 }}
+                      className="w-full"
+                  >
+                      <BlockCard 
+                          blockName={currentBlockName} 
+                          blockData={currentBlockData} 
+                          allFlatData={flatData}
+                          onFlatClick={openFlatModal}
+                      />
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+              <motion.button 
+                  onClick={goToNextBlock} 
+                  whileHover={{ scale: 1.1 }} 
+                  whileTap={{ scale: 0.9 }}
+                  className="p-3 bg-white/80 rounded-full shadow-lg border border-white/20 backdrop-blur-sm"
+              >
+                  <ChevronRight className="w-6 h-6 text-slate-600" />
+              </motion.button>
+            </motion.div>
 
-            <div className="flex-grow max-w-2xl w-full">
-              <AnimatePresence mode="wait">
-                  {isLoading ? (
-                     <div className="flex justify-center items-center h-[400px]">
-                        <motion.div
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                            className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full"
-                        />
-                     </div>
-                  ) : dbError ? (
-                     <motion.div 
-                        key="error"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="bg-red-100/80 border-l-4 border-red-500 text-red-800 p-6 rounded-2xl shadow-lg max-w-2xl mx-auto text-left backdrop-blur-sm"
-                     >
-                        <div className="flex">
-                            <div className="py-1">
-                                <AlertTriangle className="w-6 h-6 text-red-500 mr-4" />
-                            </div>
-                            <div>
-                                <p className="font-bold text-lg font-headline">Database Connection Error</p>
-                                <p className="text-sm mt-1">{dbError}</p>
-                            </div>
-                        </div>
-                     </motion.div>
-                  ) : (
-                    <motion.div
-                        key={currentBlockIndex}
-                        initial={{ opacity: 0, x: 50 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -50 }}
-                        transition={{ duration: 0.3 }}
-                        className="w-full"
-                    >
-                        <BlockCard 
-                            blockName={currentBlockName} 
-                            blockData={currentBlockData} 
-                            allFlatData={flatData}
-                            onFlatClick={openFlatModal}
-                        />
-                    </motion.div>
-                  )}
-              </AnimatePresence>
-            </div>
-            
-            <motion.button 
-                onClick={goToNextBlock} 
-                whileHover={{ scale: 1.1 }} 
-                whileTap={{ scale: 0.9 }}
-                className="p-3 bg-white/80 rounded-full shadow-lg border border-white/20 backdrop-blur-sm"
+            {/* Desktop Grid View */}
+            <motion.div
+              className="hidden lg:grid lg:grid-cols-2 xl:grid-cols-3 gap-8"
+              initial="hidden"
+              animate="visible"
+              variants={{
+                visible: {
+                  opacity: 1,
+                  y: 0,
+                  transition: {
+                    delay: 0.3,
+                    when: "beforeChildren",
+                    staggerChildren: 0.1,
+                  }
+                },
+                hidden: { opacity: 0, y: 20 },
+              }}
             >
-                <ChevronRight className="w-6 h-6 lg:w-8 lg:h-8 text-slate-600" />
-            </motion.button>
-        </motion.div>
+              {blockNames.map((blockName) => {
+                  const blockData = HijibijiFlatData[blockName];
+                  return (
+                      <BlockCard
+                          key={blockName}
+                          blockName={blockName}
+                          blockData={blockData}
+                          allFlatData={flatData}
+                          onFlatClick={openFlatModal}
+                      />
+                  );
+              })}
+            </motion.div>
+          </>
+        )}
       </main>
 
       
