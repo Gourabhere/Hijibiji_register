@@ -428,7 +428,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
           <>
             {/* Mobile Carousel View */}
             <motion.div
-              className="flex items-center justify-center gap-4 lg:hidden"
+              className="flex items-center justify-center gap-4 md:hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
@@ -472,7 +472,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
 
             {/* Desktop Grid View */}
             <motion.div
-              className="hidden lg:grid lg:grid-cols-2 xl:grid-cols-3 gap-8"
+              className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-8"
               initial="hidden"
               animate="visible"
               variants={{
