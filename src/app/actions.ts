@@ -16,44 +16,12 @@ const handleApiError = (e: any, context: string): Error => {
 // Helper to convert from various formats to the standard '{blockNumber}{flat}{floor}'
 const normalizeFlatId = (id: any): string => {
     if (!id) return '';
-    // Initial cleanup: uppercase, remove spaces
-    let strId = id.toString().trim().toUpperCase().replace(/\s+/g, "");
-
-    // Case 1: Standard app format like "1A10" - no hyphens after removing spaces
-    if (!strId.includes('-')) {
-        // May still have "BLOCK" prefix from manual entry
-        return strId.replace(/^BLOCK/, ''); // "BLOCK1A10" -> "1A10"
-    }
-    
-    // Case 2: Formats with hyphens
-    // Remove BLOCK prefix to simplify regexes
-    strId = strId.replace(/^BLOCK/, ''); // "BLOCK1-10-A" -> "1-10-A"
-
-    // Format: <block>-<floor>-<flat> e.g. 1-10-A
-    const bff = strId.match(/^(\d+)-(\d+)-([A-Z])$/);
-    if (bff) {
-        const [, block, floor, flat] = bff;
-        return `${block}${flat}${floor}`; // -> 1A10
-    }
-
-    // Format: <block>-<flat>-<floor> e.g. 1-A-10
-    const bfl = strId.match(/^(\d+)-([A-Z])-(\d+)$/);
-    if (bfl) {
-        const [, block, flat, floor] = bfl;
-        return `${block}${flat}${floor}`; // -> 1A10
-    }
-
-    // Format: <block>-<floor><flat> e.g. 1-10A
-    const bf = strId.match(/^(\d+)-(\d+)([A-Z])$/);
-    if (bf) {
-        const [, block, floor, flat] = bf;
-        return `${block}${flat}${floor}`; // -> 1A10
-    }
-
-    // Fallback: If we still have hyphens, we couldn't parse it.
-    // The most robust thing is to remove them and hope for the best.
-    // This would turn "1-A10" into "1A10".
-    return strId.replace(/-/g, '');
+    // This simpler implementation is more robust against various string formats in the sheet.
+    return id.toString()
+        .toUpperCase()
+        .replace(/^BLOCK/g, '')
+        .replace(/[\s-]+/g, '')
+        .trim();
 };
 
 
@@ -120,7 +88,7 @@ export async function saveFlatDataAction(flatId: string, data: FlatData): Promis
         };
 
         // Check if the flat exists to decide between PATCH (update) and POST (create)
-        const searchUrl = `${SHEETDB_API_URL}/search?Flat%20ID=${encodeURIComponent(normalizedFlatId)}&casesensitive=false`;
+        const searchUrl = `${SHEETDB_API_URL}/search?${encodeURIComponent('Flat ID')}=${encodeURIComponent(normalizedFlatId)}&casesensitive=false`;
         const searchResponse = await fetch(searchUrl, { cache: 'no-store' });
         if (!searchResponse.ok) {
             throw new Error(`API search responded with status ${searchResponse.status}`);
@@ -162,7 +130,7 @@ export async function loginOwnerAction(flatId: string, password_from_user: strin
     }
 
     try {
-        const searchUrl = `${SHEETDB_API_URL}/search?Flat%20ID=${encodeURIComponent(normalizedFlatId)}&casesensitive=false`;
+        const searchUrl = `${SHEETDB_API_URL}/search?${encodeURIComponent('Flat ID')}=${encodeURIComponent(normalizedFlatId)}&casesensitive=false`;
         const response = await fetch(searchUrl, { cache: 'no-store' });
         if (!response.ok) {
              throw new Error(`API responded with status ${response.status}`);
@@ -196,7 +164,7 @@ export type OwnerFlatData = FlatData & {
 export async function getOwnerFlatData(flatId: string): Promise<OwnerFlatData | null> {
     const normalizedFlatId = normalizeFlatId(flatId);
     try {
-        const searchUrl = `${SHEETDB_API_URL}/search?Flat%20ID=${encodeURIComponent(normalizedFlatId)}&casesensitive=false`;
+        const searchUrl = `${SHEETDB_API_URL}/search?${encodeURIComponent('Flat ID')}=${encodeURIComponent(normalizedFlatId)}&casesensitive=false`;
         const response = await fetch(searchUrl, { cache: 'no-store' });
 
         if (!response.ok) {
@@ -277,7 +245,7 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
     const flatId = `${blockNumber}${flat}${floor}`.toUpperCase();
 
     try {
-        const searchUrl = `${SHEETDB_API_URL}/search?Flat%20ID=${encodeURIComponent(flatId)}&casesensitive=false`;
+        const searchUrl = `${SHEETDB_API_URL}/search?${encodeURIComponent('Flat ID')}=${encodeURIComponent(flatId)}&casesensitive=false`;
         const searchResponse = await fetch(searchUrl, { cache: 'no-store' });
         if (!searchResponse.ok) {
             throw new Error(`API search responded with status ${searchResponse.status}`);
