@@ -10,7 +10,7 @@ export default function OwnerLoginRedirect() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/?role=owner');
+    router.replace('/login');
   }, [router]);
 
   return (

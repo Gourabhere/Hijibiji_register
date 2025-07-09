@@ -18,7 +18,8 @@ import {
   LogOut,
   AlertTriangle,
   User,
-  Menu
+  Menu,
+  LogIn
 } from 'lucide-react';
 import { HijibijiFlatData, BlockName, getTotalFlatsInBlock } from '@/data/flat-data';
 import { StatCard } from './stat-card';
@@ -239,14 +240,9 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
                       </Button>
                     </>
                   ) : (
-                    <>
-                      <Button asChild variant="ghost" size="sm">
-                        <Link href="/?role=owner">Owner Login</Link>
-                      </Button>
-                      <Button asChild variant="ghost" size="sm">
-                        <Link href="/?role=admin">Admin Login</Link>
-                      </Button>
-                    </>
+                    <Button asChild variant="ghost" size="sm">
+                      <Link href="/login">Login / Sign Up</Link>
+                    </Button>
                   )}
                 </>
               )}
@@ -292,20 +288,12 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
                     )}
 
                     {!isEditable && !isOwnerLoggedIn && (
-                      <>
-                        <SheetClose asChild>
-                          <Link href="/?role=admin" className={buttonVariants({ variant: "ghost", className: "justify-start gap-2" })}>
-                            <User className="h-5 w-5" />
-                            Admin Login
-                          </Link>
-                        </SheetClose>
-                        <SheetClose asChild>
-                          <Link href="/?role=owner" className={buttonVariants({ variant: "ghost", className: "justify-start gap-2" })}>
-                            <User className="h-5 w-5" />
-                            Owner Login
-                          </Link>
-                        </SheetClose>
-                      </>
+                      <SheetClose asChild>
+                        <Link href="/login" className={buttonVariants({ variant: "ghost", className: "justify-start gap-2" })}>
+                          <LogIn className="h-5 w-5" />
+                          Login / Sign Up
+                        </Link>
+                      </SheetClose>
                     )}
 
                     <Separator className="my-2" />
