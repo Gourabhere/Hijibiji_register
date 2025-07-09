@@ -65,7 +65,7 @@ export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave, isEdita
             onClick={(e) => e.stopPropagation()}
             className="bg-white rounded-3xl p-8 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl"
           >
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-start mb-6">
               <div>
                 <h2 className="text-2xl font-bold text-slate-800 font-headline">
                   {flatInfo.blockName} - Flat {flatInfo.flat}
@@ -73,6 +73,12 @@ export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave, isEdita
                 <p className="text-slate-600">
                   Floor {flatInfo.floor} &bull; Flat ID: {flatInfo.flatId}
                 </p>
+                {formData.ownerName && (
+                  <div className="flex items-center text-slate-500 text-sm mt-2">
+                    <User className="w-4 h-4 mr-2" />
+                    <span>{formData.ownerName}</span>
+                  </div>
+                )}
               </div>
               <button
                 onClick={onClose}
