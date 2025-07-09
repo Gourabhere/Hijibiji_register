@@ -189,10 +189,10 @@ export async function getOwnerFlatData(flatId: string): Promise<OwnerFlatData | 
             contactNumber: ownerRow['Contact Number'] || '',
             email: ownerRow['Email'] || '',
             familyMembers: ownerRow['Family Members'] || '',
-            issues: row['Issues / Complaints'] || '',
-            maintenanceStatus: row['Maintenance Status'] || 'pending',
+            issues: ownerRow['Issues / Complaints'] || '',
+            maintenanceStatus: ownerRow['Maintenance Status'] || 'pending',
             registered: ownerRow['Registered'] === 'TRUE',
-            lastUpdated: row['Last Updated'] || '',
+            lastUpdated: ownerRow['Last Updated'] || '',
         };
     } catch(e: any) {
         throw handleApiError(e, 'fetch owner flat data');
