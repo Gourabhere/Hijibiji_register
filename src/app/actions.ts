@@ -16,12 +16,13 @@ const handleApiError = (e: any, context: string): Error => {
 // Helper to convert from various formats to the standard '{blockNumber}{flat}{floor}'
 const normalizeFlatId = (id: any): string => {
     if (!id) return '';
-    // This simpler implementation is more robust against various string formats in the sheet.
+    // This implementation is more robust against various string formats in the sheet.
+    // It trims whitespace first to correctly handle IDs with leading/trailing spaces.
     return id.toString()
+        .trim()
         .toUpperCase()
-        .replace(/^BLOCK/g, '')
-        .replace(/[\s-]+/g, '')
-        .trim();
+        .replace(/^BLOCK\s*/, '')
+        .replace(/[\s-]+/g, '');
 };
 
 
@@ -186,9 +187,9 @@ export async function getOwnerFlatData(flatId: string): Promise<OwnerFlatData | 
             ownerName: ownerRow['Owner Name'] || '',
             contactNumber: ownerRow['Contact Number'] || '',
             email: ownerRow['Email'] || '',
-            familyMembers: ownerRow['Family Members'] || '',
-            issues: ownerRow['Issues / Complaints'] || '',
-            maintenanceStatus: ownerRow['Maintenance Status'] || 'pending',
+            familyMembers: row['Family Members'] || '',
+            issues: row['Issues / Complaints'] || '',
+            maintenanceStatus: row['Maintenance Status'] || 'pending',
             registered: ownerRow['Registered'] === 'TRUE',
             lastUpdated: ownerRow['Last Updated'] || '',
         };
