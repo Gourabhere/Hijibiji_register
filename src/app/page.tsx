@@ -5,6 +5,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Building, Lock, Mail, User, LogIn, UserPlus, AlertTriangle } from 'lucide-react';
+import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from '@/components/ui/checkbox';
 
 import { loginOwnerAction, signupOwnerAction } from '@/app/actions';
 import { HijibijiFlatData, BlockName, getFlatsForFloor } from '@/data/flat-data';
@@ -39,6 +41,7 @@ function HomePageContent() {
   const [selectedFlat, setSelectedFlat] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   
   // Common states
   const [isLoading, setIsLoading] = useState(false);
@@ -99,6 +102,10 @@ function HomePageContent() {
 
   const handleOwnerSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!agreedToTerms) {
+      setError("You must agree to the Terms of Service and Privacy Policy.");
+      return;
+    }
     if (signupPassword !== confirmPassword) {
       setError("Passwords do not match.");
       return;
@@ -265,7 +272,31 @@ function HomePageContent() {
                             <Input id="confirmPassword" type="password" placeholder="Re-enter your password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required className="mt-1 h-12 bg-gray-50" />
                         </div>
 
-                        <Button type="submit" disabled={isLoading} className="w-full h-12 bg-gradient-to-r from-[#6a82fb] to-[#fc5c7d] text-white font-bold text-base hover:opacity-90 transition-all duration-300 transform hover:scale-105">
+                        <div className="flex items-start space-x-3 py-2">
+                          <Checkbox
+                            id="terms"
+                            checked={agreedToTerms}
+                            onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
+                          />
+                          <div className="grid gap-1.5 leading-none">
+                            <label
+                              htmlFor="terms"
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                              I agree to the{' '}
+                              <Link href="#" className="font-medium text-primary underline-offset-4 hover:underline">
+                                Terms of Service
+                              </Link>{' '}
+                              and{' '}
+                              <Link href="#" className="font-medium text-primary underline-offset-4 hover:underline">
+                                Privacy Policy
+                              </Link>
+                              . I consent to the collection and processing of my personal data.
+                            </label>
+                          </div>
+                        </div>
+
+                        <Button type="submit" disabled={isLoading || !agreedToTerms} className="w-full h-12 bg-gradient-to-r from-[#6a82fb] to-[#fc5c7d] text-white font-bold text-base hover:opacity-90 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
                           {isLoading ? 'Creating Account...' : 'Sign Up'}
                         </Button>
                       </form>
