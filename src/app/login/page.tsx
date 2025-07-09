@@ -130,10 +130,7 @@ function LoginPageContent() {
     : [];
 
   return (
-    <div 
-      className="min-h-screen flex items-center justify-center p-4 bg-cover bg-center"
-      style={{ backgroundImage: "url('https://ik.imagekit.io/gourabhere/Screenshot_20250708_095402_Samsung%20Notes.jpg?updatedAt=1751950131538')" }}
-    >
+    <div className="min-h-screen flex items-center justify-center p-4 login-background">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

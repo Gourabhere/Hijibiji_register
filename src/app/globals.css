@@ -86,3 +86,13 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  .login-background {
+    background-image: url('https://ik.imagekit.io/gourabhere/Screenshot_20250708_095402_Samsung%20Notes.jpg?updatedAt=1751950131538');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+}
