@@ -128,6 +128,9 @@ export const YearMonthSelector = ({ isOpen, onClose, value, onSelect }: YearMont
           <motion.div
             className="bg-card/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-6 sm:p-8 w-full max-w-md border border-border/20 shadow-2xl"
             variants={modalVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -138,7 +141,7 @@ export const YearMonthSelector = ({ isOpen, onClose, value, onSelect }: YearMont
                 </h2>
                 <p className="text-muted-foreground text-sm">
                   {viewMode === 'month' ? selectedYear : `${yearRange.start} - ${yearRange.end}`}
-                p>
+                </p>
               </div>
               <motion.button
                 onClick={onClose}
