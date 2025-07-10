@@ -162,11 +162,11 @@ function LoginPageContent() {
                 <TabsContent value="signin">
                   <form onSubmit={handleLogin} className="space-y-4 pt-4">
                     <div>
-                      <Label htmlFor="identifier">Email or Flat ID</Label>
+                      <Label htmlFor="identifier">Flat ID</Label>
                       <Input 
                         id="identifier" 
                         type="text" 
-                        placeholder="e.g., admin@hijibiji.com or 1A1" 
+                        placeholder="e.g., 1A1" 
                         value={identifier} 
                         onChange={(e) => setIdentifier(e.target.value)} 
                         required 
