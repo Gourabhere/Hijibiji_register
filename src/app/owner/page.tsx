@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { AlertTriangle, Home, User } from 'lucide-react';
+import { AlertTriangle, Home, User, CalendarDays } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 
 export default function OwnerDashboardPage() {
@@ -29,6 +29,7 @@ export default function OwnerDashboardPage() {
         familyMembers: '',
         issues: '',
         registered: false,
+        moveInMonth: '',
     });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -56,6 +57,7 @@ export default function OwnerDashboardPage() {
                             familyMembers: data.familyMembers,
                             issues: data.issues,
                             registered: data.registered,
+                            moveInMonth: data.moveInMonth,
                         });
                     } else {
                         setError('Could not find details for your flat.');
@@ -108,6 +110,7 @@ export default function OwnerDashboardPage() {
                         familyMembers: updatedData.familyMembers,
                         issues: updatedData.issues,
                         registered: updatedData.registered,
+                        moveInMonth: updatedData.moveInMonth,
                     });
                 }
             } else {
@@ -232,6 +235,10 @@ export default function OwnerDashboardPage() {
                                     <div className="space-y-2">
                                         <Label>Maintenance Status</Label>
                                         <div>{getMaintenanceBadge(flatData.maintenanceStatus)}</div>
+                                    </div>
+                                     <div className="space-y-2">
+                                        <Label htmlFor="moveInMonth">Move In Month</Label>
+                                        <Input id="moveInMonth" value={formData.moveInMonth} onChange={handleInputChange} placeholder="e.g., January 2024" />
                                     </div>
                                     <div className="flex items-center space-x-2 pt-2 md:col-span-2">
                                         <Checkbox 

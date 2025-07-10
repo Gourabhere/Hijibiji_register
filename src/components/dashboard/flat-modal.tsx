@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useTransition } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, Phone, Mail, Users, MessageSquare, Wrench } from 'lucide-react';
+import { X, User, Phone, Mail, Users, MessageSquare, Wrench, CalendarDays } from 'lucide-react';
 import type { FlatInfo, FlatData } from './dashboard-client';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,6 +28,7 @@ const initialFormData: FlatData = {
     issues: '',
     maintenanceStatus: 'paid',
     registered: false,
+    moveInMonth: '',
 };
 
 export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave, isEditable = false }: FlatModalProps) {
@@ -137,6 +138,19 @@ export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave, isEdita
                   onChange={(e) => setFormData({...formData, familyMembers: e.target.value})}
                   className="rounded-xl"
                   placeholder="e.g., 2 Adults, 1 Child"
+                  disabled={!isEditable}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="moveInMonth" className="flex items-center"><CalendarDays className="w-4 h-4 mr-2" />Move In Month</Label>
+                <Input
+                  id="moveInMonth"
+                  type="text"
+                  value={formData.moveInMonth}
+                  onChange={(e) => setFormData({...formData, moveInMonth: e.target.value})}
+                  className="rounded-xl"
+                  placeholder="e.g., January 2024"
                   disabled={!isEditable}
                 />
               </div>

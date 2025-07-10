@@ -49,6 +49,7 @@ export type FlatData = {
   maintenanceStatus: 'paid' | 'pending' | 'overdue';
   registered: boolean;
   lastUpdated?: string;
+  moveInMonth: string;
 }
 
 export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }) => {

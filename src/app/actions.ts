@@ -38,6 +38,7 @@ const mapRowToFlatData = (row: any): FlatData => {
         maintenanceStatus: row['Maintenance Status'] || 'pending',
         registered: row['Registered'] === 'TRUE',
         lastUpdated: row['Last Updated'] || '',
+        moveInMonth: row['Move In Month'] || '',
     };
 };
 
@@ -87,6 +88,7 @@ export async function saveFlatDataAction(flatId: string, data: FlatData): Promis
             'Maintenance Status': data.maintenanceStatus,
             'Registered': data.registered ? 'TRUE' : 'FALSE',
             'Last Updated': new Date().toISOString(),
+            'Move In Month': data.moveInMonth,
         };
 
         // Check if the flat exists to decide between PATCH (update) and POST (create)
@@ -193,6 +195,7 @@ export async function getOwnerFlatData(flatId: string): Promise<OwnerFlatData | 
             maintenanceStatus: ownerRow['Maintenance Status'] || 'pending',
             registered: ownerRow['Registered'] === 'TRUE',
             lastUpdated: ownerRow['Last Updated'] || '',
+            moveInMonth: ownerRow['Move In Month'] || '',
         };
     } catch(e: any) {
         throw handleApiError(e, 'fetch owner flat data');
@@ -206,6 +209,7 @@ export type OwnerEditableData = {
     familyMembers: string;
     issues: string;
     registered: boolean;
+    moveInMonth: string;
 };
 
 export async function updateOwnerDataAction(flatId: string, data: OwnerEditableData): Promise<{ success: boolean; message: string }> {
@@ -219,6 +223,7 @@ export async function updateOwnerDataAction(flatId: string, data: OwnerEditableD
             'Issues / Complaints': data.issues,
             'Registered': data.registered ? 'TRUE' : 'FALSE',
             'Last Updated': new Date().toISOString(),
+            'Move In Month': data.moveInMonth,
         };
 
         const url = `${SHEETDB_API_URL}/Flat%20ID/${encodeURIComponent(normalizedFlatId)}`;
