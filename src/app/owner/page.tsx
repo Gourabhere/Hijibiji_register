@@ -4,6 +4,7 @@ import React, { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { format, parse } from 'date-fns';
 import { getOwnerFlatData, updateOwnerDataAction, type OwnerFlatData, type OwnerEditableData } from '@/app/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { AlertTriangle, Home, User, CalendarDays } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 
 export default function OwnerDashboardPage() {
     const router = useRouter();
@@ -85,6 +89,16 @@ export default function OwnerDashboardPage() {
         const { id, value } = e.target;
         setFormData(prev => ({ ...prev, [id]: value }));
     };
+    
+    const handleMonthSelect = (date: Date | undefined) => {
+        if (date) {
+            setFormData(prev => ({ ...prev, moveInMonth: format(date, 'MMMM yyyy') }));
+        }
+    };
+    
+    const selectedMonthDate = formData.moveInMonth 
+        ? parse(formData.moveInMonth, 'MMMM yyyy', new Date())
+        : undefined;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -238,7 +252,31 @@ export default function OwnerDashboardPage() {
                                     </div>
                                      <div className="space-y-2">
                                         <Label htmlFor="moveInMonth">Move In Month</Label>
-                                        <Input id="moveInMonth" value={formData.moveInMonth} onChange={handleInputChange} placeholder="e.g., January 2024" />
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant={"outline"}
+                                                    className={cn(
+                                                        "w-full justify-start text-left font-normal",
+                                                        !formData.moveInMonth && "text-muted-foreground"
+                                                    )}
+                                                >
+                                                    <CalendarDays className="mr-2 h-4 w-4" />
+                                                    {formData.moveInMonth ? formData.moveInMonth : <span>Pick a month</span>}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={selectedMonthDate}
+                                                    onSelect={handleMonthSelect}
+                                                    initialFocus
+                                                    captionLayout="dropdown-buttons"
+                                                    fromYear={2015}
+                                                    toYear={new Date().getFullYear()}
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
                                     </div>
                                     <div className="flex items-center space-x-2 pt-2 md:col-span-2">
                                         <Checkbox 

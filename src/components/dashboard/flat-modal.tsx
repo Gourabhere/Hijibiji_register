@@ -4,12 +4,17 @@
 import React, { useState, useEffect, useTransition } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, User, Phone, Mail, Users, MessageSquare, Wrench, CalendarDays } from 'lucide-react';
+import { format, parse } from 'date-fns';
 import type { FlatInfo, FlatData } from './dashboard-client';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 
 interface FlatModalProps {
     isOpen: boolean;
@@ -47,6 +52,16 @@ export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave, isEdita
             onSave(formData);
         });
     };
+
+    const handleMonthSelect = (date: Date | undefined) => {
+      if (date) {
+        setFormData({ ...formData, moveInMonth: format(date, 'MMMM yyyy') });
+      }
+    };
+
+    const selectedMonthDate = formData.moveInMonth 
+      ? parse(formData.moveInMonth, 'MMMM yyyy', new Date())
+      : undefined;
 
     if (!isOpen || !flatInfo) return null;
 
@@ -144,15 +159,32 @@ export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave, isEdita
 
               <div className="space-y-2">
                 <Label htmlFor="moveInMonth" className="flex items-center"><CalendarDays className="w-4 h-4 mr-2" />Move In Month</Label>
-                <Input
-                  id="moveInMonth"
-                  type="text"
-                  value={formData.moveInMonth}
-                  onChange={(e) => setFormData({...formData, moveInMonth: e.target.value})}
-                  className="rounded-xl"
-                  placeholder="e.g., January 2024"
-                  disabled={!isEditable}
-                />
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                            variant={"outline"}
+                            className={cn(
+                                "w-full justify-start text-left font-normal rounded-xl",
+                                !formData.moveInMonth && "text-muted-foreground"
+                            )}
+                            disabled={!isEditable}
+                        >
+                            <CalendarDays className="mr-2 h-4 w-4" />
+                            {formData.moveInMonth ? formData.moveInMonth : <span>Pick a month</span>}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                            mode="single"
+                            selected={selectedMonthDate}
+                            onSelect={handleMonthSelect}
+                            initialFocus
+                            captionLayout="dropdown-buttons"
+                            fromYear={2015}
+                            toYear={new Date().getFullYear()}
+                        />
+                    </PopoverContent>
+                </Popover>
               </div>
 
               <div className="space-y-2">
