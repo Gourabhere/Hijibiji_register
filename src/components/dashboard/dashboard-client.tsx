@@ -19,7 +19,8 @@ import {
   AlertTriangle,
   User,
   Menu,
-  LogIn
+  LogIn,
+  Clock
 } from 'lucide-react';
 import { HijibijiFlatData, BlockName, getTotalFlatsInBlock } from '@/data/flat-data';
 import { StatCard } from './stat-card';
@@ -61,6 +62,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
   const [isLoading, setIsLoading] = useState(true);
   const [dbError, setDbError] = useState<string | null>(null);
   const [isOwnerLoggedIn, setIsOwnerLoggedIn] = useState(false);
+  const [time, setTime] = useState(new Date());
 
   const [currentPage, setCurrentPage] = useState(0);
   const [windowWidth, setWindowWidth] = useState(0);
@@ -85,6 +87,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
   }, []);
 
   useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000);
     const handleResize = () => setWindowWidth(window.innerWidth);
     
     if (typeof window !== 'undefined') {
@@ -103,6 +106,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
     fetchFlatData();
 
     return () => {
+        clearInterval(timer);
         if (typeof window !== 'undefined') {
             window.removeEventListener('resize', handleResize);
         }
@@ -209,75 +213,110 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
     );
   }
 
+  const navButtonVariants = {
+    initial: { opacity: 0, y: -10 },
+    animate: { opacity: 1, y: 0 },
+    hover: { scale: 1.05, y: -2, transition: { type: 'spring', stiffness: 300 } },
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-slate-900 dark:via-slate-950 dark:to-black font-body">
       <motion.header 
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        className="bg-card/80 backdrop-blur-lg border-b border-border/20 sticky top-0 z-40"
+        className="bg-card/80 backdrop-blur-xl border-b border-border/20 sticky top-0 z-40 shadow-lg"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-20">
             <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
+              <motion.div 
+                animate={{ rotate: [0, 10, -10, 0]}}
+                transition={{ duration: 0.5, ease: 'easeInOut' }}
+                className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center shadow-md">
                 <Building className="w-6 h-6 text-primary-foreground" />
-              </div>
+              </motion.div>
               <div>
                 <h1 className="text-xl font-bold text-foreground font-headline">
-                  {isEditable ? 'Hijibiji Society - Admin' : 'Hijibiji Society'}
+                  {isEditable ? 'Admin Panel' : 'Society Hub'}
                 </h1>
                 <p className="text-xs text-muted-foreground">
-                  {isEditable ? 'Full Control Panel' : 'Management Dashboard'}
+                  {isEditable ? 'Hijibiji Society' : 'Management Dashboard'}
                 </p>
               </div>
             </div>
             
-            <div className="hidden md:flex items-center space-x-2">
-              <Button asChild variant="ghost" size="sm" className="space-x-2">
-                <Link href="/dashboard">
-                  <Home className="w-4 h-4" />
-                  <span>Home</span>
-                </Link>
-              </Button>
+            <div className="hidden md:flex items-center space-x-2 bg-muted/50 p-2 rounded-full border border-border/20 shadow-inner">
+               <motion.div
+                variants={navButtonVariants}
+                initial="initial"
+                animate="animate"
+                whileHover="hover"
+              >
+                <Button asChild variant="ghost" size="sm" className="space-x-2">
+                  <Link href="/dashboard">
+                    <Home className="w-4 h-4" />
+                    <span>Home</span>
+                  </Link>
+                </Button>
+              </motion.div>
               
               {isEditable ? (
-                <Button onClick={handleAdminLogout} variant="ghost" size="sm" className="space-x-2">
-                  <LogOut className="w-4 h-4"/>
-                  <span>Logout</span>
-                </Button>
+                <motion.div
+                  variants={navButtonVariants}
+                  initial="initial"
+                  animate="animate"
+                  whileHover="hover"
+                >
+                  <Button onClick={handleAdminLogout} variant="ghost" size="sm" className="space-x-2">
+                    <LogOut className="w-4 h-4"/>
+                    <span>Logout</span>
+                  </Button>
+                </motion.div>
               ) : (
                 <>
                   {isOwnerLoggedIn ? (
                     <>
-                      <Button asChild variant="ghost" size="sm" className="space-x-2">
-                        <Link href="/owner">
-                          <User className="w-4 h-4" />
-                          <span>My Dashboard</span>
-                        </Link>
-                      </Button>
-                      <Button onClick={handleOwnerLogout} variant="ghost" size="sm" className="space-x-2">
-                        <LogOut className="w-4 h-4" />
-                        <span>Logout</span>
-                      </Button>
+                      <motion.div variants={navButtonVariants} initial="initial" animate="animate" whileHover="hover">
+                        <Button asChild variant="ghost" size="sm" className="space-x-2">
+                          <Link href="/owner">
+                            <User className="w-4 h-4" />
+                            <span>My Dashboard</span>
+                          </Link>
+                        </Button>
+                      </motion.div>
+                      <motion.div variants={navButtonVariants} initial="initial" animate="animate" whileHover="hover">
+                        <Button onClick={handleOwnerLogout} variant="ghost" size="sm" className="space-x-2">
+                          <LogOut className="w-4 h-4" />
+                          <span>Logout</span>
+                        </Button>
+                      </motion.div>
                     </>
                   ) : (
-                    <Button asChild variant="ghost" size="sm">
-                      <Link href="/login">Login / Sign Up</Link>
-                    </Button>
+                     <motion.div variants={navButtonVariants} initial="initial" animate="animate" whileHover="hover">
+                        <Button asChild variant="ghost" size="sm">
+                          <Link href="/login">Login / Sign Up</Link>
+                        </Button>
+                      </motion.div>
                   )}
                 </>
               )}
+            </div>
 
-
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
-              </motion.button>
-              <ThemeToggle />
+            <div className="hidden md:flex items-center gap-4">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Clock className="w-4 h-4"/>
+                    <span>{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+                 <motion.button
+                    whileHover={{ scale: 1.1, rotate: [0, 15, -10, 15, 0] }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ duration: 0.5 }}
+                    className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                    <Bell className="w-5 h-5" />
+                    <span className="absolute top-1 right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-card animate-pulse"></span>
+                </motion.button>
+                <ThemeToggle />
             </div>
 
             <div className="md:hidden">
