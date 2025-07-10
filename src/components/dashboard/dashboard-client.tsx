@@ -60,7 +60,6 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
   const [isClient, setIsClient] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [dbError, setDbError] = useState<string | null>(null);
-  const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [isOwnerLoggedIn, setIsOwnerLoggedIn] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(0);
@@ -93,8 +92,6 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
         handleResize();
         window.addEventListener('resize', handleResize);
     }
-
-    setCurrentTime(new Date());
     
     try {
         const ownerLoggedIn = localStorage.getItem('isOwnerLoggedIn') === 'true';
@@ -103,12 +100,9 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
         setIsOwnerLoggedIn(false);
     }
 
-    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
-    
     fetchFlatData();
 
     return () => {
-        clearInterval(timer);
         if (typeof window !== 'undefined') {
             window.removeEventListener('resize', handleResize);
         }
@@ -245,18 +239,6 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
                   <span>Home</span>
                 </Link>
               </Button>
-              <div className="text-right hidden sm:block">
-                 {currentTime && (
-                  <>
-                    <p className="text-sm font-medium text-foreground">
-                      {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {currentTime.toLocaleDateString()}
-                    </p>
-                  </>
-                 )}
-              </div>
               
               {isEditable ? (
                 <Button onClick={handleAdminLogout} variant="ghost" size="sm" className="space-x-2">
