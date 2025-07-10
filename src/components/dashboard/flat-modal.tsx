@@ -239,7 +239,7 @@ export function FlatModal({ isOpen, onClose, flatInfo, initialData, onSave }: Fl
                               <Label htmlFor="parkingAllocation" className="flex items-center gap-2 mb-2"><Car className="w-4 h-4"/>Parking Allocation</Label>
                               <Select value={formData.parkingAllocation} onValueChange={(v: any) => handleSelectChange('parkingAllocation', v)}>
                                   <SelectTrigger><SelectValue placeholder="Select Parking" /></SelectTrigger>
-                                  <SelectContent>{parkingOptions.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
+                                  <SelectContent>{parkingOptions.map((p, i) => <SelectItem key={i} value={p}>{p}</SelectItem>)}</SelectContent>
                               </Select>
                           </div>
                      </div>
