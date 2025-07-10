@@ -24,11 +24,11 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import type { FlatInfo, FlatData } from './dashboard-client';
-import { Badge } from './ui/badge';
-import { Label } from './ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import { YearMonthSelector } from './year-month-selector';
 import { cn } from '@/lib/utils';
-import { Checkbox } from './ui/checkbox';
+import { Checkbox } from '@/components/ui/checkbox';
 
 
 interface FlatModalProps {
@@ -316,7 +316,4 @@ export function FlatModal({ isOpen, onClose, flatInfo, initialData, onSave }: Fl
         />
     </AnimatePresence>
   );
-};
-
-export { OwnerDetailsModal as FlatModal };
-
+}
