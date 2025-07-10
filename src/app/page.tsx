@@ -20,6 +20,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 
 import { loginOwnerAction, signupOwnerAction } from '@/app/actions';
 import { HijibijiFlatData, BlockName, getFlatsForFloor } from '@/data/flat-data';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 function HomePageContent() {
   const router = useRouter();
@@ -132,12 +133,15 @@ function HomePageContent() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 login-background">
+       <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <Card className="w-full max-w-md shadow-2xl rounded-3xl bg-white/90 backdrop-blur-sm border-white/20">
+        <Card className="w-full max-w-md shadow-2xl rounded-3xl bg-card/90 backdrop-blur-sm border-border/20">
           <CardHeader className="text-center">
              <Image
               src="https://ik.imagekit.io/gourabhere/1000440858-removebg-preview.png?updatedAt=1752149396514"
@@ -176,7 +180,7 @@ function HomePageContent() {
                         value={identifier} 
                         onChange={(e) => setIdentifier(e.target.value)} 
                         required 
-                        className="mt-1 h-12 bg-gray-50" />
+                        className="mt-1 h-12 bg-muted/50" />
                     </div>
                     <div>
                       <Label htmlFor="password">Password</Label>
@@ -187,9 +191,9 @@ function HomePageContent() {
                         value={password} 
                         onChange={(e) => setPassword(e.target.value)} 
                         required 
-                        className="mt-1 h-12 bg-gray-50" />
+                        className="mt-1 h-12 bg-muted/50" />
                     </div>
-                    <Button type="submit" disabled={isLoading} className="w-full h-12 bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white font-bold text-base hover:opacity-90 transition-all duration-300 transform hover:scale-105">
+                    <Button type="submit" disabled={isLoading} className="w-full h-12 bg-gradient-to-r from-primary to-accent text-primary-foreground font-bold text-base hover:opacity-90 transition-all duration-300 transform hover:scale-105">
                       {isLoading ? 'Signing In...' : 'Sign In'}
                     </Button>
                   </form>
@@ -223,11 +227,11 @@ function HomePageContent() {
 
                     <div>
                         <Label htmlFor="signupPassword">Create Password</Label>
-                        <Input id="signupPassword" type="password" placeholder="Choose a strong password" value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)} required className="mt-1 h-12 bg-gray-50" />
+                        <Input id="signupPassword" type="password" placeholder="Choose a strong password" value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)} required className="mt-1 h-12 bg-muted/50" />
                     </div>
                     <div>
                         <Label htmlFor="confirmPassword">Confirm Password</Label>
-                        <Input id="confirmPassword" type="password" placeholder="Re-enter your password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required className="mt-1 h-12 bg-gray-50" />
+                        <Input id="confirmPassword" type="password" placeholder="Re-enter your password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required className="mt-1 h-12 bg-muted/50" />
                     </div>
 
                     <div className="flex items-start space-x-3 py-2">
@@ -254,7 +258,7 @@ function HomePageContent() {
                       </div>
                     </div>
 
-                    <Button type="submit" disabled={isLoading || !agreedToTerms} className="w-full h-12 bg-gradient-to-r from-[#6a82fb] to-[#fc5c7d] text-white font-bold text-base hover:opacity-90 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <Button type="submit" disabled={isLoading || !agreedToTerms} className="w-full h-12 bg-gradient-to-r from-primary to-accent text-primary-foreground font-bold text-base hover:opacity-90 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
                       {isLoading ? 'Creating Account...' : 'Sign Up'}
                     </Button>
                   </form>
@@ -263,7 +267,7 @@ function HomePageContent() {
              <div className="text-center mt-4">
                 <button 
                     onClick={() => toast({ title: "Password Reset", description: "Please contact the society office to reset your password."})} 
-                    className="text-sm text-[#667eea] hover:underline font-medium"
+                    className="text-sm text-primary hover:underline font-medium"
                 >
                     Forgot your password?
                 </button>

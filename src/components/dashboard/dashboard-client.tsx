@@ -31,6 +31,7 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { getFlatsData, saveFlatDataAction } from '@/app/actions';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
+import { ThemeToggle } from '../theme-toggle';
 
 
 export type FlatInfo = {
@@ -215,23 +216,23 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 font-body">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-slate-900 dark:via-slate-950 dark:to-black font-body">
       <motion.header 
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        className="bg-white/80 backdrop-blur-lg border-b border-white/20 sticky top-0 z-40"
+        className="bg-card/80 backdrop-blur-lg border-b border-border/20 sticky top-0 z-40"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
-                <Building className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
+                <Building className="w-6 h-6 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-slate-800 font-headline">
+                <h1 className="text-xl font-bold text-foreground font-headline">
                   {isEditable ? 'Hijibiji Society - Admin' : 'Hijibiji Society'}
                 </h1>
-                <p className="text-xs text-slate-600">
+                <p className="text-xs text-muted-foreground">
                   {isEditable ? 'Full Control Panel' : 'Management Dashboard'}
                 </p>
               </div>
@@ -247,10 +248,10 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
               <div className="text-right hidden sm:block">
                  {currentTime && (
                   <>
-                    <p className="text-sm font-medium text-slate-800">
+                    <p className="text-sm font-medium text-foreground">
                       {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
-                    <p className="text-xs text-slate-600">
+                    <p className="text-xs text-muted-foreground">
                       {currentTime.toLocaleDateString()}
                     </p>
                   </>
@@ -289,11 +290,12 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="relative p-2 text-slate-600 hover:text-slate-800 transition-colors"
+                className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
               >
                 <Bell className="w-5 h-5" />
                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
               </motion.button>
+              <ThemeToggle />
             </div>
 
             <div className="md:hidden">
@@ -358,6 +360,10 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
                         </Button>
                       </>
                     )}
+                    <Separator className="my-2" />
+                    <div className="p-2">
+                        <ThemeToggle />
+                    </div>
                   </nav>
                 </SheetContent>
               </Sheet>
@@ -372,10 +378,10 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <h2 className="text-4xl font-bold text-slate-800 mb-2 font-headline">
+          <h2 className="text-4xl font-bold text-foreground mb-2 font-headline">
             {isEditable ? 'Admin Control Center' : 'Welcome to Your Society Dashboard'}
           </h2>
-          <p className="text-slate-600 text-lg">
+          <p className="text-muted-foreground text-lg">
             {isEditable ? 'View and manage all flats and resident information.' : 'Manage your flats, residents, and society operations seamlessly'}
           </p>
         </motion.div>
@@ -420,11 +426,11 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-8 shadow-lg border border-white/20"
+          className="bg-card/80 backdrop-blur-sm rounded-2xl p-6 mb-8 shadow-lg border border-border/20"
         >
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 type="text"
                 placeholder="Search by owner name, flat number..."
@@ -441,7 +447,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
             <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full"
+                className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full"
             />
           </div>
         ) : dbError ? (
@@ -450,7 +456,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="bg-red-100/80 border-l-4 border-red-500 text-red-800 p-6 rounded-2xl shadow-lg max-w-2xl mx-auto text-left backdrop-blur-sm"
+              className="bg-red-100/80 dark:bg-red-900/20 border-l-4 border-red-500 text-red-800 dark:text-red-200 p-6 rounded-2xl shadow-lg max-w-2xl mx-auto text-left backdrop-blur-sm"
           >
               <div className="flex">
                   <div className="py-1">
@@ -473,11 +479,11 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
                 onClick={goToPrevPage} 
                 whileHover={{ scale: 1.1 }} 
                 whileTap={{ scale: 0.9 }}
-                className="p-2 sm:p-3 bg-white/80 rounded-full shadow-lg border border-white/20 backdrop-blur-sm self-center shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-2 sm:p-3 bg-card/80 rounded-full shadow-lg border border-border/20 backdrop-blur-sm self-center shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={currentPage === 0}
                 aria-label="Previous page"
             >
-                <ChevronLeft className="w-6 h-6 text-slate-600" />
+                <ChevronLeft className="w-6 h-6 text-muted-foreground" />
             </motion.button>
 
             <div className="flex-grow max-w-7xl w-full">
@@ -510,11 +516,11 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
                 onClick={goToNextPage} 
                 whileHover={{ scale: 1.1 }} 
                 whileTap={{ scale: 0.9 }}
-                className="p-2 sm:p-3 bg-white/80 rounded-full shadow-lg border border-white/20 backdrop-blur-sm self-center shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-2 sm:p-3 bg-card/80 rounded-full shadow-lg border border-border/20 backdrop-blur-sm self-center shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={currentPage >= totalPages - 1}
                 aria-label="Next page"
             >
-                <ChevronRight className="w-6 h-6 text-slate-600" />
+                <ChevronRight className="w-6 h-6 text-muted-foreground" />
             </motion.button>
           </motion.div>
         )}

@@ -19,6 +19,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function OwnerDashboardPage() {
     const router = useRouter();
@@ -163,26 +164,27 @@ export default function OwnerDashboardPage() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full"
+                    className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full"
                 />
             </div>
         );
     }
     
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 p-4 sm:p-8">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-900 dark:to-gray-950 p-4 sm:p-8">
             <div className="max-w-4xl mx-auto">
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="flex flex-col sm:flex-row justify-between items-center mb-8"
                 >
-                     <h1 className="text-3xl font-bold text-gray-800 mb-2 sm:mb-0">My Dashboard</h1>
+                     <h1 className="text-3xl font-bold text-foreground mb-2 sm:mb-0">My Dashboard</h1>
                      <div className="flex items-center gap-4">
+                        <ThemeToggle />
                         <Button asChild variant="outline" size="sm">
                            <Link href="/dashboard">
                               <Home className="w-4 h-4 mr-2"/>
@@ -190,10 +192,10 @@ export default function OwnerDashboardPage() {
                            </Link>
                         </Button>
                         <div className="text-right">
-                           <p className="font-semibold text-gray-800">{flatData?.ownerName}</p>
-                           <p className="text-xs text-gray-500">{flatData?.flatId}</p>
+                           <p className="font-semibold text-foreground">{flatData?.ownerName}</p>
+                           <p className="text-xs text-muted-foreground">{flatData?.flatId}</p>
                         </div>
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#667eea] to-[#764ba2] flex items-center justify-center text-white font-bold text-lg">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold text-lg">
                            {getAvatarInitials(flatData?.ownerName || '')}
                         </div>
                         <Button variant="outline" size="sm" onClick={handleLogout}>Logout</Button>
@@ -296,7 +298,7 @@ export default function OwnerDashboardPage() {
                             </Card>
 
                             <div className="flex justify-end">
-                                <Button type="submit" disabled={isPending} className="bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white">
+                                <Button type="submit" disabled={isPending} className="bg-gradient-to-r from-primary to-accent text-primary-foreground">
                                     {isPending ? 'Saving...' : 'Save Changes'}
                                 </Button>
                             </div>

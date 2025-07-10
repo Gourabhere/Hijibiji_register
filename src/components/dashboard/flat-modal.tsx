@@ -79,18 +79,18 @@ export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave, isEdita
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-3xl p-8 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            className="bg-card rounded-3xl p-8 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl"
           >
             <div className="flex justify-between items-start mb-6">
               <div>
-                <h2 className="text-2xl font-bold text-slate-800 font-headline">
+                <h2 className="text-2xl font-bold text-foreground font-headline">
                   {flatInfo.blockName} - Flat {flatInfo.flat}
                 </h2>
-                <p className="text-slate-600">
+                <p className="text-muted-foreground">
                   Floor {flatInfo.floor} &bull; Flat ID: {flatInfo.flatId}
                 </p>
                 {formData.ownerName && (
-                  <div className="flex items-center text-slate-500 text-sm mt-2">
+                  <div className="flex items-center text-muted-foreground text-sm mt-2">
                     <User className="w-4 h-4 mr-2" />
                     <span>{formData.ownerName}</span>
                   </div>
@@ -98,7 +98,7 @@ export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave, isEdita
               </div>
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                className="p-2 hover:bg-accent rounded-full transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -238,14 +238,14 @@ export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave, isEdita
                   whileTap={{ scale: 0.98 }}
                   type="submit"
                   disabled={isPending}
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 mt-4 disabled:opacity-50"
+                  className="w-full bg-gradient-to-r from-primary to-accent text-primary-foreground py-3 px-6 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 mt-4 disabled:opacity-50"
                 >
                   {isPending ? 'Saving...' : 'Save Details'}
                 </motion.button>
               )}
                
               {flatData?.lastUpdated && (
-                <div className="text-center text-xs text-slate-500 pt-4">
+                <div className="text-center text-xs text-muted-foreground pt-4">
                   Last updated: {new Date(flatData.lastUpdated).toLocaleString()}
                 </div>
               )}

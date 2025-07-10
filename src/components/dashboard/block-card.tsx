@@ -44,18 +44,18 @@ export function BlockCard({ blockName, blockData, allFlatData, onFlatClick }: Bl
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         whileHover={{ y: -8 }}
-        className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-xl border border-white/20"
+        className="bg-card/90 backdrop-blur-sm rounded-3xl p-6 shadow-xl border border-border/20"
       >
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h3 className="text-xl font-bold text-slate-800 font-headline">{blockName}</h3>
-            <p className="text-slate-600 text-sm">
+            <h3 className="text-xl font-bold text-foreground font-headline">{blockName}</h3>
+            <p className="text-muted-foreground text-sm">
               {registeredCount}/{totalFlats} registered ({registrationRate.toFixed(1)}%)
             </p>
           </div>
           <div className="text-right">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-              <Building className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
+              <Building className="w-6 h-6 text-primary-foreground" />
             </div>
           </div>
         </div>
@@ -64,9 +64,9 @@ export function BlockCard({ blockName, blockData, allFlatData, onFlatClick }: Bl
           className="grid gap-1 mb-4" 
           style={{ gridTemplateColumns: `2rem repeat(${allFlatLetters.length}, minmax(0, 1fr))` }}
         >
-          <div className="text-center text-xs font-semibold text-slate-500 p-1"></div>
+          <div className="text-center text-xs font-semibold text-muted-foreground p-1"></div>
           {allFlatLetters.map(flat => (
-            <div key={flat} className="text-center text-xs font-semibold text-slate-500 p-1">
+            <div key={flat} className="text-center text-xs font-semibold text-muted-foreground p-1">
               {flat}
             </div>
           ))}
@@ -75,7 +75,7 @@ export function BlockCard({ blockName, blockData, allFlatData, onFlatClick }: Bl
             const flatsOnThisFloor = getFlatsForFloor(blockData, floor);
             return (
               <React.Fragment key={floor}>
-                <div className="flex items-center justify-center text-center text-xs font-semibold text-slate-500 p-1">
+                <div className="flex items-center justify-center text-center text-xs font-semibold text-muted-foreground p-1">
                   {floor}
                 </div>
                 {allFlatLetters.map(flatLetter => {
@@ -111,12 +111,12 @@ export function BlockCard({ blockName, blockData, allFlatData, onFlatClick }: Bl
           })}
         </div>
 
-        <div className="bg-gradient-to-r from-slate-100 to-slate-200 rounded-lg p-2">
+        <div className="bg-muted/50 rounded-lg p-2">
           <div className="flex justify-between text-xs">
-            <span className="text-slate-600">Registration Rate</span>
-            <span className="font-bold text-slate-800">{registrationRate.toFixed(1)}%</span>
+            <span className="text-muted-foreground">Registration Rate</span>
+            <span className="font-bold text-foreground">{registrationRate.toFixed(1)}%</span>
           </div>
-          <div className="mt-1 bg-white rounded-full h-2 overflow-hidden">
+          <div className="mt-1 bg-background rounded-full h-2 overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${registrationRate}%` }}
