@@ -144,9 +144,10 @@ function LoginPageContent() {
               alt="Society Hub Logo"
               width={250}
               height={80}
-              className="mx-auto mb-2"
+              className="mx-auto"
               priority
             />
+            <CardTitle className="font-headline text-xl mt-2">Society Hub</CardTitle>
             <CardDescription>Sign in or create your account</CardDescription>
           </CardHeader>
           <CardContent>
