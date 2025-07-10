@@ -25,7 +25,6 @@ import {
 import { HijibijiFlatData, BlockName, getTotalFlatsInBlock } from '@/data/flat-data';
 import { StatCard } from './stat-card';
 import { BlockCard } from './block-card';
-import { FlatModal } from './flat-modal';
 import { FloatingActionButton } from './floating-action-button';
 import { Input } from '@/components/ui/input';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -59,7 +58,6 @@ export type FlatData = {
 }
 
 export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }) => {
-  const [selectedFlat, setSelectedFlat] = useState<FlatInfo | null>(null);
   const [flatData, setFlatData] = useState<Record<string, FlatData>>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [isClient, setIsClient] = useState(false);
@@ -171,7 +169,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
 
   const stats = getTotalStats();
 
-  const openFlatModal = (blockName: BlockName, floor: number, flat: string) => {
+  const handleFlatClick = (blockName: BlockName, floor: number, flat: string) => {
     const blockNumber = blockName.replace('Block ', '');
     const flatId = `${blockNumber}${flat}${floor}`;
     
@@ -183,26 +181,9 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
         }
     }
 
-    setSelectedFlat({ blockName, floor, flat, flatId });
-  };
-
-  const saveFlatData = async (data: FlatData) => {
-    if(!selectedFlat) return;
-    const flatId = selectedFlat.flatId;
-    const dataToSave = { ...data, lastUpdated: new Date().toISOString() };
-    
-    setSelectedFlat(null);
-
-    try {
-        await saveFlatDataAction(flatId, dataToSave);
-        // Re-fetch on success to ensure data is in sync with the source of truth
-        await fetchFlatData();
-    } catch (e: any) {
-        console.error("Failed to save flat data. Reverting UI.", e);
-        setDbError(e.message || "Failed to save data. Please check your connection and permissions.");
-        // Re-fetch even on failure to get the true state back
-        await fetchFlatData();
-    }
+    // Admin should be able to see details, but since the modal is removed,
+    // this could be a good place for a toast or a different action.
+    // For now, we do nothing for other flats.
   };
 
   if (!isClient) {
@@ -531,7 +512,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
                                     blockName={blockName}
                                     blockData={blockData}
                                     allFlatData={flatData}
-                                    onFlatClick={openFlatModal}
+                                    onFlatClick={handleFlatClick}
                                 />
                             );
                         })}
@@ -557,18 +538,6 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
           </div>
         )}
       </main>
-
-      
-      <FlatModal 
-        key={selectedFlat?.flatId}
-        isOpen={!!selectedFlat}
-        onClose={() => setSelectedFlat(null)}
-        flatInfo={selectedFlat}
-        flatData={selectedFlat ? flatData[selectedFlat.flatId] : undefined}
-        onSave={saveFlatData}
-        isEditable={isEditable}
-      />
-        
 
       {isEditable && (
         <div className="fixed bottom-6 right-6 flex flex-col gap-4 z-30">
