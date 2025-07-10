@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { AlertTriangle, Home, User, CalendarDays, Clock, Bell, LogOut, ShieldAlert, Car, HeartPulse } from 'lucide-react';
+import { AlertTriangle, Home, User, CalendarDays, Clock, Bell, LogOut, ShieldAlert, Car, HeartPulse, Phone, Mail, Users, MessageSquare } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -277,15 +277,15 @@ export default function OwnerDashboardPage() {
                                 </CardHeader>
                                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <Label htmlFor="ownerName">Full Name</Label>
+                                        <Label htmlFor="ownerName" className="flex items-center gap-2"><User className="w-4 h-4" />Full Name</Label>
                                         <Input id="ownerName" value={formData.ownerName} onChange={handleInputChange} />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="contactNumber">Contact Number</Label>
+                                        <Label htmlFor="contactNumber" className="flex items-center gap-2"><Phone className="w-4 h-4" />Contact Number</Label>
                                         <Input id="contactNumber" type="tel" value={formData.contactNumber} onChange={handleInputChange} />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="email">Email Address</Label>
+                                        <Label htmlFor="email" className="flex items-center gap-2"><Mail className="w-4 h-4" />Email Address</Label>
                                         <Input id="email" type="email" value={formData.email} onChange={handleInputChange} />
                                     </div>
                                      <div className="space-y-2">
@@ -301,7 +301,7 @@ export default function OwnerDashboardPage() {
                                 </CardHeader>
                                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <Label htmlFor="familyMembers">Family Members</Label>
+                                        <Label htmlFor="familyMembers" className="flex items-center gap-2"><Users className="w-4 h-4" />Family Members</Label>
                                         <Input id="familyMembers" value={formData.familyMembers} onChange={handleInputChange} placeholder="e.g., 2 Adults, 1 Child" />
                                     </div>
                                     <div className="space-y-2">
@@ -314,7 +314,7 @@ export default function OwnerDashboardPage() {
                                         </Select>
                                     </div>
                                      <div className="space-y-2">
-                                        <Label htmlFor="moveInMonth">Move In Month</Label>
+                                        <Label htmlFor="moveInMonth" className="flex items-center gap-2"><CalendarDays className="w-4 h-4" />Move In Month</Label>
                                         <Button
                                             type="button"
                                             variant={"outline"}
@@ -354,7 +354,7 @@ export default function OwnerDashboardPage() {
                                         </Label>
                                     </div>
                                     <div className="space-y-2 md:col-span-2">
-                                        <Label htmlFor="issues">Issues / Complaints</Label>
+                                        <Label htmlFor="issues" className="flex items-center gap-2"><MessageSquare className="w-4 h-4" />Issues / Complaints</Label>
                                         <Textarea id="issues" value={formData.issues} onChange={handleInputChange} placeholder="Report any issues..."/>
                                     </div>
                                 </CardContent>
