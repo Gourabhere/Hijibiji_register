@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState, useTransition } from 'react';
@@ -14,11 +15,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { AlertTriangle, Home, User, CalendarDays, Clock, Bell, LogOut } from 'lucide-react';
+import { AlertTriangle, Home, User, CalendarDays, Clock, Bell, LogOut, ShieldAlert, Car, HeartPulse } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { YearMonthSelector } from '@/components/dashboard/year-month-selector';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
 export default function OwnerDashboardPage() {
     const router = useRouter();
@@ -34,6 +38,9 @@ export default function OwnerDashboardPage() {
         issues: '',
         registered: false,
         moveInMonth: '',
+        emergencyContactNumber: '',
+        parkingAllocation: '',
+        bloodGroup: '',
     });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -66,6 +73,9 @@ export default function OwnerDashboardPage() {
                             issues: data.issues,
                             registered: data.registered,
                             moveInMonth: data.moveInMonth,
+                            emergencyContactNumber: data.emergencyContactNumber,
+                            parkingAllocation: data.parkingAllocation,
+                            bloodGroup: data.bloodGroup,
                         });
                     } else {
                         setError('Could not find details for your flat.');
@@ -95,6 +105,10 @@ export default function OwnerDashboardPage() {
         setFormData(prev => ({ ...prev, [id]: value }));
     };
 
+    const handleSelectChange = (id: keyof OwnerEditableData, value: string) => {
+        setFormData(prev => ({ ...prev, [id]: value }));
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!flatData) return;
@@ -120,6 +134,9 @@ export default function OwnerDashboardPage() {
                         issues: updatedData.issues,
                         registered: updatedData.registered,
                         moveInMonth: updatedData.moveInMonth,
+                        emergencyContactNumber: updatedData.emergencyContactNumber,
+                        parkingAllocation: updatedData.parkingAllocation,
+                        bloodGroup: updatedData.bloodGroup,
                     });
                 }
             } else {
@@ -267,9 +284,13 @@ export default function OwnerDashboardPage() {
                                         <Label htmlFor="contactNumber">Contact Number</Label>
                                         <Input id="contactNumber" type="tel" value={formData.contactNumber} onChange={handleInputChange} />
                                     </div>
-                                    <div className="space-y-2 md:col-span-2">
+                                    <div className="space-y-2">
                                         <Label htmlFor="email">Email Address</Label>
                                         <Input id="email" type="email" value={formData.email} onChange={handleInputChange} />
+                                    </div>
+                                     <div className="space-y-2">
+                                        <Label htmlFor="emergencyContactNumber" className="flex items-center gap-2"><ShieldAlert className="w-4 h-4 text-destructive" />Emergency Contact</Label>
+                                        <Input id="emergencyContactNumber" type="tel" value={formData.emergencyContactNumber} onChange={handleInputChange} />
                                     </div>
                                 </CardContent>
                             </Card>
@@ -284,8 +305,13 @@ export default function OwnerDashboardPage() {
                                         <Input id="familyMembers" value={formData.familyMembers} onChange={handleInputChange} placeholder="e.g., 2 Adults, 1 Child" />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label>Maintenance Status</Label>
-                                        <div>{getMaintenanceBadge(flatData.maintenanceStatus)}</div>
+                                        <Label htmlFor="bloodGroup" className="flex items-center gap-2"><HeartPulse className="w-4 h-4"/>Blood Group</Label>
+                                        <Select value={formData.bloodGroup} onValueChange={(v) => handleSelectChange('bloodGroup', v)}>
+                                            <SelectTrigger><SelectValue placeholder="Select Blood Group" /></SelectTrigger>
+                                            <SelectContent>
+                                                {bloodGroups.map(group => <SelectItem key={group} value={group}>{group}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
                                     </div>
                                      <div className="space-y-2">
                                         <Label htmlFor="moveInMonth">Move In Month</Label>
@@ -301,6 +327,21 @@ export default function OwnerDashboardPage() {
                                             <CalendarDays className="mr-2 h-4 w-4" />
                                             {formData.moveInMonth ? formData.moveInMonth : <span>Pick a month</span>}
                                         </Button>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="parkingAllocation" className="flex items-center gap-2"><Car className="w-4 h-4"/>Parking Allocation</Label>
+                                        <Select value={formData.parkingAllocation} onValueChange={(v: any) => handleSelectChange('parkingAllocation', v)}>
+                                            <SelectTrigger><SelectValue placeholder="Select Parking" /></SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="Covered">Covered</SelectItem>
+                                                <SelectItem value="Open">Open</SelectItem>
+                                                <SelectItem value="No Parking">No Parking</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Maintenance Status</Label>
+                                        <div>{getMaintenanceBadge(flatData.maintenanceStatus)}</div>
                                     </div>
                                     <div className="flex items-center space-x-2 pt-2 md:col-span-2">
                                         <Checkbox 

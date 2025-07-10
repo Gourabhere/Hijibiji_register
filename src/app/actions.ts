@@ -1,7 +1,13 @@
 
 'use server';
 
-import type { FlatData } from '@/components/dashboard/dashboard-client';
+import type { FlatData as BaseFlatData } from '@/components/dashboard/dashboard-client';
+
+export type FlatData = BaseFlatData & {
+    emergencyContactNumber: string;
+    parkingAllocation: 'Covered' | 'Open' | 'No Parking' | '';
+    bloodGroup: string;
+};
 
 const SHEETDB_API_URL = 'https://sheetdb.io/api/v1/5ce4kfqrdyy4t';
 
@@ -39,6 +45,9 @@ const mapRowToFlatData = (row: any): FlatData => {
         registered: row['Registered'] === 'TRUE',
         lastUpdated: row['Last Updated'] || '',
         moveInMonth: row['Move In Month'] || '',
+        emergencyContactNumber: row['Emergency Contact Number'] || '',
+        parkingAllocation: row['Parking Allocation'] || '',
+        bloodGroup: row['Blood Group'] || '',
     };
 };
 
@@ -89,6 +98,9 @@ export async function saveFlatDataAction(flatId: string, data: FlatData): Promis
             'Registered': data.registered ? 'TRUE' : 'FALSE',
             'Last Updated': new Date().toISOString(),
             'Move In Month': data.moveInMonth,
+            'Emergency Contact Number': data.emergencyContactNumber,
+            'Parking Allocation': data.parkingAllocation,
+            'Blood Group': data.bloodGroup,
         };
 
         // Check if the flat exists to decide between PATCH (update) and POST (create)
@@ -196,6 +208,9 @@ export async function getOwnerFlatData(flatId: string): Promise<OwnerFlatData | 
             registered: ownerRow['Registered'] === 'TRUE',
             lastUpdated: ownerRow['Last Updated'] || '',
             moveInMonth: ownerRow['Move In Month'] || '',
+            emergencyContactNumber: row['Emergency Contact Number'] || '',
+            parkingAllocation: row['Parking Allocation'] || '',
+            bloodGroup: row['Blood Group'] || '',
         };
     } catch(e: any) {
         throw handleApiError(e, 'fetch owner flat data');
@@ -210,6 +225,9 @@ export type OwnerEditableData = {
     issues: string;
     registered: boolean;
     moveInMonth: string;
+    emergencyContactNumber: string;
+    parkingAllocation: 'Covered' | 'Open' | 'No Parking' | '';
+    bloodGroup: string;
 };
 
 export async function updateOwnerDataAction(flatId: string, data: OwnerEditableData): Promise<{ success: boolean; message: string }> {
@@ -224,6 +242,9 @@ export async function updateOwnerDataAction(flatId: string, data: OwnerEditableD
             'Registered': data.registered ? 'TRUE' : 'FALSE',
             'Last Updated': new Date().toISOString(),
             'Move In Month': data.moveInMonth,
+            'Emergency Contact Number': data.emergencyContactNumber,
+            'Parking Allocation': data.parkingAllocation,
+            'Blood Group': data.bloodGroup,
         };
 
         const url = `${SHEETDB_API_URL}/Flat%20ID/${encodeURIComponent(normalizedFlatId)}`;

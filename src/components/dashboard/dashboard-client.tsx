@@ -33,7 +33,8 @@ import { getFlatsData, saveFlatDataAction } from '@/app/actions';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { ThemeToggle } from '../theme-toggle';
-
+import type { FlatData as BaseFlatData } from './dashboard-client';
+import { CommitteeCard } from './committee-card';
 
 export type FlatInfo = {
   blockName: BlockName;
@@ -52,6 +53,9 @@ export type FlatData = {
   registered: boolean;
   lastUpdated?: string;
   moveInMonth: string;
+  emergencyContactNumber: string;
+  parkingAllocation: 'Covered' | 'Open' | 'No Parking' | '';
+  bloodGroup: string;
 }
 
 export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }) => {
@@ -77,7 +81,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
     setDbError(null);
     try {
       const data = await getFlatsData();
-      setFlatData(data);
+      setFlatData(data as Record<string, FlatData>);
     } catch (e: any) {
       console.error("Failed to load flat data.", e);
       setDbError(e.message || "An unknown error occurred while fetching data.");
@@ -490,60 +494,67 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
               </div>
           </motion.div>
         ) : (
-          <motion.div
-            className="flex items-stretch justify-center gap-2 sm:gap-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-          >
-            <motion.button 
-                onClick={goToPrevPage} 
-                whileHover={{ scale: 1.1 }} 
-                whileTap={{ scale: 0.9 }}
-                className="p-2 sm:p-3 bg-card/80 rounded-full shadow-lg border border-border/20 backdrop-blur-sm self-center shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={currentPage === 0}
-                aria-label="Previous page"
-            >
-                <ChevronLeft className="w-6 h-6 text-muted-foreground" />
-            </motion.button>
-
-            <div className="flex-grow max-w-7xl w-full">
-              <AnimatePresence mode="wait">
+          <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
+            <div className="xl:col-span-3">
                 <motion.div
-                    key={currentPage}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.3 }}
-                    className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-8"
+                    className="flex items-stretch justify-center gap-2 sm:gap-4"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
                 >
-                  {currentBlocks.map((blockName) => {
-                      const blockData = HijibijiFlatData[blockName];
-                      return (
-                          <BlockCard
-                              key={blockName}
-                              blockName={blockName}
-                              blockData={blockData}
-                              allFlatData={flatData}
-                              onFlatClick={openFlatModal}
-                          />
-                      );
-                  })}
-                </motion.div>
-              </AnimatePresence>
-            </div>
+                    <motion.button 
+                        onClick={goToPrevPage} 
+                        whileHover={{ scale: 1.1 }} 
+                        whileTap={{ scale: 0.9 }}
+                        className="p-2 sm:p-3 bg-card/80 rounded-full shadow-lg border border-border/20 backdrop-blur-sm self-center shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={currentPage === 0}
+                        aria-label="Previous page"
+                    >
+                        <ChevronLeft className="w-6 h-6 text-muted-foreground" />
+                    </motion.button>
 
-            <motion.button 
-                onClick={goToNextPage} 
-                whileHover={{ scale: 1.1 }} 
-                whileTap={{ scale: 0.9 }}
-                className="p-2 sm:p-3 bg-card/80 rounded-full shadow-lg border border-border/20 backdrop-blur-sm self-center shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={currentPage >= totalPages - 1}
-                aria-label="Next page"
-            >
-                <ChevronRight className="w-6 h-6 text-muted-foreground" />
-            </motion.button>
-          </motion.div>
+                    <div className="flex-grow max-w-7xl w-full">
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={currentPage}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.3 }}
+                            className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8"
+                        >
+                        {currentBlocks.map((blockName) => {
+                            const blockData = HijibijiFlatData[blockName];
+                            return (
+                                <BlockCard
+                                    key={blockName}
+                                    blockName={blockName}
+                                    blockData={blockData}
+                                    allFlatData={flatData}
+                                    onFlatClick={openFlatModal}
+                                />
+                            );
+                        })}
+                        </motion.div>
+                    </AnimatePresence>
+                    </div>
+
+                    <motion.button 
+                        onClick={goToNextPage} 
+                        whileHover={{ scale: 1.1 }} 
+                        whileTap={{ scale: 0.9 }}
+                        className="p-2 sm:p-3 bg-card/80 rounded-full shadow-lg border border-border/20 backdrop-blur-sm self-center shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={currentPage >= totalPages - 1}
+                        aria-label="Next page"
+                    >
+                        <ChevronRight className="w-6 h-6 text-muted-foreground" />
+                    </motion.button>
+                </motion.div>
+            </div>
+            <div className="xl:col-span-1">
+              <CommitteeCard />
+            </div>
+          </div>
         )}
       </main>
 

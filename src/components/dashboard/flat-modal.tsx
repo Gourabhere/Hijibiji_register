@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useTransition } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, Phone, Mail, Users, MessageSquare, Wrench, CalendarDays } from 'lucide-react';
+import { X, User, Phone, Mail, Users, MessageSquare, Wrench, CalendarDays, ShieldAlert, Car, HeartPulse } from 'lucide-react';
 import type { FlatInfo, FlatData } from './dashboard-client';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,7 +32,12 @@ const initialFormData: FlatData = {
     maintenanceStatus: 'paid',
     registered: false,
     moveInMonth: '',
+    emergencyContactNumber: '',
+    parkingAllocation: '',
+    bloodGroup: '',
 };
+
+const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
 export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave, isEditable = false }: FlatModalProps) {
     const [formData, setFormData] = useState<FlatData>(initialFormData);
@@ -44,6 +49,10 @@ export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave, isEdita
             setFormData({ ...initialFormData, ...(flatData || {}) });
         }
     }, [flatInfo, flatData]);
+
+    const handleSelectChange = (id: keyof FlatData, value: string) => {
+        setFormData(prev => ({ ...prev, [id]: value }));
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -69,7 +78,7 @@ export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave, isEdita
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-card rounded-3xl p-8 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+              className="bg-card rounded-3xl p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl"
             >
               <div className="flex justify-between items-start mb-6">
                 <div>
@@ -95,76 +104,77 @@ export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave, isEdita
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="ownerName" className="flex items-center"><User className="w-4 h-4 mr-2" />Owner Name</Label>
-                  <Input
-                    id="ownerName"
-                    type="text"
-                    value={formData.ownerName}
-                    onChange={(e) => setFormData({...formData, ownerName: e.target.value})}
-                    className="rounded-xl"
-                    placeholder="Enter owner name"
-                    disabled={!isEditable}
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="ownerName" className="flex items-center"><User className="w-4 h-4 mr-2" />Owner Name</Label>
+                      <Input id="ownerName" type="text" value={formData.ownerName} onChange={(e) => setFormData({...formData, ownerName: e.target.value})} className="rounded-xl" placeholder="Enter owner name" disabled={!isEditable} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="contactNumber" className="flex items-center"><Phone className="w-4 h-4 mr-2" />Contact Number</Label>
+                      <Input id="contactNumber" type="tel" value={formData.contactNumber} onChange={(e) => setFormData({...formData, contactNumber: e.target.value})} className="rounded-xl" placeholder="Enter contact number" disabled={!isEditable} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email" className="flex items-center"><Mail className="w-4 h-4 mr-2" />Email Address</Label>
+                      <Input id="email" type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="rounded-xl" placeholder="Enter email address" disabled={!isEditable} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="emergencyContactNumber" className="flex items-center"><ShieldAlert className="w-4 h-4 mr-2 text-destructive"/>Emergency Contact</Label>
+                        <Input id="emergencyContactNumber" type="tel" value={formData.emergencyContactNumber} onChange={(e) => setFormData({...formData, emergencyContactNumber: e.target.value})} className="rounded-xl" placeholder="Emergency number" disabled={!isEditable}/>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="familyMembers" className="flex items-center"><Users className="w-4 h-4 mr-2" />Family Members</Label>
+                      <Input id="familyMembers" type="text" value={formData.familyMembers} onChange={(e) => setFormData({...formData, familyMembers: e.target.value})} className="rounded-xl" placeholder="e.g., 2 Adults, 1 Child" disabled={!isEditable} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="bloodGroup" className="flex items-center"><HeartPulse className="w-4 h-4 mr-2" />Blood Group</Label>
+                        <Select value={formData.bloodGroup} onValueChange={(v) => handleSelectChange('bloodGroup', v)} disabled={!isEditable}>
+                            <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select group..." /></SelectTrigger>
+                            <SelectContent>
+                                {bloodGroups.map(group => <SelectItem key={group} value={group}>{group}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="moveInMonth" className="flex items-center"><CalendarDays className="w-4 h-4 mr-2" />Move In Month</Label>
+                      <Button
+                          type="button"
+                          variant={"outline"}
+                          onClick={() => setIsMonthSelectorOpen(true)}
+                          className={cn(
+                              "w-full justify-start text-left font-normal rounded-xl",
+                              !formData.moveInMonth && "text-muted-foreground"
+                          )}
+                          disabled={!isEditable}
+                      >
+                          <CalendarDays className="mr-2 h-4 w-4" />
+                          {formData.moveInMonth ? formData.moveInMonth : <span>Pick a month</span>}
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="parkingAllocation" className="flex items-center"><Car className="w-4 h-4 mr-2" />Parking Allocation</Label>
+                      <Select value={formData.parkingAllocation} onValueChange={(v: any) => handleSelectChange('parkingAllocation', v)} disabled={!isEditable}>
+                          <SelectTrigger id="parkingAllocation" className="rounded-xl"><SelectValue placeholder="Select status" /></SelectTrigger>
+                          <SelectContent>
+                              <SelectItem value="Covered">Covered</SelectItem>
+                              <SelectItem value="Open">Open</SelectItem>
+                              <SelectItem value="No Parking">No Parking</SelectItem>
+                          </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="maintenanceStatus" className="flex items-center"><Wrench className="w-4 h-4 mr-2" />Maintenance Status</Label>
+                        <Select value={formData.maintenanceStatus} onValueChange={(value: 'paid' | 'pending' | 'overdue') => setFormData({...formData, maintenanceStatus: value})} disabled={!isEditable}>
+                            <SelectTrigger id="maintenanceStatus" className="rounded-xl"><SelectValue placeholder="Select status" /></SelectTrigger>
+                            <SelectContent>
+                            <SelectItem value="paid">Paid</SelectItem>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="overdue">Overdue</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="contactNumber" className="flex items-center"><Phone className="w-4 h-4 mr-2" />Contact Number</Label>
-                  <Input
-                    id="contactNumber"
-                    type="tel"
-                    value={formData.contactNumber}
-                    onChange={(e) => setFormData({...formData, contactNumber: e.target.value})}
-                    className="rounded-xl"
-                    placeholder="Enter contact number"
-                    disabled={!isEditable}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="flex items-center"><Mail className="w-4 h-4 mr-2" />Email Address</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className="rounded-xl"
-                    placeholder="Enter email address"
-                    disabled={!isEditable}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="familyMembers" className="flex items-center"><Users className="w-4 h-4 mr-2" />Family Members</Label>
-                  <Input
-                    id="familyMembers"
-                    type="text"
-                    value={formData.familyMembers}
-                    onChange={(e) => setFormData({...formData, familyMembers: e.target.value})}
-                    className="rounded-xl"
-                    placeholder="e.g., 2 Adults, 1 Child"
-                    disabled={!isEditable}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="moveInMonth" className="flex items-center"><CalendarDays className="w-4 h-4 mr-2" />Move In Month</Label>
-                  <Button
-                      type="button"
-                      variant={"outline"}
-                      onClick={() => setIsMonthSelectorOpen(true)}
-                      className={cn(
-                          "w-full justify-start text-left font-normal rounded-xl",
-                          !formData.moveInMonth && "text-muted-foreground"
-                      )}
-                      disabled={!isEditable}
-                  >
-                      <CalendarDays className="mr-2 h-4 w-4" />
-                      {formData.moveInMonth ? formData.moveInMonth : <span>Pick a month</span>}
-                  </Button>
-                </div>
-
-                <div className="space-y-2">
+                <div className="space-y-2 pt-2">
                   <Label htmlFor="issues" className="flex items-center"><MessageSquare className="w-4 h-4 mr-2" />Issues/Complaints</Label>
                   <Textarea
                     id="issues"
@@ -175,24 +185,6 @@ export function FlatModal({ isOpen, onClose, flatInfo, flatData, onSave, isEdita
                     placeholder="Any issues or complaints..."
                     disabled={!isEditable}
                   />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="maintenanceStatus" className="flex items-center"><Wrench className="w-4 h-4 mr-2" />Maintenance Status</Label>
-                  <Select
-                    value={formData.maintenanceStatus}
-                    onValueChange={(value: 'paid' | 'pending' | 'overdue') => setFormData({...formData, maintenanceStatus: value})}
-                    disabled={!isEditable}
-                  >
-                    <SelectTrigger id="maintenanceStatus" className="rounded-xl">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="paid">Paid</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="overdue">Overdue</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
 
                 <div className="flex items-center space-x-2 pt-2">
