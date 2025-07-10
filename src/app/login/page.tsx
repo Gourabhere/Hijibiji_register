@@ -140,7 +140,7 @@ function LoginPageContent() {
         <Card className="w-full max-w-md shadow-2xl rounded-3xl bg-white/90 backdrop-blur-sm border-white/20">
           <CardHeader className="text-center">
             <Image
-              src="https://ik.imagekit.io/gourabhere/20250710_125848.jpg?updatedAt=1752132747820"
+              src="https://ik.imagekit.io/gourabhere/1000440858-removebg-preview.png?updatedAt=1752149396514"
               alt="Society Hub Logo"
               width={250}
               height={80}
