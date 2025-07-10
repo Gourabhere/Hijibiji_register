@@ -26,13 +26,14 @@ import { HijibijiFlatData, BlockName, getTotalFlatsInBlock } from '@/data/flat-d
 import { StatCard } from './stat-card';
 import { BlockCard } from './block-card';
 import { FloatingActionButton } from './floating-action-button';
+import { FlatModal } from './flat-modal';
 import { Input } from '@/components/ui/input';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { getFlatsData, saveFlatDataAction } from '@/app/actions';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { ThemeToggle } from '../theme-toggle';
-import type { FlatData as BaseFlatData } from './dashboard-client';
+import { useToast } from '@/hooks/use-toast';
 import { CommitteeCard } from './committee-card';
 
 export type FlatInfo = {
@@ -60,6 +61,8 @@ export type FlatData = {
 export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }) => {
   const [flatData, setFlatData] = useState<Record<string, FlatData>>({});
   const [searchTerm, setSearchTerm] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedFlat, setSelectedFlat] = useState<FlatInfo | null>(null);
   const [isClient, setIsClient] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [dbError, setDbError] = useState<string | null>(null);
@@ -73,6 +76,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
   
   const router = useRouter();
   const pathname = usePathname();
+  const { toast } = useToast();
 
   const fetchFlatData = useCallback(async () => {
     setIsLoading(true);
@@ -173,17 +177,33 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
     const blockNumber = blockName.replace('Block ', '');
     const flatId = `${blockNumber}${flat}${floor}`;
     
-    if (isOwnerLoggedIn) {
+    if (isEditable) {
+        setSelectedFlat({ blockName, floor, flat, flatId });
+        setIsModalOpen(true);
+    } else if (isOwnerLoggedIn) {
         const ownerFlatId = localStorage.getItem('ownerFlatId');
         if (flatId === ownerFlatId) {
             router.push('/owner');
-            return;
         }
     }
-
-    // Admin should be able to see details, but since the modal is removed,
-    // this could be a good place for a toast or a different action.
-    // For now, we do nothing for other flats.
+  };
+  
+  const handleSaveFlatData = async (flatId: string, data: FlatData) => {
+    try {
+        await saveFlatDataAction(flatId, data);
+        toast({
+            title: "Success",
+            description: `Flat ${flatId} data has been updated.`
+        });
+        setIsModalOpen(false);
+        fetchFlatData(); // Re-fetch data to update the UI
+    } catch (e: any) {
+        toast({
+            title: "Error",
+            description: `Failed to save data: ${e.message}`,
+            variant: "destructive"
+        });
+    }
   };
 
   if (!isClient) {
@@ -538,6 +558,16 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
           </div>
         )}
       </main>
+
+       {isEditable && selectedFlat && (
+        <FlatModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          flatInfo={selectedFlat}
+          initialData={flatData[selectedFlat.flatId]}
+          onSave={handleSaveFlatData}
+        />
+      )}
 
       {isEditable && (
         <div className="fixed bottom-6 right-6 flex flex-col gap-4 z-30">
