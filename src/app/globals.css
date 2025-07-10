@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
 body {
   font-family: Arial, Helvetica, sans-serif;
 }
@@ -94,5 +101,7 @@ body {
     background-position: center;
     background-repeat: no-repeat;
     background-attachment: fixed;
+    width: 100%;
+    min-height: 100vh;
   }
 }
