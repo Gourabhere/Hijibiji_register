@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { AlertTriangle, Home, User, CalendarDays } from 'lucide-react';
+import { AlertTriangle, Home, User, CalendarDays, Clock, Bell, LogOut } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -38,6 +38,7 @@ export default function OwnerDashboardPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isMonthSelectorOpen, setIsMonthSelectorOpen] = useState(false);
+    const [time, setTime] = useState(new Date());
 
     useEffect(() => {
         let isMounted = true;
@@ -46,6 +47,8 @@ export default function OwnerDashboardPage() {
             router.replace('/');
             return;
         }
+
+        const timer = setInterval(() => setTime(new Date()), 1000);
 
         const fetchData = async () => {
             setIsLoading(true);
@@ -83,6 +86,7 @@ export default function OwnerDashboardPage() {
 
         return () => {
             isMounted = false;
+            clearInterval(timer);
         };
     }, [router]);
     
@@ -151,6 +155,12 @@ export default function OwnerDashboardPage() {
                 return <Badge variant="outline">{status || 'N/A'}</Badge>;
         }
     };
+    
+    const navButtonVariants = {
+        initial: { opacity: 0, y: -10 },
+        animate: { opacity: 1, y: 0 },
+        hover: { scale: 1.05, y: -2, transition: { type: 'spring', stiffness: 300 } },
+    };
 
     if (isLoading) {
         return (
@@ -165,33 +175,68 @@ export default function OwnerDashboardPage() {
     }
     
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-900 dark:to-gray-950 p-4 sm:p-8">
-            <div className="max-w-4xl mx-auto">
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex flex-col sm:flex-row justify-between items-center mb-8"
-                >
-                     <h1 className="text-3xl font-bold text-foreground mb-2 sm:mb-0">My Dashboard</h1>
-                     <div className="flex items-center gap-4">
-                        <ThemeToggle />
-                        <Button asChild variant="outline" size="sm">
-                           <Link href="/dashboard">
-                              <Home className="w-4 h-4 mr-2"/>
-                              Home
-                           </Link>
-                        </Button>
-                        <div className="text-right">
-                           <p className="font-semibold text-foreground">{flatData?.ownerName}</p>
-                           <p className="text-xs text-muted-foreground">{flatData?.flatId}</p>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-900 dark:to-gray-950 font-body">
+            <motion.header
+                initial={{ y: -100 }}
+                animate={{ y: 0 }}
+                className="bg-card/80 backdrop-blur-xl border-b border-border/20 sticky top-0 z-40 shadow-lg"
+            >
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex justify-between items-center h-20">
+                        <div className="flex items-center space-x-4">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold text-lg shadow-md">
+                                {getAvatarInitials(flatData?.ownerName || '')}
+                            </div>
+                            <div>
+                                <h1 className="text-xl font-bold text-foreground font-headline">My Dashboard</h1>
+                                <p className="text-xs text-muted-foreground">{flatData?.ownerName} ({flatData?.flatId})</p>
+                            </div>
                         </div>
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold text-lg">
-                           {getAvatarInitials(flatData?.ownerName || '')}
-                        </div>
-                        <Button variant="outline" size="sm" onClick={handleLogout}>Logout</Button>
-                     </div>
-                </motion.div>
 
+                        <div className="hidden md:flex items-center space-x-2 bg-muted/50 p-2 rounded-full border border-border/20 shadow-inner">
+                            <motion.div variants={navButtonVariants} initial="initial" animate="animate" whileHover="hover">
+                                <Button asChild variant="ghost" size="sm" className="space-x-2">
+                                    <Link href="/dashboard">
+                                        <Home className="w-4 h-4" />
+                                        <span>Home</span>
+                                    </Link>
+                                </Button>
+                            </motion.div>
+                            <motion.div variants={navButtonVariants} initial="initial" animate="animate" whileHover="hover">
+                                <Button onClick={handleLogout} variant="ghost" size="sm" className="space-x-2">
+                                    <LogOut className="w-4 h-4" />
+                                    <span>Logout</span>
+                                </Button>
+                            </motion.div>
+                        </div>
+
+                        <div className="hidden md:flex items-center gap-4">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Clock className="w-4 h-4" />
+                                <span>{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                            <motion.button
+                                whileHover={{ scale: 1.1, rotate: [0, 15, -10, 15, 0] }}
+                                whileTap={{ scale: 0.95 }}
+                                transition={{ duration: 0.5 }}
+                                className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                                <Bell className="w-5 h-5" />
+                                <span className="absolute top-1 right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-card animate-pulse"></span>
+                            </motion.button>
+                            <ThemeToggle />
+                        </div>
+                        
+                        <div className="md:hidden">
+                          <Button variant="ghost" size="icon" onClick={handleLogout}>
+                            <LogOut className="h-6 w-6" />
+                          </Button>
+                        </div>
+                    </div>
+                </div>
+            </motion.header>
+            
+            <main className="max-w-4xl mx-auto p-4 sm:p-8">
                 {error && (
                      <Alert variant="destructive" className="mb-8">
                         <AlertTriangle className="h-4 w-4" />
@@ -282,7 +327,7 @@ export default function OwnerDashboardPage() {
                         </motion.div>
                     </form>
                 )}
-            </div>
+            </main>
             <YearMonthSelector 
               isOpen={isMonthSelectorOpen}
               onClose={() => setIsMonthSelectorOpen(false)}
