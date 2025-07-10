@@ -208,9 +208,9 @@ export async function getOwnerFlatData(flatId: string): Promise<OwnerFlatData | 
             registered: ownerRow['Registered'] === 'TRUE',
             lastUpdated: ownerRow['Last Updated'] || '',
             moveInMonth: ownerRow['Move In Month'] || '',
-            emergencyContactNumber: row['Emergency Contact Number'] || '',
-            parkingAllocation: row['Parking Allocation'] || '',
-            bloodGroup: row['Blood Group'] || '',
+            emergencyContactNumber: ownerRow['Emergency Contact Number'] || '',
+            parkingAllocation: ownerRow['Parking Allocation'] || '',
+            bloodGroup: ownerRow['Blood Group'] || '',
         };
     } catch(e: any) {
         throw handleApiError(e, 'fetch owner flat data');
