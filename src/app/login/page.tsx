@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Building, Lock, Mail, User, LogIn, UserPlus, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -138,10 +139,14 @@ function LoginPageContent() {
       >
         <Card className="w-full max-w-md shadow-2xl rounded-3xl bg-white/90 backdrop-blur-sm border-white/20">
           <CardHeader className="text-center">
-            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center mb-4">
-              <Building className="w-8 h-8 text-white" />
-            </div>
-            <CardTitle className="text-3xl font-bold text-slate-800 font-headline">Society Hub</CardTitle>
+            <Image
+              src="https://ik.imagekit.io/gourabhere/20250710_125848.jpg?updatedAt=1752132747820"
+              alt="Society Hub Logo"
+              width={250}
+              height={80}
+              className="mx-auto mb-2"
+              priority
+            />
             <CardDescription>Sign in or create your account</CardDescription>
           </CardHeader>
           <CardContent>
