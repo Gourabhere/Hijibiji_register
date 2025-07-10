@@ -8,19 +8,21 @@ import { motion } from 'framer-motion';
 import { format, parse } from 'date-fns';
 import { getOwnerFlatData, updateOwnerDataAction, type OwnerFlatData, type OwnerEditableData } from '@/app/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { AlertTriangle, Home, User, CalendarDays, Clock, Bell, LogOut, ShieldAlert, Car, HeartPulse, Phone, Mail, Users, MessageSquare } from 'lucide-react';
+import { AlertTriangle, Home, User, CalendarDays, Clock, Bell, LogOut, ShieldAlert, Car, HeartPulse, Phone, Mail, Users, MessageSquare, Menu } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { YearMonthSelector } from '@/components/dashboard/year-month-selector';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
+import { Separator } from '@/components/ui/separator';
 
 const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
@@ -245,9 +247,41 @@ export default function OwnerDashboardPage() {
                         </div>
                         
                         <div className="md:hidden">
-                          <Button variant="ghost" size="icon" onClick={handleLogout}>
-                            <LogOut className="h-6 w-6" />
-                          </Button>
+                            <Sheet>
+                                <SheetTrigger asChild>
+                                  <Button variant="ghost" size="icon">
+                                    <Menu className="h-6 w-6" />
+                                    <span className="sr-only">Open Menu</span>
+                                  </Button>
+                                </SheetTrigger>
+                                <SheetContent className="w-[280px] sm:w-[320px]">
+                                    <SheetHeader>
+                                        <SheetTitle>Menu</SheetTitle>
+                                    </SheetHeader>
+                                    <nav className="flex flex-col gap-2 mt-4">
+                                        <SheetClose asChild>
+                                          <Link href="/dashboard" className={buttonVariants({ variant: "ghost", className: "justify-start gap-2" })}>
+                                            <Home className="h-5 w-5" />
+                                            <span>Home</span>
+                                          </Link>
+                                        </SheetClose>
+                                        <Separator className="my-2" />
+                                        <Button variant="ghost" onClick={() => alert('Notifications feature coming soon!')} className="justify-start gap-2">
+                                            <Bell className="h-5 w-5" />
+                                            Notifications
+                                        </Button>
+                                        <Separator className="my-2" />
+                                        <Button variant="ghost" onClick={handleLogout} className="justify-start gap-2">
+                                            <LogOut className="h-5 w-5" />
+                                            Logout
+                                        </Button>
+                                        <Separator className="my-2" />
+                                        <div className="p-2">
+                                            <ThemeToggle />
+                                        </div>
+                                    </nav>
+                                </SheetContent>
+                            </Sheet>
                         </div>
                     </div>
                 </div>
