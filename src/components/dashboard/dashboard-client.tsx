@@ -5,6 +5,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { 
   Building, 
   Users, 
@@ -234,20 +235,16 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center space-x-4">
-              <motion.div 
-                animate={{ rotate: [0, 10, -10, 0]}}
-                transition={{ duration: 0.5, ease: 'easeInOut' }}
-                className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center shadow-md">
-                <Building className="w-6 h-6 text-primary-foreground" />
-              </motion.div>
-              <div>
-                <h1 className="text-xl font-bold text-foreground font-headline">
-                  {isEditable ? 'Admin Panel' : 'Society Hub'}
-                </h1>
-                <p className="text-xs text-muted-foreground">
-                  {isEditable ? 'Hijibiji Society' : 'Management Dashboard'}
-                </p>
-              </div>
+              <Link href="/">
+                <Image
+                  src="https://ik.imagekit.io/gourabhere/1000440858-removebg-preview.png?updatedAt=1752149396514"
+                  alt="Society Hub Logo"
+                  width={150}
+                  height={50}
+                  className="object-contain"
+                  priority
+                />
+              </Link>
             </div>
             
             <div className="hidden md:flex items-center space-x-2 bg-muted/50 p-2 rounded-full border border-border/20 shadow-inner">
