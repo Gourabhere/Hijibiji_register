@@ -1,6 +1,7 @@
 
 'use server';
 
+import { google } from 'googleapis';
 import type { FlatData as BaseFlatData } from '@/components/dashboard/dashboard-client';
 
 export type FlatData = BaseFlatData & {
@@ -9,64 +10,106 @@ export type FlatData = BaseFlatData & {
     bloodGroup: string;
 };
 
-const SHEETDB_API_URL = 'https://sheetdb.io/api/v1/5ce4kfqrdyy4t';
+// All column names used in the sheet
+const COLUMN_NAMES = [
+    'Flat ID', 'Block', 'Floor', 'Flat', 'Owner Name', 'Contact Number',
+    'Email', 'Family Members', 'Issues / Complaints', 'Maintenance Status',
+    'Registered', 'Password', 'Last Updated', 'Move In Month',
+    'Emergency Contact Number', 'Parking Allocation', 'Blood Group'
+];
+
+const SPREADSHEET_ID = process.env.GOOGLE_SHEETS_ID;
+const SHEET_NAME = 'Flats'; // Name of the sheet/tab in your Google Sheet
+
+// Helper to authenticate and get the Google Sheets API client
+async function getSheetsClient() {
+    const auth = new google.auth.GoogleAuth({
+        credentials: {
+            client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+            private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        },
+        scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
+
+    const authClient = await auth.getClient();
+    return google.sheets({ version: 'v4', auth: authClient });
+}
 
 // Helper to handle API errors consistently.
 const handleApiError = (e: any, context: string): Error => {
-    console.error(`Failed to ${context} via SheetDB.`, e);
+    console.error(`Failed to ${context} via Google Sheets API.`, e);
     const message = e.message || 'An unknown error occurred.';
-    // Provide a more user-friendly error message
     return new Error(`There was a problem connecting to the database (${context}). Please try again later. Details: ${message}`);
 };
 
 // Helper to convert from various formats to the standard '{blockNumber}{flat}{floor}'
 const normalizeFlatId = (id: any): string => {
     if (!id) return '';
-    // This implementation is more robust against various string formats in the sheet,
-    // including descriptive ones like "Block 1 - Flat A - Floor 1".
     return id.toString()
         .trim()
         .toUpperCase()
         .replace(/^BLOCK\s*/, '')
-        .replace(/FLAT|FLOOR/g, '') // Remove keywords to isolate numbers/letters
-        .replace(/[\s,-]+/g, '');      // Remove all whitespace, hyphens, and commas
+        .replace(/FLAT|FLOOR/g, '')
+        .replace(/[\s,-]+/g, '');
 };
 
+// Find the row number for a given flat ID
+async function findRowByFlatId(sheets: any, flatId: string): Promise<number | null> {
+    try {
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `${SHEET_NAME}!A:A`, // Search in the 'Flat ID' column
+        });
+        const rows = response.data.values;
+        if (!rows) return null;
 
-// Maps a row object from SheetDB to the app's FlatData type.
-const mapRowToFlatData = (row: any): FlatData => {
-    return {
-        ownerName: row['Owner Name'] || '',
-        contactNumber: row['Contact Number'] || '',
-        email: row['Email'] || '',
-        familyMembers: row['Family Members'] || '',
-        issues: row['Issues / Complaints'] || '',
-        maintenanceStatus: row['Maintenance Status'] || 'pending',
-        registered: row['Registered'] === 'TRUE',
-        lastUpdated: row['Last Updated'] || '',
-        moveInMonth: row['Move In Month'] || '',
-        emergencyContactNumber: row['Emergency Contact Number'] || '',
-        parkingAllocation: row['Parking Allocation'] || '',
-        bloodGroup: row['Blood Group'] || '',
-    };
-};
+        for (let i = 0; i < rows.length; i++) {
+            if (rows[i][0] && normalizeFlatId(rows[i][0]) === normalizeFlatId(flatId)) {
+                return i + 1; // Return 1-based row index
+            }
+        }
+        return null;
+    } catch (e) {
+        throw handleApiError(e, 'find row by flat ID');
+    }
+}
 
 export async function getFlatsData(): Promise<Record<string, FlatData>> {
     try {
-        const response = await fetch(SHEETDB_API_URL, { cache: 'no-store' });
-        if (!response.ok) {
-            if (response.status === 429) {
-                throw new Error('API request limit exceeded. Please wait a moment before trying again.');
-            }
-            throw new Error(`API responded with status ${response.status}`);
-        }
-        const rows: any[] = await response.json();
+        const sheets = await getSheetsClient();
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `${SHEET_NAME}!A:Q`, // Adjust range to cover all columns
+        });
 
+        const rows = response.data.values;
+        if (!rows || rows.length === 0) {
+            return {};
+        }
+
+        const headers = rows[0] as string[];
+        const headerIndexMap = new Map(headers.map((h, i) => [h, i]));
+        
         const flatData: Record<string, FlatData> = {};
-        for (const row of rows) {
-            const flatIdFromSheet = row['Flat ID'];
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            const flatIdFromSheet = row[headerIndexMap.get('Flat ID')!];
             if (flatIdFromSheet) {
-                flatData[normalizeFlatId(flatIdFromSheet)] = mapRowToFlatData(row);
+                const normalizedId = normalizeFlatId(flatIdFromSheet);
+                flatData[normalizedId] = {
+                    ownerName: row[headerIndexMap.get('Owner Name')!] || '',
+                    contactNumber: row[headerIndexMap.get('Contact Number')!] || '',
+                    email: row[headerIndexMap.get('Email')!] || '',
+                    familyMembers: row[headerIndexMap.get('Family Members')!] || '',
+                    issues: row[headerIndexMap.get('Issues / Complaints')!] || '',
+                    maintenanceStatus: row[headerIndexMap.get('Maintenance Status')!] || 'pending',
+                    registered: row[headerIndexMap.get('Registered')!] === 'TRUE',
+                    lastUpdated: row[headerIndexMap.get('Last Updated')!] || '',
+                    moveInMonth: row[headerIndexMap.get('Move In Month')!] || '',
+                    emergencyContactNumber: row[headerIndexMap.get('Emergency Contact Number')!] || '',
+                    parkingAllocation: row[headerIndexMap.get('Parking Allocation')!] || '',
+                    bloodGroup: row[headerIndexMap.get('Blood Group')!] || '',
+                };
             }
         }
         return flatData;
@@ -75,21 +118,23 @@ export async function getFlatsData(): Promise<Record<string, FlatData>> {
     }
 }
 
-
 export async function saveFlatDataAction(flatId: string, data: FlatData): Promise<void> {
     const normalizedFlatId = normalizeFlatId(flatId);
-    
     try {
-        const parts = normalizedFlatId.match(/^(\d+)([A-Z])(\d+)$/);
-        if (!parts) {
-            throw new Error(`Invalid flat ID format: ${flatId}`);
+        const sheets = await getSheetsClient();
+        const rowNumber = await findRowByFlatId(sheets, normalizedFlatId);
+
+        if (!rowNumber) {
+            throw new Error(`Flat ID ${normalizedFlatId} not found in the sheet for updating.`);
         }
+        
+        const parts = normalizedFlatId.match(/^(\d+)([A-Z])(\d+)$/);
+        if (!parts) throw new Error(`Invalid flat ID format: ${flatId}`);
         const [, blockNum, flatLetter, floorNum] = parts;
-        const block = `Block ${blockNum}`;
 
         const rowData = {
             'Flat ID': normalizedFlatId,
-            'Block': block,
+            'Block': `Block ${blockNum}`,
             'Floor': floorNum,
             'Flat': flatLetter,
             'Owner Name': data.ownerName,
@@ -105,75 +150,52 @@ export async function saveFlatDataAction(flatId: string, data: FlatData): Promis
             'Parking Allocation': data.parkingAllocation,
             'Blood Group': data.bloodGroup,
         };
-
-        // Check if the flat exists to decide between PATCH (update) and POST (create)
-        const searchUrl = `${SHEETDB_API_URL}/search?${encodeURIComponent('Flat ID')}=${encodeURIComponent(normalizedFlatId)}&casesensitive=false`;
-        const searchResponse = await fetch(searchUrl, { cache: 'no-store' });
-        if (!searchResponse.ok) {
-             if (searchResponse.status === 429) {
-                throw new Error('API request limit exceeded. Please wait a moment before trying again.');
-            }
-            throw new Error(`API search responded with status ${searchResponse.status}`);
-        }
         
-        const existingData: any[] = await searchResponse.json();
+        // Prepare the values in the correct column order
+        const values = [COLUMN_NAMES.map(colName => rowData[colName as keyof typeof rowData] || '')];
 
-        let response;
-        if (existingData.length > 0) {
-            // Flat exists, use PATCH to update the specific row.
-            const url = `${SHEETDB_API_URL}/Flat%20ID/${encodeURIComponent(normalizedFlatId)}`;
-            response = await fetch(url, {
-                method: 'PATCH',
-                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                body: JSON.stringify(rowData)
-            });
-        } else {
-            // Flat does not exist, use POST to create a new row.
-            response = await fetch(SHEETDB_API_URL, {
-                method: 'POST',
-                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                body: JSON.stringify({ data: [rowData] }) // SheetDB expects a 'data' property for POST
-            });
-        }
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `${SHEET_NAME}!A${rowNumber}:${String.fromCharCode(65 + COLUMN_NAMES.length-1)}${rowNumber}`,
+            valueInputOption: 'USER_ENTERED',
+            requestBody: { values },
+        });
 
-        if (!response.ok) {
-            if (response.status === 429) {
-                throw new Error('API request limit exceeded. Please wait a moment before trying again.');
-            }
-            const errorBody = await response.text();
-            throw new Error(`API responded with status ${response.status}: ${errorBody}`);
-        }
     } catch (e: any) {
         throw handleApiError(e, `save data for flat ${flatId}`);
     }
 }
 
+
 export async function loginOwnerAction(flatId: string, password_from_user: string): Promise<{ success: boolean; message: string; flatId?: string }> {
     const normalizedFlatId = normalizeFlatId(flatId);
-    if (!normalizedFlatId) {
-        return { success: false, message: "Flat ID is required." };
-    }
+    if (!normalizedFlatId) return { success: false, message: "Flat ID is required." };
 
     try {
-        const searchUrl = `${SHEETDB_API_URL}/search?${encodeURIComponent('Flat ID')}=${encodeURIComponent(normalizedFlatId)}&casesensitive=false`;
-        const response = await fetch(searchUrl, { cache: 'no-store' });
-        if (!response.ok) {
-             if (response.status === 429) {
-                return { success: false, message: 'API request limit exceeded. Please wait and try again.' };
-            }
-             throw new Error(`API responded with status ${response.status}`);
-        }
-        const data: any[] = await response.json();
+        const sheets = await getSheetsClient();
+        const rowNumber = await findRowByFlatId(sheets, normalizedFlatId);
+
+        if (!rowNumber) return { success: false, message: "Flat ID not found." };
         
-        const ownerRow = data.length > 0 ? data[0] : null;
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `${SHEET_NAME}!A${rowNumber}:Q${rowNumber}`,
+        });
 
-        if (!ownerRow) {
-            return { success: false, message: "Flat ID not found." };
-        }
+        const row = response.data.values?.[0];
+        if (!row) return { success: false, message: "Flat ID not found." };
 
-        const correctPassword = ownerRow['Password'];
+        const headersResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `${SHEET_NAME}!A1:Q1` });
+        const headers = headersResponse.data.values?.[0];
+        if (!headers) throw new Error("Sheet headers not found.");
+        const headerIndexMap = new Map(headers.map((h, i) => [h, i]));
+
+        const passwordIndex = headerIndexMap.get('Password');
+        if (passwordIndex === undefined) throw new Error("Password column not found in sheet.");
+        
+        const correctPassword = row[passwordIndex];
         if (correctPassword && correctPassword === password_from_user) {
-            return { success: true, message: "Login successful.", flatId: normalizeFlatId(ownerRow['Flat ID']) };
+            return { success: true, message: "Login successful.", flatId: normalizedFlatId };
         } else {
             return { success: false, message: "Incorrect password." };
         }
@@ -192,40 +214,41 @@ export type OwnerFlatData = FlatData & {
 export async function getOwnerFlatData(flatId: string): Promise<OwnerFlatData | null> {
     const normalizedFlatId = normalizeFlatId(flatId);
     try {
-        const searchUrl = `${SHEETDB_API_URL}/search?${encodeURIComponent('Flat ID')}=${encodeURIComponent(normalizedFlatId)}&casesensitive=false`;
-        const response = await fetch(searchUrl, { cache: 'no-store' });
+        const sheets = await getSheetsClient();
+        const rowNumber = await findRowByFlatId(sheets, normalizedFlatId);
+        
+        if (!rowNumber) return null;
 
-        if (!response.ok) {
-            if (response.status === 429) {
-                throw new Error('API request limit exceeded. Please wait a moment and try again.');
-            }
-            throw new Error(`API responded with status ${response.status}`);
-        }
-        const data: any[] = await response.json();
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `${SHEET_NAME}!A${rowNumber}:Q${rowNumber}`,
+        });
+        const row = response.data.values?.[0];
         
-        const ownerRow = data.length > 0 ? data[0] : null;
-        
-        if (!ownerRow) {
-            return null;
-        }
+        if (!row) return null;
+
+        const headersResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `${SHEET_NAME}!A1:Q1` });
+        const headers = headersResponse.data.values?.[0];
+        if (!headers) throw new Error("Sheet headers not found.");
+        const headerIndexMap = new Map(headers.map((h, i) => [h, i]));
 
         return {
-            flatId: ownerRow['Flat ID'] || '',
-            block: ownerRow['Block'] || '',
-            floor: ownerRow['Floor'] || '',
-            flat: ownerRow['Flat'] || '',
-            ownerName: ownerRow['Owner Name'] || '',
-            contactNumber: ownerRow['Contact Number'] || '',
-            email: ownerRow['Email'] || '',
-            familyMembers: ownerRow['Family Members'] || '',
-            issues: ownerRow['Issues / Complaints'] || '',
-            maintenanceStatus: ownerRow['Maintenance Status'] || 'pending',
-            registered: ownerRow['Registered'] === 'TRUE',
-            lastUpdated: ownerRow['Last Updated'] || '',
-            moveInMonth: ownerRow['Move In Month'] || '',
-            emergencyContactNumber: ownerRow['Emergency Contact Number'] || '',
-            parkingAllocation: ownerRow['Parking Allocation'] || '',
-            bloodGroup: ownerRow['Blood Group'] || '',
+            flatId: row[headerIndexMap.get('Flat ID')!] || '',
+            block: row[headerIndexMap.get('Block')!] || '',
+            floor: row[headerIndexMap.get('Floor')!] || '',
+            flat: row[headerIndexMap.get('Flat')!] || '',
+            ownerName: row[headerIndexMap.get('Owner Name')!] || '',
+            contactNumber: row[headerIndexMap.get('Contact Number')!] || '',
+            email: row[headerIndexMap.get('Email')!] || '',
+            familyMembers: row[headerIndexMap.get('Family Members')!] || '',
+            issues: row[headerIndexMap.get('Issues / Complaints')!] || '',
+            maintenanceStatus: row[headerIndexMap.get('Maintenance Status')!] || 'pending',
+            registered: row[headerIndexMap.get('Registered')!] === 'TRUE',
+            lastUpdated: row[headerIndexMap.get('Last Updated')!] || '',
+            moveInMonth: row[headerIndexMap.get('Move In Month')!] || '',
+            emergencyContactNumber: row[headerIndexMap.get('Emergency Contact Number')!] || '',
+            parkingAllocation: row[headerIndexMap.get('Parking Allocation')!] || '',
+            bloodGroup: row[headerIndexMap.get('Blood Group')!] || '',
         };
     } catch(e: any) {
         throw handleApiError(e, 'fetch owner flat data');
@@ -248,7 +271,14 @@ export type OwnerEditableData = {
 export async function updateOwnerDataAction(flatId: string, data: OwnerEditableData): Promise<{ success: boolean; message: string }> {
     const normalizedFlatId = normalizeFlatId(flatId);
     try {
-        const rowData = {
+        const sheets = await getSheetsClient();
+        const rowNumber = await findRowByFlatId(sheets, normalizedFlatId);
+
+        if (!rowNumber) {
+            return { success: false, message: `Could not find flat ${normalizedFlatId} to update.` };
+        }
+
+        const dataToUpdate = {
             'Owner Name': data.ownerName,
             'Contact Number': data.contactNumber,
             'Email': data.email,
@@ -262,23 +292,20 @@ export async function updateOwnerDataAction(flatId: string, data: OwnerEditableD
             'Blood Group': data.bloodGroup,
         };
 
-        const url = `${SHEETDB_API_URL}/Flat%20ID/${encodeURIComponent(normalizedFlatId)}`;
-        const response = await fetch(url, {
-            method: 'PATCH',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(rowData)
+        const headersResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `${SHEET_NAME}!A1:Q1` });
+        const headers = headersResponse.data.values?.[0];
+        if (!headers) throw new Error("Sheet headers not found.");
+        
+        // Map data to the correct column order for the update
+        const values = [headers.map(header => dataToUpdate[header as keyof typeof dataToUpdate] || '')];
+
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `${SHEET_NAME}!A${rowNumber}:${String.fromCharCode(65 + headers.length-1)}${rowNumber}`,
+            valueInputOption: 'USER_ENTERED',
+            requestBody: { values },
         });
 
-        if (!response.ok) {
-            if (response.status === 429) {
-                return { success: false, message: 'API request limit exceeded. Please wait and try again.' };
-            }
-            const errorBody = await response.json();
-            throw new Error(`API responded with status ${response.status}: ${JSON.stringify(errorBody)}`);
-        }
         return { success: true, message: 'Details updated successfully!' };
 
     } catch(e: any) {
@@ -291,75 +318,54 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
     const flatId = `${blockNumber}${flat}${floor}`.toUpperCase();
 
     try {
-        const searchUrl = `${SHEETDB_API_URL}/search?${encodeURIComponent('Flat ID')}=${encodeURIComponent(flatId)}&casesensitive=false`;
-        const searchResponse = await fetch(searchUrl, { cache: 'no-store' });
-        if (!searchResponse.ok) {
-            if (searchResponse.status === 429) {
-                return { success: false, message: 'API request limit exceeded. Please wait and try again.' };
-            }
-            throw new Error(`API search responded with status ${searchResponse.status}`);
-        }
-        const data: any[] = await searchResponse.json();
-        const flatRow = data.length > 0 ? data[0] : null;
+        const sheets = await getSheetsClient();
+        const rowNumber = await findRowByFlatId(sheets, flatId);
 
-        // Case 1: Flat exists in the sheet
-        if (flatRow) {
-            if (flatRow['Registered'] === 'TRUE') {
-                return { success: false, message: "This flat is already registered. Please log in or contact administration if you believe this is an error." };
-            }
-            if (flatRow['Password'] && flatRow['Password'].length > 0) {
-                return { success: false, message: "An account for this flat already exists. Please log in or contact administration." };
-            }
-
-            // Flat exists but is unregistered and has no password. Update it.
-            const updateUrl = `${SHEETDB_API_URL}/Flat%20ID/${encodeURIComponent(flatId)}`;
-            const updateResponse = await fetch(updateUrl, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    'Password': password_from_user,
-                    'Registered': 'FALSE', // Still not fully registered until details are filled
-                    'Last Updated': new Date().toISOString()
-                })
+        if (rowNumber) { // Flat exists
+            const response = await sheets.spreadsheets.values.get({
+                spreadsheetId: SPREADSHEET_ID,
+                range: `${SHEET_NAME}!A${rowNumber}:Q${rowNumber}`,
             });
+            const row = response.data.values?.[0];
+            if (!row) throw new Error("Could not retrieve existing flat data.");
 
-            if (!updateResponse.ok) {
-                if (updateResponse.status === 429) {
-                    return { success: false, message: 'API request limit exceeded. Please wait and try again.' };
-                }
-                throw new Error(`API update responded with status ${updateResponse.status}`);
+            const headersResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `${SHEET_NAME}!A1:Q1` });
+            const headers = headersResponse.data.values?.[0] as string[];
+            if (!headers) throw new Error("Sheet headers not found.");
+            const headerIndexMap = new Map(headers.map((h, i) => [h, i]));
+
+            if (row[headerIndexMap.get('Registered')!] === 'TRUE') {
+                return { success: false, message: "This flat is already registered. Please log in or contact administration." };
             }
-             return { success: true, message: 'Signup successful! Please log in to update your details.', flatId };
-        } 
-        
-        // Case 2: Flat does not exist in the sheet, create it.
-        else {
-             const newRowData = {
-                'Flat ID': flatId,
-                'Block': block,
-                'Floor': floor,
-                'Flat': flat,
-                'Password': password_from_user,
-                'Registered': 'FALSE',
-                'Last Updated': new Date().toISOString(),
-             };
+            if (row[headerIndexMap.get('Password')!] && row[headerIndexMap.get('Password')!].length > 0) {
+                 return { success: false, message: "An account for this flat already exists. Please log in." };
+            }
 
-             const createResponse = await fetch(SHEETDB_API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ data: [newRowData] }) // SheetDB expects a 'data' property for POST
-             });
+            // Update existing row with password
+            const passwordColumnLetter = String.fromCharCode(65 + headers.indexOf('Password'));
+            await sheets.spreadsheets.values.update({
+                spreadsheetId: SPREADSHEET_ID,
+                range: `${SHEET_NAME}!${passwordColumnLetter}${rowNumber}`,
+                valueInputOption: 'USER_ENTERED',
+                requestBody: { values: [[password_from_user]] },
+            });
+            return { success: true, message: 'Signup successful! Please log in to update your details.', flatId };
 
-             if (!createResponse.ok) {
-                if (createResponse.status === 429) {
-                    return { success: false, message: 'API request limit exceeded. Please wait and try again.' };
-                }
-                throw new Error(`API create responded with status ${createResponse.status}`);
-             }
+        } else { // Flat does not exist, create it
+            const newRowData = [
+                flatId, block, floor, flat, '', '', '', '', '', 'pending',
+                'FALSE', password_from_user, new Date().toISOString(),
+                '', '', '', ''
+            ];
 
-             return { success: true, message: 'Signup successful! Please log in to update your details.', flatId };
+            await sheets.spreadsheets.values.append({
+                spreadsheetId: SPREADSHEET_ID,
+                range: `${SHEET_NAME}!A:Q`,
+                valueInputOption: 'USER_ENTERED',
+                requestBody: { values: [newRowData] },
+            });
+            return { success: true, message: 'Signup successful! Please log in to update your details.', flatId };
         }
-
     } catch (e: any) {
         return { success: false, message: handleApiError(e, 'process owner signup').message };
     }
