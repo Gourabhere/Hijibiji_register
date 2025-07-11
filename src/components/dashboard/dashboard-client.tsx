@@ -492,66 +492,61 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
               </div>
           </motion.div>
         ) : (
-          <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
-            <div className="xl:col-span-3">
-                <motion.div
-                    className="flex items-stretch justify-center gap-2 sm:gap-4"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                >
-                    <motion.button 
-                        onClick={goToPrevPage} 
-                        whileHover={{ scale: 1.1 }} 
-                        whileTap={{ scale: 0.9 }}
-                        className="p-2 sm:p-3 bg-card/80 rounded-full shadow-lg border border-border/20 backdrop-blur-sm self-center shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled={currentPage === 0}
-                        aria-label="Previous page"
-                    >
-                        <ChevronLeft className="w-6 h-6 text-muted-foreground" />
-                    </motion.button>
+          <div>
+              <motion.div
+                  className="flex items-stretch justify-center gap-2 sm:gap-4"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+              >
+                  <motion.button 
+                      onClick={goToPrevPage} 
+                      whileHover={{ scale: 1.1 }} 
+                      whileTap={{ scale: 0.9 }}
+                      className="p-2 sm:p-3 bg-card/80 rounded-full shadow-lg border border-border/20 backdrop-blur-sm self-center shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={currentPage === 0}
+                      aria-label="Previous page"
+                  >
+                      <ChevronLeft className="w-6 h-6 text-muted-foreground" />
+                  </motion.button>
 
-                    <div className="flex-grow max-w-7xl w-full">
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={currentPage}
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            transition={{ duration: 0.3 }}
-                            className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8"
-                        >
-                        {currentBlocks.map((blockName) => {
-                            const blockData = HijibijiFlatData[blockName];
-                            return (
-                                <BlockCard
-                                    key={blockName}
-                                    blockName={blockName}
-                                    blockData={blockData}
-                                    allFlatData={flatData}
-                                    onFlatClick={handleFlatClick}
-                                />
-                            );
-                        })}
-                        </motion.div>
-                    </AnimatePresence>
-                    </div>
+                  <div className="flex-grow max-w-7xl w-full">
+                  <AnimatePresence mode="wait">
+                      <motion.div
+                          key={currentPage}
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          transition={{ duration: 0.3 }}
+                          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8"
+                      >
+                      {currentBlocks.map((blockName) => {
+                          const blockData = HijibijiFlatData[blockName];
+                          return (
+                              <BlockCard
+                                  key={blockName}
+                                  blockName={blockName}
+                                  blockData={blockData}
+                                  allFlatData={flatData}
+                                  onFlatClick={handleFlatClick}
+                              />
+                          );
+                      })}
+                      </motion.div>
+                  </AnimatePresence>
+                  </div>
 
-                    <motion.button 
-                        onClick={goToNextPage} 
-                        whileHover={{ scale: 1.1 }} 
-                        whileTap={{ scale: 0.9 }}
-                        className="p-2 sm:p-3 bg-card/80 rounded-full shadow-lg border border-border/20 backdrop-blur-sm self-center shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled={currentPage >= totalPages - 1}
-                        aria-label="Next page"
-                    >
-                        <ChevronRight className="w-6 h-6 text-muted-foreground" />
-                    </motion.button>
-                </motion.div>
-            </div>
-            <div className="xl:col-span-1">
-              <CommitteeCard />
-            </div>
+                  <motion.button 
+                      onClick={goToNextPage} 
+                      whileHover={{ scale: 1.1 }} 
+                      whileTap={{ scale: 0.9 }}
+                      className="p-2 sm:p-3 bg-card/80 rounded-full shadow-lg border border-border/20 backdrop-blur-sm self-center shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={currentPage >= totalPages - 1}
+                      aria-label="Next page"
+                  >
+                      <ChevronRight className="w-6 h-6 text-muted-foreground" />
+                  </motion.button>
+              </motion.div>
           </div>
         )}
       </main>
@@ -566,28 +561,31 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
         />
       )}
 
-      {isEditable && (
-        <div className="fixed bottom-6 right-6 flex flex-col gap-4 z-30">
-          <FloatingActionButton
-            icon={Bell}
-            onClick={() => alert('Notifications feature coming soon!')}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
-            tooltip="Notifications"
-          />
-          <FloatingActionButton
-            icon={FileText}
-            onClick={() => alert('Reports feature coming soon!')}
-            className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700"
-            tooltip="Generate Reports"
-          />
-          <FloatingActionButton
-            icon={Settings}
-            onClick={() => alert('Settings feature coming soon!')}
-            className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
-            tooltip="Settings"
-          />
-        </div>
-      )}
+      <div className="fixed bottom-6 right-6 flex flex-col gap-4 z-30">
+        {isEditable && (
+          <>
+            <FloatingActionButton
+              icon={Bell}
+              onClick={() => alert('Notifications feature coming soon!')}
+              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+              tooltip="Notifications"
+            />
+            <FloatingActionButton
+              icon={FileText}
+              onClick={() => alert('Reports feature coming soon!')}
+              className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700"
+              tooltip="Generate Reports"
+            />
+            <FloatingActionButton
+              icon={Settings}
+              onClick={() => alert('Settings feature coming soon!')}
+              className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
+              tooltip="Settings"
+            />
+          </>
+        )}
+        <CommitteeCard />
+      </div>
     </div>
   );
 };
