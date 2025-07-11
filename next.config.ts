@@ -1,10 +1,11 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
   env: {
     GOOGLE_SHEETS_ID: '1z_6CN-5qHWvnphs8H3fNSldQVQHc9X6qxutyW66MwUw',
-    GOOGLE_SHEET_NAME: 'Flat Details',
+    GOOGLE_SHEET_NAME: 'Sheet1',
   },
   typescript: {
     ignoreBuildErrors: true,
@@ -31,5 +32,3 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
-
-    
