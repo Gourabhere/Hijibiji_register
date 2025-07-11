@@ -116,7 +116,6 @@ export default function OwnerDashboardPage() {
         if (!flatData) return;
 
         startTransition(async () => {
-            // Ensure `registered` status is also updated upon saving any detail.
             const dataToSave = { ...formData, registered: true };
 
             const result = await updateOwnerDataAction(flatData.flatId, dataToSave);
@@ -125,22 +124,7 @@ export default function OwnerDashboardPage() {
                     title: 'Success!',
                     description: result.message,
                 });
-                const updatedData = await getOwnerFlatData(flatData.flatId);
-                if(updatedData) {
-                    setFlatData(updatedData);
-                    setFormData({
-                        ownerName: updatedData.ownerName,
-                        contactNumber: updatedData.contactNumber,
-                        email: updatedData.email,
-                        familyMembers: updatedData.familyMembers,
-                        issues: updatedData.issues,
-                        registered: updatedData.registered,
-                        moveInMonth: updatedData.moveInMonth,
-                        emergencyContactNumber: updatedData.emergencyContactNumber,
-                        parkingAllocation: updatedData.parkingAllocation,
-                        bloodGroup: updatedData.bloodGroup,
-                    });
-                }
+                router.push('/dashboard');
             } else {
                 toast({
                     title: 'Update Failed',
