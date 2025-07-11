@@ -19,7 +19,7 @@ const COLUMN_NAMES = [
 ];
 
 const SPREADSHEET_ID = process.env.GOOGLE_SHEETS_ID;
-const SHEET_NAME = 'Flats'; // Name of the sheet/tab in your Google Sheet
+const SHEET_NAME = 'Flat Details'; // Name of the sheet/tab in your Google Sheet
 
 // Helper to authenticate and get the Google Sheets API client
 async function getSheetsClient() {
