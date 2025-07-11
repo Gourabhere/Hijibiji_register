@@ -23,15 +23,29 @@ const SHEET_NAME = process.env.GOOGLE_SHEET_NAME || 'Sheet1'; // Name of the she
 
 // Helper to authenticate and get the Google Sheets API client
 async function getSheetsClient() {
-    // Auth will be handled by Application Default Credentials on GCP.
-    // For local development, ensure you have authenticated via `gcloud auth application-default login`.
-    const auth = new google.auth.GoogleAuth({
-        scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-    });
+    const serviceAccountEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+    const privateKey = process.env.GOOGLE_PRIVATE_KEY;
 
-    const authClient = await auth.getClient();
-    return google.sheets({ version: 'v4', auth: authClient });
+    if (serviceAccountEmail && privateKey) {
+        // Use service account credentials if provided
+        const jwtClient = new google.auth.JWT(
+            serviceAccountEmail,
+            undefined,
+            privateKey.replace(/\\n/g, '\n'), // Important for environment variables
+            ['https://www.googleapis.com/auth/spreadsheets']
+        );
+        await jwtClient.authorize();
+        return google.sheets({ version: 'v4', auth: jwtClient });
+    } else {
+        // Fallback to Application Default Credentials for GCP environments or local `gcloud` auth
+        const auth = new google.auth.GoogleAuth({
+            scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+        });
+        const authClient = await auth.getClient();
+        return google.sheets({ version: 'v4', auth: authClient });
+    }
 }
+
 
 // Helper to handle API errors consistently.
 const handleApiError = (e: any, context: string): Error => {
@@ -404,4 +418,5 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
     }
 }
 
+    
     
