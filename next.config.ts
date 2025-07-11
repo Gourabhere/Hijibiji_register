@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   env: {
     GOOGLE_SHEETS_ID: '1z_6CN-5qHWvnphs8H3fNSldQVQHc9X6qxutyW66MwUw',
+    GOOGLE_SHEET_NAME: 'Flat Details',
   },
   typescript: {
     ignoreBuildErrors: true,
@@ -30,3 +31,5 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+    

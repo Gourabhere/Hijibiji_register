@@ -19,7 +19,7 @@ const COLUMN_NAMES = [
 ];
 
 const SPREADSHEET_ID = process.env.GOOGLE_SHEETS_ID;
-const SHEET_NAME = 'Flat Details'; // Name of the sheet/tab in your Google Sheet
+const SHEET_NAME = process.env.GOOGLE_SHEET_NAME || 'Sheet1'; // Name of the sheet/tab in your Google Sheet
 
 // Helper to authenticate and get the Google Sheets API client
 async function getSheetsClient() {
@@ -56,9 +56,10 @@ const normalizeFlatId = (id: any): string => {
 // Find the row number for a given flat ID
 async function findRowByFlatId(sheets: any, flatId: string): Promise<number | null> {
     try {
+        const range = `'${SHEET_NAME}'!A:A`;
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A:A`, // Search in the 'Flat ID' column
+            range: range, // Search in the 'Flat ID' column
         });
         const rows = response.data.values;
         if (!rows) return null;
@@ -77,9 +78,10 @@ async function findRowByFlatId(sheets: any, flatId: string): Promise<number | nu
 export async function getFlatsData(): Promise<Record<string, FlatData>> {
     try {
         const sheets = await getSheetsClient();
+        const range = `'${SHEET_NAME}'!A:Q`;
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A:Q`, // Adjust range to cover all columns
+            range: range, // Adjust range to cover all columns
         });
 
         const rows = response.data.values;
@@ -154,9 +156,10 @@ export async function saveFlatDataAction(flatId: string, data: FlatData): Promis
         // Prepare the values in the correct column order
         const values = [COLUMN_NAMES.map(colName => rowData[colName as keyof typeof rowData] || '')];
 
+        const range = `'${SHEET_NAME}'!A${rowNumber}:${String.fromCharCode(65 + COLUMN_NAMES.length-1)}${rowNumber}`;
         await sheets.spreadsheets.values.update({
             spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A${rowNumber}:${String.fromCharCode(65 + COLUMN_NAMES.length-1)}${rowNumber}`,
+            range: range,
             valueInputOption: 'USER_ENTERED',
             requestBody: { values },
         });
@@ -177,15 +180,16 @@ export async function loginOwnerAction(flatId: string, password_from_user: strin
 
         if (!rowNumber) return { success: false, message: "Flat ID not found." };
         
+        const range = `'${SHEET_NAME}'!A${rowNumber}:Q${rowNumber}`;
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A${rowNumber}:Q${rowNumber}`,
+            range: range,
         });
 
         const row = response.data.values?.[0];
         if (!row) return { success: false, message: "Flat ID not found." };
 
-        const headersResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `${SHEET_NAME}!A1:Q1` });
+        const headersResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `'${SHEET_NAME}'!A1:Q1` });
         const headers = headersResponse.data.values?.[0];
         if (!headers) throw new Error("Sheet headers not found.");
         const headerIndexMap = new Map(headers.map((h, i) => [h, i]));
@@ -219,15 +223,16 @@ export async function getOwnerFlatData(flatId: string): Promise<OwnerFlatData | 
         
         if (!rowNumber) return null;
 
+        const range = `'${SHEET_NAME}'!A${rowNumber}:Q${rowNumber}`;
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A${rowNumber}:Q${rowNumber}`,
+            range: range,
         });
         const row = response.data.values?.[0];
         
         if (!row) return null;
 
-        const headersResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `${SHEET_NAME}!A1:Q1` });
+        const headersResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `'${SHEET_NAME}'!A1:Q1` });
         const headers = headersResponse.data.values?.[0];
         if (!headers) throw new Error("Sheet headers not found.");
         const headerIndexMap = new Map(headers.map((h, i) => [h, i]));
@@ -292,16 +297,17 @@ export async function updateOwnerDataAction(flatId: string, data: OwnerEditableD
             'Blood Group': data.bloodGroup,
         };
 
-        const headersResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `${SHEET_NAME}!A1:Q1` });
+        const headersResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `'${SHEET_NAME}'!A1:Q1` });
         const headers = headersResponse.data.values?.[0];
         if (!headers) throw new Error("Sheet headers not found.");
         
         // Map data to the correct column order for the update
         const values = [headers.map(header => dataToUpdate[header as keyof typeof dataToUpdate] || '')];
-
+        
+        const range = `'${SHEET_NAME}'!A${rowNumber}:${String.fromCharCode(65 + headers.length-1)}${rowNumber}`;
         await sheets.spreadsheets.values.update({
             spreadsheetId: SPREADSHEET_ID,
-            range: `${SHEET_NAME}!A${rowNumber}:${String.fromCharCode(65 + headers.length-1)}${rowNumber}`,
+            range: range,
             valueInputOption: 'USER_ENTERED',
             requestBody: { values },
         });
@@ -322,14 +328,15 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
         const rowNumber = await findRowByFlatId(sheets, flatId);
 
         if (rowNumber) { // Flat exists
+            const range = `'${SHEET_NAME}'!A${rowNumber}:Q${rowNumber}`;
             const response = await sheets.spreadsheets.values.get({
                 spreadsheetId: SPREADSHEET_ID,
-                range: `${SHEET_NAME}!A${rowNumber}:Q${rowNumber}`,
+                range: range,
             });
             const row = response.data.values?.[0];
             if (!row) throw new Error("Could not retrieve existing flat data.");
 
-            const headersResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `${SHEET_NAME}!A1:Q1` });
+            const headersResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `'${SHEET_NAME}'!A1:Q1` });
             const headers = headersResponse.data.values?.[0] as string[];
             if (!headers) throw new Error("Sheet headers not found.");
             const headerIndexMap = new Map(headers.map((h, i) => [h, i]));
@@ -343,9 +350,10 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
 
             // Update existing row with password
             const passwordColumnLetter = String.fromCharCode(65 + headers.indexOf('Password'));
+            const updateRange = `'${SHEET_NAME}'!${passwordColumnLetter}${rowNumber}`;
             await sheets.spreadsheets.values.update({
                 spreadsheetId: SPREADSHEET_ID,
-                range: `${SHEET_NAME}!${passwordColumnLetter}${rowNumber}`,
+                range: updateRange,
                 valueInputOption: 'USER_ENTERED',
                 requestBody: { values: [[password_from_user]] },
             });
@@ -358,9 +366,10 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
                 '', '', '', ''
             ];
 
+            const appendRange = `'${SHEET_NAME}'!A:Q`;
             await sheets.spreadsheets.values.append({
                 spreadsheetId: SPREADSHEET_ID,
-                range: `${SHEET_NAME}!A:Q`,
+                range: appendRange,
                 valueInputOption: 'USER_ENTERED',
                 requestBody: { values: [newRowData] },
             });
@@ -370,3 +379,5 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
         return { success: false, message: handleApiError(e, 'process owner signup').message };
     }
 }
+
+    
