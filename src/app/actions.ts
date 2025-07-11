@@ -55,6 +55,9 @@ export async function getFlatsData(): Promise<Record<string, FlatData>> {
     try {
         const response = await fetch(SHEETDB_API_URL, { cache: 'no-store' });
         if (!response.ok) {
+            if (response.status === 429) {
+                throw new Error('API request limit exceeded. Please wait a moment before trying again.');
+            }
             throw new Error(`API responded with status ${response.status}`);
         }
         const rows: any[] = await response.json();
@@ -107,6 +110,9 @@ export async function saveFlatDataAction(flatId: string, data: FlatData): Promis
         const searchUrl = `${SHEETDB_API_URL}/search?${encodeURIComponent('Flat ID')}=${encodeURIComponent(normalizedFlatId)}&casesensitive=false`;
         const searchResponse = await fetch(searchUrl, { cache: 'no-store' });
         if (!searchResponse.ok) {
+             if (searchResponse.status === 429) {
+                throw new Error('API request limit exceeded. Please wait a moment before trying again.');
+            }
             throw new Error(`API search responded with status ${searchResponse.status}`);
         }
         
@@ -131,6 +137,9 @@ export async function saveFlatDataAction(flatId: string, data: FlatData): Promis
         }
 
         if (!response.ok) {
+            if (response.status === 429) {
+                throw new Error('API request limit exceeded. Please wait a moment before trying again.');
+            }
             const errorBody = await response.text();
             throw new Error(`API responded with status ${response.status}: ${errorBody}`);
         }
@@ -149,6 +158,9 @@ export async function loginOwnerAction(flatId: string, password_from_user: strin
         const searchUrl = `${SHEETDB_API_URL}/search?${encodeURIComponent('Flat ID')}=${encodeURIComponent(normalizedFlatId)}&casesensitive=false`;
         const response = await fetch(searchUrl, { cache: 'no-store' });
         if (!response.ok) {
+             if (response.status === 429) {
+                return { success: false, message: 'API request limit exceeded. Please wait and try again.' };
+            }
              throw new Error(`API responded with status ${response.status}`);
         }
         const data: any[] = await response.json();
@@ -184,6 +196,9 @@ export async function getOwnerFlatData(flatId: string): Promise<OwnerFlatData | 
         const response = await fetch(searchUrl, { cache: 'no-store' });
 
         if (!response.ok) {
+            if (response.status === 429) {
+                throw new Error('API request limit exceeded. Please wait a moment and try again.');
+            }
             throw new Error(`API responded with status ${response.status}`);
         }
         const data: any[] = await response.json();
@@ -258,6 +273,9 @@ export async function updateOwnerDataAction(flatId: string, data: OwnerEditableD
         });
 
         if (!response.ok) {
+            if (response.status === 429) {
+                return { success: false, message: 'API request limit exceeded. Please wait and try again.' };
+            }
             const errorBody = await response.json();
             throw new Error(`API responded with status ${response.status}: ${JSON.stringify(errorBody)}`);
         }
@@ -276,6 +294,9 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
         const searchUrl = `${SHEETDB_API_URL}/search?${encodeURIComponent('Flat ID')}=${encodeURIComponent(flatId)}&casesensitive=false`;
         const searchResponse = await fetch(searchUrl, { cache: 'no-store' });
         if (!searchResponse.ok) {
+            if (searchResponse.status === 429) {
+                return { success: false, message: 'API request limit exceeded. Please wait and try again.' };
+            }
             throw new Error(`API search responded with status ${searchResponse.status}`);
         }
         const data: any[] = await searchResponse.json();
@@ -303,6 +324,9 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
             });
 
             if (!updateResponse.ok) {
+                if (updateResponse.status === 429) {
+                    return { success: false, message: 'API request limit exceeded. Please wait and try again.' };
+                }
                 throw new Error(`API update responded with status ${updateResponse.status}`);
             }
              return { success: true, message: 'Signup successful! Please log in to update your details.', flatId };
@@ -327,6 +351,9 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
              });
 
              if (!createResponse.ok) {
+                if (createResponse.status === 429) {
+                    return { success: false, message: 'API request limit exceeded. Please wait and try again.' };
+                }
                 throw new Error(`API create responded with status ${createResponse.status}`);
              }
 
