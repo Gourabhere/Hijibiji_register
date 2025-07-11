@@ -73,7 +73,7 @@ export function FlatModal({ isOpen, onClose, flatInfo, initialData, onSave }: Fl
     }
   }, [initialData]);
 
-  if (!isOpen || !flatInfo) return null;
+  if (!flatInfo) return null;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
@@ -122,6 +122,7 @@ export function FlatModal({ isOpen, onClose, flatInfo, initialData, onSave }: Fl
     <AnimatePresence>
       {isOpen && (
         <motion.div
+          key="flat-modal"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -305,15 +306,17 @@ export function FlatModal({ isOpen, onClose, flatInfo, initialData, onSave }: Fl
           </motion.div>
         </motion.div>
       )}
-      <YearMonthSelector
-          isOpen={isMonthSelectorOpen}
-          onClose={() => setIsMonthSelectorOpen(false)}
-          value={formData.moveInMonth}
-          onSelect={(value) => {
-            handleSelectChange('moveInMonth', value);
-            setIsMonthSelectorOpen(false);
-          }}
-        />
+      <div key="year-month-selector">
+        <YearMonthSelector
+            isOpen={isMonthSelectorOpen}
+            onClose={() => setIsMonthSelectorOpen(false)}
+            value={formData.moveInMonth}
+            onSelect={(value) => {
+              handleSelectChange('moveInMonth', value);
+              setIsMonthSelectorOpen(false);
+            }}
+          />
+      </div>
     </AnimatePresence>
   );
 }
