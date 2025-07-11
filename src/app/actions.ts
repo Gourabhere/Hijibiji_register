@@ -129,39 +129,50 @@ export async function saveFlatDataAction(flatId: string, data: FlatData): Promis
         if (!rowNumber) {
             throw new Error(`Flat ID ${normalizedFlatId} not found in the sheet for updating.`);
         }
-        
-        const parts = normalizedFlatId.match(/^(\d+)([A-Z])(\d+)$/);
-        if (!parts) throw new Error(`Invalid flat ID format: ${flatId}`);
-        const [, blockNum, flatLetter, floorNum] = parts;
 
-        const rowData = {
-            'Flat ID': normalizedFlatId,
-            'Block': `Block ${blockNum}`,
-            'Floor': floorNum,
-            'Flat': flatLetter,
-            'Owner Name': data.ownerName,
-            'Contact Number': data.contactNumber,
-            'Email': data.email,
-            'Family Members': data.familyMembers,
-            'Issues / Complaints': data.issues,
-            'Maintenance Status': data.maintenanceStatus,
-            'Registered': data.registered ? 'TRUE' : 'FALSE',
-            'Last Updated': new Date().toISOString(),
-            'Move In Month': data.moveInMonth,
-            'Emergency Contact Number': data.emergencyContactNumber,
-            'Parking Allocation': data.parkingAllocation,
-            'Blood Group': data.bloodGroup,
+        // Get headers to map column names to indices
+        const headersResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `'${SHEET_NAME}'!A1:Q1` });
+        const headers = headersResponse.data.values?.[0] as string[];
+        if (!headers) throw new Error("Sheet headers not found.");
+        const headerIndexMap = new Map(headers.map((h, i) => [h, i]));
+
+        // Fetch the existing row data to preserve fields like Password
+        const getRange = `'${SHEET_NAME}'!A${rowNumber}:${String.fromCharCode(65 + headers.length-1)}${rowNumber}`;
+        const getResponse = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: getRange,
+        });
+        const existingRowValues = getResponse.data.values?.[0] || [];
+
+        const updatedValues = [...existingRowValues];
+
+        // Map data to the correct column index and update it
+        const updateField = (fieldName: string, value: any) => {
+            const index = headerIndexMap.get(fieldName);
+            if (index !== undefined) {
+                updatedValues[index] = value;
+            }
         };
-        
-        // Prepare the values in the correct column order
-        const values = [COLUMN_NAMES.map(colName => rowData[colName as keyof typeof rowData] || '')];
 
-        const range = `'${SHEET_NAME}'!A${rowNumber}:${String.fromCharCode(65 + COLUMN_NAMES.length-1)}${rowNumber}`;
+        updateField('Owner Name', data.ownerName);
+        updateField('Contact Number', data.contactNumber);
+        updateField('Email', data.email);
+        updateField('Family Members', data.familyMembers);
+        updateField('Issues / Complaints', data.issues);
+        updateField('Maintenance Status', data.maintenanceStatus);
+        updateField('Registered', data.registered ? 'TRUE' : 'FALSE');
+        updateField('Last Updated', new Date().toISOString());
+        updateField('Move In Month', data.moveInMonth);
+        updateField('Emergency Contact Number', data.emergencyContactNumber);
+        updateField('Parking Allocation', data.parkingAllocation);
+        updateField('Blood Group', data.bloodGroup);
+
+        const updateRange = `'${SHEET_NAME}'!A${rowNumber}:${String.fromCharCode(65 + headers.length-1)}${rowNumber}`;
         await sheets.spreadsheets.values.update({
             spreadsheetId: SPREADSHEET_ID,
-            range: range,
+            range: updateRange,
             valueInputOption: 'USER_ENTERED',
-            requestBody: { values },
+            requestBody: { values: [updatedValues] },
         });
 
     } catch (e: any) {
@@ -283,33 +294,48 @@ export async function updateOwnerDataAction(flatId: string, data: OwnerEditableD
             return { success: false, message: `Could not find flat ${normalizedFlatId} to update.` };
         }
 
-        const dataToUpdate = {
-            'Owner Name': data.ownerName,
-            'Contact Number': data.contactNumber,
-            'Email': data.email,
-            'Family Members': data.familyMembers,
-            'Issues / Complaints': data.issues,
-            'Registered': data.registered ? 'TRUE' : 'FALSE',
-            'Last Updated': new Date().toISOString(),
-            'Move In Month': data.moveInMonth,
-            'Emergency Contact Number': data.emergencyContactNumber,
-            'Parking Allocation': data.parkingAllocation,
-            'Blood Group': data.bloodGroup,
+        const headersResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `'${SHEET_NAME}'!A1:Q1` });
+        const headers = headersResponse.data.values?.[0] as string[];
+        if (!headers) throw new Error("Sheet headers not found.");
+        const headerIndexMap = new Map(headers.map((h, i) => [h, i]));
+
+        // Fetch the existing row to preserve immutable fields
+        const getRange = `'${SHEET_NAME}'!A${rowNumber}:${String.fromCharCode(65 + headers.length-1)}${rowNumber}`;
+        const getResponse = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: getRange,
+        });
+        const existingRowValues = getResponse.data.values?.[0] || [];
+        
+        const updatedValues = [...existingRowValues];
+
+        // Function to safely update a value in the array by column name
+        const updateField = (fieldName: string, value: any) => {
+            const index = headerIndexMap.get(fieldName);
+            if (index !== undefined) {
+                updatedValues[index] = value;
+            }
         };
 
-        const headersResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `'${SHEET_NAME}'!A1:Q1` });
-        const headers = headersResponse.data.values?.[0];
-        if (!headers) throw new Error("Sheet headers not found.");
-        
-        // Map data to the correct column order for the update
-        const values = [headers.map(header => dataToUpdate[header as keyof typeof dataToUpdate] || '')];
+        // Update only the editable fields
+        updateField('Owner Name', data.ownerName);
+        updateField('Contact Number', data.contactNumber);
+        updateField('Email', data.email);
+        updateField('Family Members', data.familyMembers);
+        updateField('Issues / Complaints', data.issues);
+        updateField('Registered', data.registered ? 'TRUE' : 'FALSE');
+        updateField('Last Updated', new Date().toISOString());
+        updateField('Move In Month', data.moveInMonth);
+        updateField('Emergency Contact Number', data.emergencyContactNumber);
+        updateField('Parking Allocation', data.parkingAllocation);
+        updateField('Blood Group', data.bloodGroup);
         
         const range = `'${SHEET_NAME}'!A${rowNumber}:${String.fromCharCode(65 + headers.length-1)}${rowNumber}`;
         await sheets.spreadsheets.values.update({
             spreadsheetId: SPREADSHEET_ID,
             range: range,
             valueInputOption: 'USER_ENTERED',
-            requestBody: { values },
+            requestBody: { values: [updatedValues] },
         });
 
         return { success: true, message: 'Details updated successfully!' };
