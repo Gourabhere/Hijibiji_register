@@ -45,7 +45,7 @@ export function CommitteeCard() {
                             <div className="bg-gradient-to-br from-yellow-400 to-amber-500 p-2 rounded-lg text-white">
                                 <Crown className="w-5 h-5"/>
                             </div>
-                            <CardTitle className="text-lg font-bold font-headline">Interim Committee</CardTitle>
+                            <CardTitle className="text-lg font-bold font-headline">Hijibiji Interim Committee</CardTitle>
                         </div>
                     </CardHeader>
                     <CardContent className="p-4 pt-0">
