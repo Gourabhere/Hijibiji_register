@@ -2,6 +2,9 @@ import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
+  env: {
+    GOOGLE_SHEETS_ID: '1z_6CN-5qHWvnphs8H3fNSldQVQHc9X6qxutyW66MwUw',
+  },
   typescript: {
     ignoreBuildErrors: true,
   },
