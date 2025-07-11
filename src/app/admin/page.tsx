@@ -1,5 +1,5 @@
-import { DashboardClient } from '@/components/dashboard/dashboard-client';
+import { DynamicDashboard } from '@/components/dashboard/dynamic-dashboard';
 
 export default function AdminPage() {
-  return <DashboardClient isEditable={true} />;
+  return <DynamicDashboard isEditable={true} />;
 }
