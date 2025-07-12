@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -52,6 +53,7 @@ export type FlatData = {
   issues: string;
   maintenanceStatus: string;
   registered: boolean;
+  registrationStatus: string;
   lastUpdated?: string;
   moveInMonth: string;
   emergencyContactNumber: string;
@@ -584,7 +586,6 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
           onClose={() => setIsModalOpen(false)}
           flatInfo={selectedFlat}
           initialData={flatData[selectedFlat.flatId]}
-          allFlatData={flatData}
           onSave={handleSaveFlatData}
           isSaving={isSaving}
         />
