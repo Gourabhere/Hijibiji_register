@@ -121,6 +121,23 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
         }
     };
   }, [pathname, router, fetchFlatData]);
+
+  const filteredFlatData = useMemo(() => {
+    if (!searchTerm) {
+      return flatData;
+    }
+    const lowercasedFilter = searchTerm.toLowerCase();
+    return Object.entries(flatData).reduce((acc, [flatId, data]) => {
+      if (
+        flatId.toLowerCase().includes(lowercasedFilter) ||
+        data.ownerName.toLowerCase().includes(lowercasedFilter) ||
+        data.email.toLowerCase().includes(lowercasedFilter)
+      ) {
+        acc[flatId] = data;
+      }
+      return acc;
+    }, {} as Record<string, FlatData>);
+  }, [searchTerm, flatData]);
   
   // --- Pagination Logic ---
   const blocksPerPage = useMemo(() => {
@@ -141,12 +158,25 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
   };
 
   const startIndex = currentPage * blocksPerPage;
-  const currentBlocks = useMemo(() => blockNames.slice(startIndex, startIndex + blocksPerPage), [blockNames, startIndex, blocksPerPage]);
+  const currentBlocks = useMemo(() => {
+    const blocksToDisplay = searchTerm 
+      ? blockNames // If searching, show all blocks but filter content inside
+      : blockNames.slice(startIndex, startIndex + blocksPerPage);
+    
+    if (searchTerm) {
+      const flatIdsWithResults = Object.keys(filteredFlatData);
+      const blocksWithResults = new Set(flatIdsWithResults.map(id => `Block ${id.charAt(0)}`));
+      return blockNames.filter(name => blocksWithResults.has(name));
+    }
+    return blocksToDisplay;
+  }, [blockNames, startIndex, blocksPerPage, searchTerm, filteredFlatData]);
 
   // Reset to first page if screen size changes and current page becomes invalid
   useEffect(() => {
-    setCurrentPage(0);
-  }, [blocksPerPage]);
+    if (!searchTerm) {
+      setCurrentPage(0);
+    }
+  }, [blocksPerPage, searchTerm]);
   // --- End Pagination Logic ---
 
 
@@ -370,15 +400,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
                         <Bell className="h-5 w-5" />
                         Notifications
                     </Button>
-                    <Button variant="ghost" onClick={() => alert('Reports feature coming soon!')} className="justify-start gap-2">
-                        <FileText className="h-5 w-5" />
-                        Reports
-                    </Button>
-                    <Button variant="ghost" onClick={() => alert('Settings feature coming soon!')} className="justify-start gap-2">
-                        <Settings className="h-5 w-5" />
-                        Settings
-                    </Button>
-
+                   
                     {(isEditable || isOwnerLoggedIn) && (
                       <>
                         <Separator className="my-2" />
@@ -509,7 +531,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
                       whileHover={{ scale: 1.1 }} 
                       whileTap={{ scale: 0.9 }}
                       className="p-2 sm:p-3 bg-card/80 rounded-full shadow-lg border border-border/20 backdrop-blur-sm self-center shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={currentPage === 0}
+                      disabled={currentPage === 0 || !!searchTerm}
                       aria-label="Previous page"
                   >
                       <ChevronLeft className="w-6 h-6 text-muted-foreground" />
@@ -532,7 +554,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
                                   key={blockName}
                                   blockName={blockName}
                                   blockData={blockData}
-                                  allFlatData={flatData}
+                                  allFlatData={filteredFlatData}
                                   onFlatClick={handleFlatClick}
                               />
                           );
@@ -546,7 +568,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
                       whileHover={{ scale: 1.1 }} 
                       whileTap={{ scale: 0.9 }}
                       className="p-2 sm:p-3 bg-card/80 rounded-full shadow-lg border border-border/20 backdrop-blur-sm self-center shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={currentPage >= totalPages - 1}
+                      disabled={currentPage >= totalPages - 1 || !!searchTerm}
                       aria-label="Next page"
                   >
                       <ChevronRight className="w-6 h-6 text-muted-foreground" />
