@@ -259,7 +259,7 @@ export function FlatModal({ isOpen, onClose, flatInfo, initialData, onSave, isSa
                                 </Select>
                             </div>
                             <div className="flex items-center space-x-3 pt-6">
-                                <Checkbox id="registered" checked={formData.registered} onCheckedChange={(c) => handleSelectChange('registered', c as any)} />
+                                <Checkbox id="registered" checked={formData.registered} onCheckedChange={(c) => handleSelectChange('registered', c === true ? 'TRUE' : 'FALSE')} />
                                 <Label htmlFor="registered" className="font-medium flex items-center gap-2">
                                   <CheckCircle className={cn("w-4 h-4", formData.registered ? "text-green-500" : "text-muted-foreground")}/>
                                   Flat Registered

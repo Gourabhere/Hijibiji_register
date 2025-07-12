@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { AlertTriangle, Home, User, CalendarDays, Clock, Bell, LogOut, ShieldAlert, Car, HeartPulse, Phone, Mail, Users, MessageSquare, Menu } from 'lucide-react';
+import { AlertTriangle, Home, User, CalendarDays, Clock, Bell, LogOut, ShieldAlert, Car, HeartPulse, Phone, Mail, Users, MessageSquare, Menu, CheckCircle } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -110,13 +110,21 @@ export default function OwnerDashboardPage() {
     const handleSelectChange = (id: keyof OwnerEditableData, value: string) => {
         setFormData(prev => ({ ...prev, [id]: value }));
     };
+    
+    const handleCheckboxChange = (id: keyof OwnerEditableData, checked: boolean) => {
+        setFormData(prev => ({ ...prev, [id]: checked }));
+    };
+
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!flatData) return;
 
         startTransition(async () => {
-            const dataToSave = { ...formData, registered: true };
+            const dataToSave = { ...formData };
+            if (!formData.registered) {
+              dataToSave.registered = true;
+            }
 
             const result = await updateOwnerDataAction(flatData.flatId, dataToSave);
             if (result.success) {
@@ -362,13 +370,14 @@ export default function OwnerDashboardPage() {
                                         <div>{getMaintenanceBadge(flatData.maintenanceStatus)}</div>
                                     </div>
                                     <div className="flex items-center space-x-2 pt-2 md:col-span-2">
-                                        <Checkbox 
-                                            id="registered" 
-                                            checked={formData.registered} 
-                                            disabled
+                                         <Checkbox
+                                            id="registered"
+                                            checked={formData.registered}
+                                            onCheckedChange={(checked) => handleCheckboxChange('registered', checked === true)}
                                         />
-                                        <Label htmlFor="registered" className="font-normal text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                            My flat is registered
+                                        <Label htmlFor="registered" className="font-normal text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2">
+                                          <CheckCircle className={cn("w-4 h-4", formData.registered ? "text-green-500" : "text-muted-foreground")} />
+                                          My flat is registered
                                         </Label>
                                     </div>
                                     <div className="space-y-2 md:col-span-2">
