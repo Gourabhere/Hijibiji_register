@@ -21,7 +21,8 @@ import {
   User,
   Menu,
   LogIn,
-  Clock
+  Clock,
+  Crown
 } from 'lucide-react';
 import { HijibijiFlatData, BlockName, getTotalFlatsInBlock } from '@/data/flat-data';
 import { StatCard } from './stat-card';
@@ -567,28 +568,6 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
       )}
 
       <div className="fixed bottom-6 right-6 flex flex-col gap-4 z-30">
-        {isEditable && (
-          <>
-            <FloatingActionButton
-              icon={Bell}
-              onClick={() => alert('Notifications feature coming soon!')}
-              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
-              tooltip="Notifications"
-            />
-            <FloatingActionButton
-              icon={FileText}
-              onClick={() => alert('Reports feature coming soon!')}
-              className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700"
-              tooltip="Generate Reports"
-            />
-            <FloatingActionButton
-              icon={Settings}
-              onClick={() => alert('Settings feature coming soon!')}
-              className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
-              tooltip="Settings"
-            />
-          </>
-        )}
         <CommitteeCard />
       </div>
     </div>
