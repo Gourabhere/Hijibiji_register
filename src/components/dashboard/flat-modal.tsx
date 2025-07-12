@@ -43,7 +43,6 @@ interface FlatModalProps {
 
 const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 const parkingOptions: FlatData['parkingAllocation'][] = ['Covered', 'Open', 'No Parking'];
-const maintenanceStatusOptions = ['Paid', 'Pending', 'Intimation Sent', 'Overdue'];
 
 export function FlatModal({ isOpen, onClose, flatInfo, initialData, onSave, isSaving }: FlatModalProps) {
   const [activeTab, setActiveTab] = useState('personal');
