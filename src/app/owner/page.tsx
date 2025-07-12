@@ -24,7 +24,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetClose 
 import { Separator } from '@/components/ui/separator';
 
 const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
-const maintenanceStatusOptions = ['Paid', 'Pending', 'Intimation Sent', 'Overdue'];
+const registrationStatusOptions = ['Done', 'Intimation Sent', 'Pending'];
 
 export default function OwnerDashboardPage() {
     const router = useRouter();
@@ -43,7 +43,7 @@ export default function OwnerDashboardPage() {
         emergencyContactNumber: '',
         parkingAllocation: '',
         bloodGroup: '',
-        maintenanceStatus: 'pending',
+        maintenanceStatus: 'Pending',
         carNumber: '',
     });
     const [isLoading, setIsLoading] = useState(true);
@@ -112,7 +112,14 @@ export default function OwnerDashboardPage() {
     };
 
     const handleSelectChange = (id: keyof OwnerEditableData, value: string) => {
-        setFormData(prev => ({ ...prev, [id]: value }));
+        setFormData(prev => {
+            const newState = { ...prev, [id]: value };
+            // If Registration Status is set to 'Done', auto-check the 'registered' box.
+            if (id === 'maintenanceStatus' && value === 'Done') {
+                newState.registered = true;
+            }
+            return newState;
+        });
     };
     
     const handleCheckboxChange = (id: keyof OwnerEditableData, checked: boolean) => {
@@ -131,7 +138,8 @@ export default function OwnerDashboardPage() {
                     title: 'Success!',
                     description: result.message,
                 });
-                router.push('/dashboard');
+                // Optionally refetch data to confirm changes
+                // router.refresh();
             } else {
                 toast({
                     title: 'Update Failed',
@@ -156,7 +164,8 @@ export default function OwnerDashboardPage() {
     const getMaintenanceBadge = (status: string) => {
         switch (status?.toLowerCase()) {
             case 'paid':
-                return <Badge variant="default" className="bg-green-500 hover:bg-green-600">Paid</Badge>;
+            case 'done':
+                return <Badge variant="default" className="bg-green-500 hover:bg-green-600">{status}</Badge>;
             case 'pending':
                 return <Badge variant="secondary" className="bg-yellow-400 text-black hover:bg-yellow-500">Pending</Badge>;
             case 'overdue':
@@ -377,7 +386,7 @@ export default function OwnerDashboardPage() {
                                         <Select value={formData.maintenanceStatus} onValueChange={(v) => handleSelectChange('maintenanceStatus', v)}>
                                             <SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger>
                                             <SelectContent>
-                                                {maintenanceStatusOptions.map(status => <SelectItem key={status} value={status}>{status}</SelectItem>)}
+                                                {registrationStatusOptions.map(status => <SelectItem key={status} value={status}>{status}</SelectItem>)}
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -413,7 +422,7 @@ export default function OwnerDashboardPage() {
               onClose={() => setIsMonthSelectorOpen(false)}
               value={formData.moveInMonth}
               onSelect={(value) => {
-                setFormData(prev => ({...prev, moveInMonth: value}));
+                handleSelectChange('moveInMonth', value);
                 setIsMonthSelectorOpen(false);
               }}
             />
