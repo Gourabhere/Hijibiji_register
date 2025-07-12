@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState, useTransition } from 'react';
@@ -39,6 +40,7 @@ export default function OwnerDashboardPage() {
         familyMembers: '',
         issues: '',
         registered: false,
+        registrationStatus: 'Pending',
         moveInMonth: '',
         emergencyContactNumber: '',
         parkingAllocation: '',
@@ -49,7 +51,7 @@ export default function OwnerDashboardPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isMonthSelectorOpen, setIsMonthSelectorOpen] = useState(false);
-    const [time, setTime] = useState(new Date());
+    const [time, setTime] = useState<Date | null>(null);
 
     useEffect(() => {
         let isMounted = true;
@@ -59,6 +61,8 @@ export default function OwnerDashboardPage() {
             return;
         }
 
+        // Set initial time and start timer only on client
+        setTime(new Date());
         const timer = setInterval(() => setTime(new Date()), 1000);
 
         const fetchData = async () => {
@@ -76,6 +80,7 @@ export default function OwnerDashboardPage() {
                             familyMembers: data.familyMembers,
                             issues: data.issues,
                             registered: data.registered,
+                            registrationStatus: data.registrationStatus,
                             moveInMonth: data.moveInMonth,
                             emergencyContactNumber: data.emergencyContactNumber,
                             parkingAllocation: data.parkingAllocation,
@@ -115,7 +120,7 @@ export default function OwnerDashboardPage() {
         setFormData(prev => {
             const newState = { ...prev, [id]: value };
             // If Registration Status is set to 'Done', auto-check the 'registered' box.
-            if (id === 'maintenanceStatus' && value === 'Done') {
+            if (id === 'registrationStatus' && value === 'Done') {
                 newState.registered = true;
             }
             return newState;
@@ -234,7 +239,7 @@ export default function OwnerDashboardPage() {
                         <div className="hidden md:flex items-center gap-4">
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <Clock className="w-4 h-4" />
-                                <span>{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                {time && <span>{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
                             </div>
                             <motion.button
                                 whileHover={{ scale: 1.1, rotate: [0, 15, -10, 15, 0] }}
@@ -382,8 +387,8 @@ export default function OwnerDashboardPage() {
                                         </div>
                                     )}
                                     <div className="space-y-2">
-                                        <Label htmlFor="maintenanceStatus" className="flex items-center gap-2"><Settings className="w-4 h-4"/>Registration Status</Label>
-                                        <Select value={formData.maintenanceStatus} onValueChange={(v) => handleSelectChange('maintenanceStatus', v)}>
+                                        <Label htmlFor="registrationStatus" className="flex items-center gap-2"><Settings className="w-4 h-4"/>Registration Status</Label>
+                                        <Select value={formData.registrationStatus} onValueChange={(v) => handleSelectChange('registrationStatus', v)}>
                                             <SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger>
                                             <SelectContent>
                                                 {registrationStatusOptions.map(status => <SelectItem key={status} value={status}>{status}</SelectItem>)}

@@ -72,7 +72,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
   const [isSaving, setIsSaving] = useState(false);
   const [dbError, setDbError] = useState<string | null>(null);
   const [isOwnerLoggedIn, setIsOwnerLoggedIn] = useState(false);
-  const [time, setTime] = useState(new Date());
+  const [time, setTime] = useState<Date | null>(null);
 
   const [currentPage, setCurrentPage] = useState(0);
   const [windowWidth, setWindowWidth] = useState(0);
@@ -98,7 +98,6 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
   }, []);
 
   useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 1000);
     const handleResize = () => setWindowWidth(window.innerWidth);
     
     if (typeof window !== 'undefined') {
@@ -107,6 +106,10 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
         window.addEventListener('resize', handleResize);
     }
     
+    // Set initial time and start timer only on client
+    setTime(new Date());
+    const timer = setInterval(() => setTime(new Date()), 1000);
+
     try {
         const ownerLoggedIn = localStorage.getItem('isOwnerLoggedIn') === 'true';
         setIsOwnerLoggedIn(ownerLoggedIn);
@@ -344,7 +347,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
             <div className="hidden md:flex items-center gap-4">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Clock className="w-4 h-4"/>
-                    <span>{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    {time && <span>{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
                 </div>
                  <motion.button
                     whileHover={{ scale: 1.1, rotate: [0, 15, -10, 15, 0] }}
