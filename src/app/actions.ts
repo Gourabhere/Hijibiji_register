@@ -185,7 +185,7 @@ export async function saveFlatDataAction(flatId: string, data: FlatData): Promis
         updateField('Emergency Contact Number', data.emergencyContactNumber);
         updateField('Parking Allocation', data.parkingAllocation);
         updateField('Blood Group', data.bloodGroup);
-        updateField('Car Number', data.carNumber);
+        updateField('CarNumber', data.carNumber);
 
         const updateRange = `'${SHEET_NAME}'!A${rowNumber}:${String.fromCharCode(65 + headers.length-1)}${rowNumber}`;
         await sheets.spreadsheets.values.update({
@@ -300,6 +300,7 @@ export type OwnerEditableData = {
     familyMembers: string;
     issues: string;
     registered: boolean;
+    maintenanceStatus: string;
     moveInMonth: string;
     emergencyContactNumber: string;
     parkingAllocation: 'Covered' | 'Open' | 'No Parking' | '';
@@ -348,6 +349,7 @@ export async function updateOwnerDataAction(flatId: string, data: Partial<OwnerE
         updateField('Email', data.email);
         updateField('Family Members', data.familyMembers);
         updateField('Issues / Complaints', data.issues);
+        updateField('Maintenance Status', data.maintenanceStatus);
         updateField('Registered', data.registered ? 'TRUE' : 'FALSE');
         updateField('Last Updated', new Date().toISOString());
         updateField('Move In Month', data.moveInMonth);
@@ -372,15 +374,77 @@ export async function updateOwnerDataAction(flatId: string, data: Partial<OwnerE
     }
 }
 
-export async function signupOwnerAction(block: string, floor: string, flat: string, password_from_user: string): Promise<{ success: boolean; message: string; flatId?: string }> {
+export type SignupFormData = {
+  ownerName: string;
+  email: string;
+  contactNumber: string;
+};
+
+export type PreSignupData = SignupFormData & { passwordExists: boolean };
+
+export async function getPreSignupFlatDataAction(flatId: string): Promise<PreSignupData | null> {
+    const normalizedFlatId = normalizeFlatId(flatId);
+    if (!normalizedFlatId) return null;
+
+    try {
+        const sheets = await getSheetsClient();
+        const rowNumber = await findRowByFlatId(sheets, normalizedFlatId);
+
+        if (!rowNumber) return null; // Flat doesn't exist at all, proceed with fresh signup.
+
+        const range = `'${SHEET_NAME}'!A${rowNumber}:${MAX_COLUMN_LETTER}${rowNumber}`;
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: range,
+        });
+
+        const row = response.data.values?.[0];
+        if (!row) return null;
+
+        const headersResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `'${SHEET_NAME}'!A1:${MAX_COLUMN_LETTER}1` });
+        const headers = headersResponse.data.values?.[0] as string[];
+        if (!headers) throw new Error("Sheet headers not found.");
+        const headerIndexMap = new Map(headers.map((h, i) => [h, i]));
+        
+        const password = row[headerIndexMap.get('Password')!];
+        if (password && password.length > 0) {
+            return { passwordExists: true, ownerName: '', email: '', contactNumber: '' };
+        }
+        
+        return {
+            passwordExists: false,
+            ownerName: row[headerIndexMap.get('Owner Name')!] || '',
+            email: row[headerIndexMap.get('Email')!] || '',
+            contactNumber: row[headerIndexMap.get('Contact Number')!] || '',
+        };
+
+    } catch (e: any) {
+        // Don't throw, just return null so signup can proceed as if no data exists.
+        console.error("Error in getPreSignupFlatDataAction", e);
+        return null;
+    }
+}
+
+export async function signupOwnerAction(
+  block: string, 
+  floor: string, 
+  flat: string, 
+  password_from_user: string,
+  formData: SignupFormData
+): Promise<{ success: boolean; message: string; flatId?: string }> {
     const blockNumber = block.replace('Block ', '');
     const flatId = `${blockNumber}${flat}${floor}`.toUpperCase();
 
     try {
         const sheets = await getSheetsClient();
         const rowNumber = await findRowByFlatId(sheets, flatId);
+        
+        const headersResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `'${SHEET_NAME}'!A1:${MAX_COLUMN_LETTER}1` });
+        const headers = headersResponse.data.values?.[0] as string[];
+        if (!headers) throw new Error("Sheet headers not found.");
+        const headerIndexMap = new Map(headers.map((h, i) => [h, i]));
 
-        if (rowNumber) { // Flat exists
+        if (rowNumber) { // Flat exists, update it
             const range = `'${SHEET_NAME}'!A${rowNumber}:${MAX_COLUMN_LETTER}${rowNumber}`;
             const response = await sheets.spreadsheets.values.get({
                 spreadsheetId: SPREADSHEET_ID,
@@ -389,26 +453,33 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
             const row = response.data.values?.[0];
             if (!row) throw new Error("Could not retrieve existing flat data.");
 
-            const headersResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `'${SHEET_NAME}'!A1:${MAX_COLUMN_LETTER}1` });
-            const headers = headersResponse.data.values?.[0] as string[];
-            if (!headers) throw new Error("Sheet headers not found.");
-            const headerIndexMap = new Map(headers.map((h, i) => [h, i]));
-
-            if (row[headerIndexMap.get('Registered')!] === 'TRUE') {
-                return { success: false, message: "This flat is already registered. Please log in or contact administration." };
-            }
             if (row[headerIndexMap.get('Password')!] && row[headerIndexMap.get('Password')!].length > 0) {
                  return { success: false, message: "An account for this flat already exists. Please log in." };
             }
 
-            // Update existing row with password
-            const passwordColumnLetter = String.fromCharCode(65 + headers.indexOf('Password'));
-            const updateRange = `'${SHEET_NAME}'!${passwordColumnLetter}${rowNumber}`;
+            // Update existing row with new details
+            const existingRowValues = [...row];
+            const updateField = (fieldName: string, value: any) => {
+                const index = headerIndexMap.get(fieldName);
+                if (index !== undefined) {
+                    existingRowValues[index] = value;
+                }
+            };
+            
+            updateField('Password', password_from_user);
+            updateField('Owner Name', formData.ownerName);
+            updateField('Email', formData.email);
+            updateField('Contact Number', formData.contactNumber);
+            updateField('Last Updated', new Date().toISOString());
+            // Mark as registered on signup completion
+            updateField('Registered', 'TRUE');
+            updateField('Registration Status', 'Done');
+
             await sheets.spreadsheets.values.update({
                 spreadsheetId: SPREADSHEET_ID,
-                range: updateRange,
+                range: range,
                 valueInputOption: 'USER_ENTERED',
-                requestBody: { values: [[password_from_user]] },
+                requestBody: { values: [existingRowValues] },
             });
             return { success: true, message: 'Signup successful! Please log in to update your details.', flatId };
 
@@ -419,10 +490,13 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
                     case 'Block': acc.push(block); break;
                     case 'Floor': acc.push(floor); break;
                     case 'Flat': acc.push(flat); break;
-                    case 'Maintenance Status': acc.push('pending'); break;
-                    case 'Registered': acc.push('FALSE'); break;
-                    case 'Registration Status': acc.push('Pending'); break;
                     case 'Password': acc.push(password_from_user); break;
+                    case 'Owner Name': acc.push(formData.ownerName); break;
+                    case 'Email': acc.push(formData.email); break;
+                    case 'Contact Number': acc.push(formData.contactNumber); break;
+                    case 'Maintenance Status': acc.push('pending'); break;
+                    case 'Registered': acc.push('TRUE'); break; // Mark as registered on signup
+                    case 'Registration Status': acc.push('Done'); break;
                     case 'Last Updated': acc.push(new Date().toISOString()); break;
                     default: acc.push(''); break;
                 }
@@ -443,5 +517,3 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
         return { success: false, message: handleApiError(e, 'process owner signup').message };
     }
 }
-
-    

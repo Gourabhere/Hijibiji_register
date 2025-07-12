@@ -1,10 +1,10 @@
 
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useTransition } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Building, Lock, Mail, User, LogIn, UserPlus, AlertTriangle } from 'lucide-react';
+import { Building, Lock, Mail, User, LogIn, UserPlus, AlertTriangle, Phone } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -19,7 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from '@/components/ui/checkbox';
 import { useTheme } from 'next-themes';
 
-import { loginOwnerAction, signupOwnerAction } from '@/app/actions';
+import { loginOwnerAction, signupOwnerAction, getPreSignupFlatDataAction } from '@/app/actions';
 import { HijibijiFlatData, BlockName, getFlatsForFloor } from '@/data/flat-data';
 import { ThemeToggle } from '@/components/theme-toggle';
 
@@ -28,7 +28,6 @@ function HomePageContent() {
   const { toast } = useToast();
   const { setTheme } = useTheme();
 
-  // Force light theme on this page
   useEffect(() => {
     setTheme('light');
   }, [setTheme]);
@@ -43,11 +42,40 @@ function HomePageContent() {
   const [selectedFlat, setSelectedFlat] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [ownerName, setOwnerName] = useState('');
+  const [email, setEmail] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   
   // Common states
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingFlat, startChecking] = useTransition();
   const [error, setError] = useState('');
+
+  // Pre-load data logic
+  useEffect(() => {
+    if (selectedBlock && selectedFloor && selectedFlat) {
+      const flatId = `${selectedBlock.replace('Block ', '')}${selectedFlat}${selectedFloor}`;
+      startChecking(async () => {
+        setError('');
+        const preSignupData = await getPreSignupFlatDataAction(flatId);
+        if (preSignupData?.passwordExists) {
+            setError("An account for this flat already exists. Please log in.");
+            setOwnerName('');
+            setEmail('');
+            setContactNumber('');
+        } else if (preSignupData) {
+            setOwnerName(preSignupData.ownerName || '');
+            setEmail(preSignupData.email || '');
+            setContactNumber(preSignupData.contactNumber || '');
+        } else {
+            setOwnerName('');
+            setEmail('');
+            setContactNumber('');
+        }
+      });
+    }
+  }, [selectedBlock, selectedFloor, selectedFlat]);
   
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,7 +138,8 @@ function HomePageContent() {
     setIsLoading(true);
 
     try {
-      const result = await signupOwnerAction(selectedBlock, selectedFloor, selectedFlat, signupPassword);
+      const formData = { ownerName, email, contactNumber };
+      const result = await signupOwnerAction(selectedBlock, selectedFloor, selectedFlat, signupPassword, formData);
       if (result.success && result.flatId) {
         toast({
           title: 'Signup Successful!',
@@ -229,6 +258,21 @@ function HomePageContent() {
                         </div>
                     </div>
 
+                    {isCheckingFlat && <p className="text-sm text-muted-foreground text-center">Checking flat status...</p>}
+
+                    <div>
+                        <Label htmlFor="ownerName" className="flex items-center gap-2"><User className="w-4 h-4" />Full Name</Label>
+                        <Input id="ownerName" value={ownerName} onChange={(e) => setOwnerName(e.target.value)} required className="mt-1 h-12 bg-muted/50" />
+                    </div>
+                    <div>
+                        <Label htmlFor="email" className="flex items-center gap-2"><Mail className="w-4 h-4" />Email Address</Label>
+                        <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1 h-12 bg-muted/50" />
+                    </div>
+                    <div>
+                        <Label htmlFor="contactNumber" className="flex items-center gap-2"><Phone className="w-4 h-4" />Contact Number</Label>
+                        <Input id="contactNumber" type="tel" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} required className="mt-1 h-12 bg-muted/50" />
+                    </div>
+
                     <div>
                         <Label htmlFor="signupPassword">Create Password</Label>
                         <Input id="signupPassword" type="password" placeholder="Choose a strong password" value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)} required className="mt-1 h-12 bg-muted/50" />
@@ -262,7 +306,7 @@ function HomePageContent() {
                       </div>
                     </div>
 
-                    <Button type="submit" disabled={isLoading || !agreedToTerms} className="w-full h-12 bg-gradient-to-r from-primary to-accent text-primary-foreground font-bold text-base hover:opacity-90 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <Button type="submit" disabled={isLoading || !agreedToTerms || isCheckingFlat} className="w-full h-12 bg-gradient-to-r from-primary to-accent text-primary-foreground font-bold text-base hover:opacity-90 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
                       {isLoading ? 'Creating Account...' : 'Sign Up'}
                     </Button>
                   </form>
