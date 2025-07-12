@@ -584,6 +584,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
           onClose={() => setIsModalOpen(false)}
           flatInfo={selectedFlat}
           initialData={flatData[selectedFlat.flatId]}
+          allFlatData={flatData}
           onSave={handleSaveFlatData}
           isSaving={isSaving}
         />
