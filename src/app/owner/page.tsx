@@ -15,12 +15,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { AlertTriangle, Home, User, CalendarDays, Clock, Bell, LogOut, ShieldAlert, Car, HeartPulse, Phone, Mail, Users, MessageSquare, Menu, CheckCircle } from 'lucide-react';
+import { AlertTriangle, Home, User, CalendarDays, Clock, Bell, LogOut, ShieldAlert, Car, HeartPulse, Phone, Mail, Users, MessageSquare, Menu, CheckCircle, Settings } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { YearMonthSelector } from '@/components/dashboard/year-month-selector';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 
@@ -366,7 +366,7 @@ export default function OwnerDashboardPage() {
                                         </Select>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="maintenanceStatus">Maintenance Status</Label>
+                                        <Label htmlFor="maintenanceStatus" className="flex items-center gap-2"><Settings className="w-4 h-4"/>Maintenance Status</Label>
                                         <Select value={formData.maintenanceStatus} onValueChange={(v) => handleSelectChange('maintenanceStatus', v)}>
                                             <SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger>
                                             <SelectContent>
@@ -413,3 +413,5 @@ export default function OwnerDashboardPage() {
         </div>
     );
 }
+
+    
