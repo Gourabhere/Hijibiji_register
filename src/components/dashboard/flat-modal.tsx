@@ -30,7 +30,7 @@ import { YearMonthSelector } from './year-month-selector';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { MaintenanceManager } from './maintenance-manager';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 
 
 interface FlatModalProps {
@@ -151,8 +151,8 @@ export function FlatModal({ isOpen, onClose, flatInfo, initialData, onSave, isSa
                     <Building className="w-8 h-8" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold font-headline">{flatInfo.blockName} - Flat {flatInfo.flat}{flatInfo.floor}</h2>
-                    <p className="text-primary-foreground/80 text-sm">Floor {flatInfo.floor} • Flat ID: {flatInfo.flatId}</p>
+                    <DialogTitle className="text-2xl font-bold font-headline">{flatInfo.blockName} - Flat {flatInfo.flat}{flatInfo.floor}</DialogTitle>
+                    <DialogDescription className="text-primary-foreground/80 text-sm">Floor {flatInfo.floor} • Flat ID: {flatInfo.flatId}</DialogDescription>
                   </div>
                 </div>
                 <motion.button
