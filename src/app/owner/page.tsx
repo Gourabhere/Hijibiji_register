@@ -373,7 +373,7 @@ export default function OwnerDashboardPage() {
                                         </div>
                                     )}
                                     <div className="space-y-2">
-                                        <Label htmlFor="maintenanceStatus" className="flex items-center gap-2"><Settings className="w-4 h-4"/>Maintenance Status</Label>
+                                        <Label htmlFor="maintenanceStatus" className="flex items-center gap-2"><Settings className="w-4 h-4"/>Registration Status</Label>
                                         <Select value={formData.maintenanceStatus} onValueChange={(v) => handleSelectChange('maintenanceStatus', v)}>
                                             <SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger>
                                             <SelectContent>
