@@ -83,6 +83,10 @@ export function FlatModal({ isOpen, onClose, flatInfo, initialData, onSave, isSa
   const handleSelectChange = (id: keyof FlatData, value: string) => {
     setFormData(prev => ({ ...prev, [id]: value as any }));
   };
+  
+  const handleCheckboxChange = (id: keyof FlatData, checked: boolean) => {
+      setFormData(prev => ({ ...prev, [id]: checked }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -167,7 +171,7 @@ export function FlatModal({ isOpen, onClose, flatInfo, initialData, onSave, isSa
             {/* Tab Navigation */}
             <motion.div
               variants={itemVariants}
-              className="flex border-b border-border bg-card/80 backdrop-blur-sm px-8"
+              className="flex border-b border-border bg-card/80 backdrop-blur-sm px-2 sm:px-8"
             >
               {[
                 { id: 'personal', label: 'Personal Details', icon: User },
@@ -180,14 +184,14 @@ export function FlatModal({ isOpen, onClose, flatInfo, initialData, onSave, isSa
                   animate={activeTab === tab.id ? 'active' : 'inactive'}
                   whileHover={{ scale: 1.05 }}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`relative flex items-center space-x-2 px-6 py-4 font-medium transition-all text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:z-10 ${
+                  className={`relative flex items-center space-x-2 px-4 sm:px-6 py-4 font-medium transition-all text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:z-10 ${
                     activeTab === tab.id
                       ? 'text-primary'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   <tab.icon className="w-4 h-4" />
-                  <span>{tab.label}</span>
+                  <span className="hidden sm:inline">{tab.label}</span>
                    {activeTab === tab.id && (
                      <motion.div
                         className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
@@ -246,28 +250,26 @@ export function FlatModal({ isOpen, onClose, flatInfo, initialData, onSave, isSa
 
                   {activeTab === 'maintenance' && (
                       <div className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                            <div>
-                                <Label htmlFor="maintenanceStatus" className="flex items-center gap-2 mb-2"><Settings className="w-4 h-4"/>Maintenance Status</Label>
-                                <Select value={formData.maintenanceStatus} onValueChange={(v: any) => handleSelectChange('maintenanceStatus', v)}>
-                                    <SelectTrigger><Badge variant={
-                                        formData.maintenanceStatus === 'paid' ? 'default' :
-                                        formData.maintenanceStatus === 'overdue' ? 'destructive' :
-                                        'secondary'
-                                    }>{formData.maintenanceStatus.charAt(0).toUpperCase() + formData.maintenanceStatus.slice(1)}</Badge></SelectTrigger>
-                                    <SelectContent>{maintenanceStatusOptions.map(s => <SelectItem key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>)}</SelectContent>
-                                </Select>
-                            </div>
-                            <div className="flex items-center space-x-3 pt-6">
-                                <Checkbox id="registered" checked={formData.registered} onCheckedChange={(c) => handleSelectChange('registered', c === true ? 'TRUE' : 'FALSE')} />
-                                <Label htmlFor="registered" className="font-medium flex items-center gap-2">
-                                  <CheckCircle className={cn("w-4 h-4", formData.registered ? "text-green-500" : "text-muted-foreground")}/>
-                                  Flat Registered
-                                </Label>
-                            </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="maintenanceStatus" className="flex items-center gap-2"><Settings className="w-4 h-4"/>Maintenance Status</Label>
+                            <Select value={formData.maintenanceStatus} onValueChange={(v: any) => handleSelectChange('maintenanceStatus', v)}>
+                                <SelectTrigger><Badge variant={
+                                    formData.maintenanceStatus === 'paid' ? 'default' :
+                                    formData.maintenanceStatus === 'overdue' ? 'destructive' :
+                                    'secondary'
+                                }>{formData.maintenanceStatus.charAt(0).toUpperCase() + formData.maintenanceStatus.slice(1)}</Badge></SelectTrigger>
+                                <SelectContent>{maintenanceStatusOptions.map(s => <SelectItem key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>)}</SelectContent>
+                            </Select>
                         </div>
-                        <div>
-                            <Label htmlFor="issues" className="flex items-center gap-2 mb-2"><MessageSquare className="w-4 h-4"/>Issues / Complaints</Label>
+                        <div className="flex items-center space-x-3 pt-2">
+                            <Checkbox id="registered" checked={formData.registered} onCheckedChange={(c) => handleCheckboxChange('registered', c as boolean)} />
+                            <Label htmlFor="registered" className="font-normal flex items-center gap-2">
+                              <CheckCircle className={cn("w-4 h-4", formData.registered ? "text-green-500" : "text-muted-foreground")}/>
+                              Flat Registered
+                            </Label>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="issues" className="flex items-center gap-2"><MessageSquare className="w-4 h-4"/>Issues / Complaints</Label>
                             <Textarea id="issues" value={formData.issues} onChange={handleInputChange} placeholder="Report any issues..." rows={4}/>
                         </div>
                       </div>
@@ -279,23 +281,23 @@ export function FlatModal({ isOpen, onClose, flatInfo, initialData, onSave, isSa
             {/* Footer */}
             <motion.div
               variants={itemVariants}
-              className="flex justify-between items-center px-8 py-5 border-t border-border bg-card/80 backdrop-blur-sm rounded-b-3xl"
+              className="flex flex-col sm:flex-row justify-between items-center gap-4 px-8 py-5 border-t border-border bg-card/80 backdrop-blur-sm rounded-b-3xl"
             >
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-muted-foreground text-center sm:text-left">
                 Last updated: {formData.lastUpdated ? new Date(formData.lastUpdated).toLocaleString() : 'Never'}
               </div>
-              <div className="flex space-x-4">
+              <div className="flex space-x-4 w-full sm:w-auto">
                 <Button
                   variant="outline"
                   onClick={onClose}
-                  className="px-6 py-3 rounded-xl font-medium"
+                  className="w-full sm:w-auto px-6 py-3 rounded-xl font-medium"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleSubmit}
                   disabled={isSaving}
-                  className="px-6 py-3 bg-gradient-to-r from-primary to-purple-600 text-primary-foreground rounded-xl hover:opacity-90 transition-all font-medium shadow-lg"
+                  className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-primary to-purple-600 text-primary-foreground rounded-xl hover:opacity-90 transition-all font-medium shadow-lg"
                 >
                   {isSaving ? 'Saving...' : 'Save Changes'}
                 </Button>
@@ -304,7 +306,7 @@ export function FlatModal({ isOpen, onClose, flatInfo, initialData, onSave, isSa
           </motion.div>
         </motion.div>
       )}
-      <div key="year-month-selector">
+      <div key="year-month-selector-wrapper">
         <YearMonthSelector
             isOpen={isMonthSelectorOpen}
             onClose={() => setIsMonthSelectorOpen(false)}
