@@ -37,7 +37,6 @@ interface FlatModalProps {
   onClose: () => void;
   flatInfo: FlatInfo | null;
   initialData?: FlatData;
-  allFlatData: Record<string, FlatData>;
   onSave: (flatId: string, data: FlatData) => Promise<void>;
   isSaving: boolean;
 }
@@ -46,7 +45,7 @@ const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 const parkingOptions: FlatData['parkingAllocation'][] = ['Covered', 'Open', 'No Parking'];
 const maintenanceStatusOptions = ['Paid', 'Pending', 'Intimation Sent', 'Overdue'];
 
-export function FlatModal({ isOpen, onClose, flatInfo, initialData, allFlatData, onSave, isSaving }: FlatModalProps) {
+export function FlatModal({ isOpen, onClose, flatInfo, initialData, onSave, isSaving }: FlatModalProps) {
   const [activeTab, setActiveTab] = useState('personal');
   const [isMonthSelectorOpen, setIsMonthSelectorOpen] = useState(false);
   const [isMaintenanceManagerOpen, setIsMaintenanceManagerOpen] = useState(false);
@@ -262,11 +261,11 @@ export function FlatModal({ isOpen, onClose, flatInfo, initialData, allFlatData,
                     {activeTab === 'maintenance' && (
                         <div className="space-y-6">
                             <div className="space-y-2">
-                                <Label htmlFor="maintenanceStatus" className="flex items-center gap-2"><Settings className="w-4 h-4"/>Maintenance Status</Label>
+                                <Label className="flex items-center gap-2"><Settings className="w-4 h-4"/>Maintenance Status</Label>
                                 <Button className="w-full" onClick={() => setIsMaintenanceManagerOpen(true)}>
                                   <IndianRupee className="mr-2 h-4 w-4" /> Manage Maintenance Charges
                                 </Button>
-                                <p className="text-sm text-muted-foreground">Open the manager to view payment history, update dues, and set rates.</p>
+                                <p className="text-sm text-muted-foreground">Open the manager to view payment history and update dues.</p>
                             </div>
 
                             <div className="flex items-center space-x-3 pt-2">
@@ -316,11 +315,12 @@ export function FlatModal({ isOpen, onClose, flatInfo, initialData, allFlatData,
         )}
       </AnimatePresence>
 
-      <MaintenanceManager 
+      {flatInfo && <MaintenanceManager 
         isOpen={isMaintenanceManagerOpen}
         onClose={() => setIsMaintenanceManagerOpen(false)}
-        allFlatData={allFlatData}
-      />
+        flatInfo={flatInfo}
+        flatData={formData}
+      />}
 
       <div key="year-month-selector-wrapper">
         <YearMonthSelector
