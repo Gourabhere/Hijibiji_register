@@ -41,7 +41,6 @@ interface FlatModalProps {
 }
 
 const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
-const maintenanceStatusOptions: FlatData['maintenanceStatus'][] = ['paid', 'pending', 'overdue'];
 const parkingOptions: FlatData['parkingAllocation'][] = ['Covered', 'Open', 'No Parking'];
 
 export function FlatModal({ isOpen, onClose, flatInfo, initialData, onSave, isSaving }: FlatModalProps) {
@@ -252,14 +251,19 @@ export function FlatModal({ isOpen, onClose, flatInfo, initialData, onSave, isSa
                       <div className="space-y-6">
                         <div className="space-y-2">
                             <Label htmlFor="maintenanceStatus" className="flex items-center gap-2"><Settings className="w-4 h-4"/>Maintenance Status</Label>
-                            <Select value={formData.maintenanceStatus} onValueChange={(v: any) => handleSelectChange('maintenanceStatus', v)}>
-                                <SelectTrigger><Badge variant={
-                                    formData.maintenanceStatus === 'paid' ? 'default' :
-                                    formData.maintenanceStatus === 'overdue' ? 'destructive' :
-                                    'secondary'
-                                }>{formData.maintenanceStatus.charAt(0).toUpperCase() + formData.maintenanceStatus.slice(1)}</Badge></SelectTrigger>
-                                <SelectContent>{maintenanceStatusOptions.map(s => <SelectItem key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>)}</SelectContent>
-                            </Select>
+                            <Input 
+                                id="maintenanceStatus"
+                                value={formData.maintenanceStatus}
+                                onChange={handleInputChange}
+                                list="maintenance-suggestions"
+                                placeholder="e.g., Paid, Pending, Intimation Sent"
+                            />
+                            <datalist id="maintenance-suggestions">
+                                <option value="Paid" />
+                                <option value="Pending" />
+                                <option value="Overdue" />
+                                <option value="Intimation Sent" />
+                            </datalist>
                         </div>
                         <div className="flex items-center space-x-3 pt-2">
                             <Checkbox id="registered" checked={formData.registered} onCheckedChange={(c) => handleCheckboxChange('registered', c as boolean)} />

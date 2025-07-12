@@ -51,7 +51,7 @@ export type FlatData = {
   email: string;
   familyMembers: string;
   issues: string;
-  maintenanceStatus: 'paid' | 'pending' | 'overdue';
+  maintenanceStatus: string;
   registered: boolean;
   lastUpdated?: string;
   moveInMonth: string;

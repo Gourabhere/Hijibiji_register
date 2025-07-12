@@ -162,6 +162,8 @@ export default function OwnerDashboardPage() {
                 return <Badge variant="secondary" className="bg-yellow-400 text-black hover:bg-yellow-500">Pending</Badge>;
             case 'overdue':
                 return <Badge variant="destructive">Overdue</Badge>;
+            case 'intimation sent':
+                return <Badge variant="default" className="bg-blue-500 hover:bg-blue-600">Intimation Sent</Badge>;
             default:
                 return <Badge variant="outline">{status || 'N/A'}</Badge>;
         }
