@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useTransition } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -37,14 +37,14 @@ interface FlatModalProps {
   flatInfo: FlatInfo | null;
   initialData?: FlatData;
   onSave: (flatId: string, data: FlatData) => Promise<void>;
+  isSaving: boolean;
 }
 
 const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 const maintenanceStatusOptions: FlatData['maintenanceStatus'][] = ['paid', 'pending', 'overdue'];
 const parkingOptions: FlatData['parkingAllocation'][] = ['Covered', 'Open', 'No Parking'];
 
-export function FlatModal({ isOpen, onClose, flatInfo, initialData, onSave }: FlatModalProps) {
-  const [isPending, startTransition] = useTransition();
+export function FlatModal({ isOpen, onClose, flatInfo, initialData, onSave, isSaving }: FlatModalProps) {
   const [activeTab, setActiveTab] = useState('personal');
   const [isMonthSelectorOpen, setIsMonthSelectorOpen] = useState(false);
   const [formData, setFormData] = useState<FlatData>({
@@ -86,10 +86,7 @@ export function FlatModal({ isOpen, onClose, flatInfo, initialData, onSave }: Fl
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    startTransition(async () => {
-      await onSave(flatInfo.flatId, formData);
-      onClose();
-    });
+    onSave(flatInfo.flatId, formData);
   };
 
   const containerVariants = {
@@ -122,7 +119,7 @@ export function FlatModal({ isOpen, onClose, flatInfo, initialData, onSave }: Fl
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          key="flat-modal"
+          key="flat-modal-backdrop"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -130,6 +127,7 @@ export function FlatModal({ isOpen, onClose, flatInfo, initialData, onSave }: Fl
           onClick={onClose}
         >
           <motion.div
+            key="flat-modal-content"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
@@ -296,10 +294,10 @@ export function FlatModal({ isOpen, onClose, flatInfo, initialData, onSave }: Fl
                 </Button>
                 <Button
                   onClick={handleSubmit}
-                  disabled={isPending}
+                  disabled={isSaving}
                   className="px-6 py-3 bg-gradient-to-r from-primary to-purple-600 text-primary-foreground rounded-xl hover:opacity-90 transition-all font-medium shadow-lg"
                 >
-                  {isPending ? 'Saving...' : 'Save Changes'}
+                  {isSaving ? 'Saving...' : 'Save Changes'}
                 </Button>
               </div>
             </motion.div>

@@ -66,6 +66,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
   const [selectedFlat, setSelectedFlat] = useState<FlatInfo | null>(null);
   const [isClient, setIsClient] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [dbError, setDbError] = useState<string | null>(null);
   const [isOwnerLoggedIn, setIsOwnerLoggedIn] = useState(false);
   const [time, setTime] = useState(new Date());
@@ -190,20 +191,23 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
   };
   
   const handleSaveFlatData = async (flatId: string, data: FlatData) => {
+    setIsSaving(true);
     try {
-        await saveFlatDataAction(flatId, data);
-        toast({
-            title: "Success",
-            description: `Flat ${flatId} data has been updated.`
-        });
-        setIsModalOpen(false);
-        fetchFlatData(); // Re-fetch data to update the UI
+      await saveFlatDataAction(flatId, data);
+      toast({
+        title: "Success",
+        description: `Flat ${flatId} data has been updated.`
+      });
+      setIsModalOpen(false);
+      await fetchFlatData(); // Re-fetch data to update the UI
     } catch (e: any) {
-        toast({
-            title: "Error",
-            description: `Failed to save data: ${e.message}`,
-            variant: "destructive"
-        });
+      toast({
+        title: "Error",
+        description: `Failed to save data: ${e.message}`,
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -558,6 +562,7 @@ export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }
           flatInfo={selectedFlat}
           initialData={flatData[selectedFlat.flatId]}
           onSave={handleSaveFlatData}
+          isSaving={isSaving}
         />
       )}
 
