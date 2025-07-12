@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -58,6 +57,7 @@ export function FlatModal({ isOpen, onClose, flatInfo, initialData, onSave, isSa
     emergencyContactNumber: '',
     parkingAllocation: '',
     bloodGroup: '',
+    carNumber: '',
   });
 
   useEffect(() => {
@@ -67,7 +67,7 @@ export function FlatModal({ isOpen, onClose, flatInfo, initialData, onSave, isSa
       setFormData({
         ownerName: '', contactNumber: '', email: '', familyMembers: '', issues: '',
         maintenanceStatus: 'pending', registered: false, moveInMonth: '',
-        emergencyContactNumber: '', parkingAllocation: '', bloodGroup: ''
+        emergencyContactNumber: '', parkingAllocation: '', bloodGroup: '', carNumber: ''
       });
     }
   }, [initialData]);
@@ -244,6 +244,12 @@ export function FlatModal({ isOpen, onClose, flatInfo, initialData, onSave, isSa
                                   <SelectContent>{parkingOptions.map((p, i) => <SelectItem key={i} value={p}>{p}</SelectItem>)}</SelectContent>
                               </Select>
                           </div>
+                          {(formData.parkingAllocation === 'Covered' || formData.parkingAllocation === 'Open') && (
+                              <div>
+                                  <Label htmlFor="carNumber" className="flex items-center gap-2 mb-2"><Car className="w-4 h-4" />Car Number</Label>
+                                  <Input id="carNumber" value={formData.carNumber} onChange={handleInputChange} placeholder="e.g., WB 01 AB 1234" />
+                              </div>
+                          )}
                      </div>
                   )}
 

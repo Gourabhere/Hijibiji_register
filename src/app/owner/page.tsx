@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState, useTransition } from 'react';
@@ -45,6 +44,7 @@ export default function OwnerDashboardPage() {
         parkingAllocation: '',
         bloodGroup: '',
         maintenanceStatus: 'pending',
+        carNumber: '',
     });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -81,6 +81,7 @@ export default function OwnerDashboardPage() {
                             parkingAllocation: data.parkingAllocation,
                             bloodGroup: data.bloodGroup,
                             maintenanceStatus: data.maintenanceStatus,
+                            carNumber: data.carNumber,
                         });
                     } else {
                         setError('Could not find details for your flat.');
@@ -365,6 +366,12 @@ export default function OwnerDashboardPage() {
                                             </SelectContent>
                                         </Select>
                                     </div>
+                                    {(formData.parkingAllocation === 'Covered' || formData.parkingAllocation === 'Open') && (
+                                        <div className="space-y-2">
+                                            <Label htmlFor="carNumber" className="flex items-center gap-2"><Car className="w-4 h-4" />Car Number</Label>
+                                            <Input id="carNumber" value={formData.carNumber} onChange={handleInputChange} placeholder="e.g., WB 01 AB 1234" />
+                                        </div>
+                                    )}
                                     <div className="space-y-2">
                                         <Label htmlFor="maintenanceStatus" className="flex items-center gap-2"><Settings className="w-4 h-4"/>Maintenance Status</Label>
                                         <Select value={formData.maintenanceStatus} onValueChange={(v) => handleSelectChange('maintenanceStatus', v)}>
@@ -413,5 +420,3 @@ export default function OwnerDashboardPage() {
         </div>
     );
 }
-
-    

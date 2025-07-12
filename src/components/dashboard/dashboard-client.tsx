@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -58,6 +57,7 @@ export type FlatData = {
   emergencyContactNumber: string;
   parkingAllocation: 'Covered' | 'Open' | 'No Parking' | '';
   bloodGroup: string;
+  carNumber: string;
 }
 
 export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }) => {
