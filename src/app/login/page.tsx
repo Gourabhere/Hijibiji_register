@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from '@/components/ui/checkbox';
+import { useTheme } from 'next-themes';
 
 import { loginOwnerAction, signupOwnerAction } from '@/app/actions';
 import { HijibijiFlatData, BlockName, getFlatsForFloor } from '@/data/flat-data';
@@ -25,6 +26,12 @@ import { ThemeToggle } from '@/components/theme-toggle';
 function LoginPageContent() {
   const router = useRouter();
   const { toast } = useToast();
+  const { setTheme } = useTheme();
+
+  // Force light theme on this page
+  useEffect(() => {
+    setTheme('light');
+  }, [setTheme]);
 
   // Unified Login States
   const [identifier, setIdentifier] = useState('');
