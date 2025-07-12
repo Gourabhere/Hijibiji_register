@@ -42,8 +42,6 @@ function HomePageContent() {
   const [selectedFlat, setSelectedFlat] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [ownerName, setOwnerName] = useState('');
-  const [email, setEmail] = useState('');
   const [contactNumber, setContactNumber] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   
@@ -61,17 +59,6 @@ function HomePageContent() {
         const preSignupData = await getPreSignupFlatDataAction(flatId);
         if (preSignupData?.passwordExists) {
             setError("An account for this flat already exists. Please log in.");
-            setOwnerName('');
-            setEmail('');
-            setContactNumber('');
-        } else if (preSignupData) {
-            setOwnerName(preSignupData.ownerName || '');
-            setEmail(preSignupData.email || '');
-            setContactNumber(preSignupData.contactNumber || '');
-        } else {
-            setOwnerName('');
-            setEmail('');
-            setContactNumber('');
         }
       });
     }
@@ -138,7 +125,7 @@ function HomePageContent() {
     setIsLoading(true);
 
     try {
-      const formData = { ownerName, email, contactNumber };
+      const formData = { contactNumber };
       const result = await signupOwnerAction(selectedBlock, selectedFloor, selectedFlat, signupPassword, formData);
       if (result.success && result.flatId) {
         toast({
@@ -261,16 +248,8 @@ function HomePageContent() {
                     {isCheckingFlat && <p className="text-sm text-muted-foreground text-center">Checking flat status...</p>}
 
                     <div>
-                        <Label htmlFor="ownerName" className="flex items-center gap-2"><User className="w-4 h-4" />Full Name</Label>
-                        <Input id="ownerName" value={ownerName} onChange={(e) => setOwnerName(e.target.value)} required className="mt-1 h-12 bg-muted/50" />
-                    </div>
-                    <div>
-                        <Label htmlFor="email" className="flex items-center gap-2"><Mail className="w-4 h-4" />Email Address</Label>
-                        <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1 h-12 bg-muted/50" />
-                    </div>
-                    <div>
                         <Label htmlFor="contactNumber" className="flex items-center gap-2"><Phone className="w-4 h-4" />Contact Number</Label>
-                        <Input id="contactNumber" type="tel" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} required className="mt-1 h-12 bg-muted/50" />
+                        <Input id="contactNumber" type="tel" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} required className="mt-1 h-12 bg-muted/50" placeholder="Enter registered contact number" />
                     </div>
 
                     <div>

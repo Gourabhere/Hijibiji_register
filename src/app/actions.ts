@@ -24,6 +24,8 @@ const MAX_COLUMN_LETTER = 'S';
 
 const SPREADSHEET_ID = process.env.GOOGLE_SHEETS_ID;
 const SHEET_NAME = process.env.GOOGLE_SHEET_NAME || 'Sheet1'; // Name of the sheet/tab in your Google Sheet
+const SHEET_NAME_SHEET2 = process.env.GOOGLE_SHEET_NAME_SHEET2 || 'Sheet2';
+
 
 // Helper to authenticate and get the Google Sheets API client
 async function getSheetsClient() {
@@ -70,9 +72,9 @@ const normalizeFlatId = (id: any): string => {
 };
 
 // Find the row number for a given flat ID
-async function findRowByFlatId(sheets: any, flatId: string): Promise<number | null> {
+async function findRowByFlatId(sheets: any, flatId: string, sheetName: string = SHEET_NAME): Promise<number | null> {
     try {
-        const range = `'${SHEET_NAME}'!A:A`;
+        const range = `'${sheetName}'!A:A`;
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
             range: range, // Search in the 'Flat ID' column
@@ -87,9 +89,36 @@ async function findRowByFlatId(sheets: any, flatId: string): Promise<number | nu
         }
         return null;
     } catch (e) {
-        throw handleApiError(e, 'find row by flat ID');
+        throw handleApiError(e, `find row by flat ID in ${sheetName}`);
     }
 }
+
+// Check if the contact number is valid for the given flat ID in Sheet2
+async function validateContactNumber(sheets: any, flatId: string, contactNumber: string): Promise<boolean> {
+    try {
+        const rowNumber = await findRowByFlatId(sheets, flatId, SHEET_NAME_SHEET2);
+        if (!rowNumber) {
+            return false; // Flat ID not found in validation sheet.
+        }
+
+        const range = `'${SHEET_NAME_SHEET2}'!A${rowNumber}:B${rowNumber}`; // Assuming Flat ID is in col A, Contact in col B
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: range,
+        });
+
+        const row = response.data.values?.[0];
+        if (!row || !row[1]) {
+            return false; // No contact number found for this flat
+        }
+        
+        const sheetContactNumber = row[1].toString().trim();
+        return sheetContactNumber === contactNumber.trim();
+    } catch (e) {
+        throw handleApiError(e, 'validate contact number');
+    }
+}
+
 
 export async function getFlatsData(): Promise<Record<string, FlatData>> {
     try {
@@ -185,7 +214,7 @@ export async function saveFlatDataAction(flatId: string, data: FlatData): Promis
         updateField('Emergency Contact Number', data.emergencyContactNumber);
         updateField('Parking Allocation', data.parkingAllocation);
         updateField('Blood Group', data.bloodGroup);
-        updateField('CarNumber', data.carNumber);
+        updateField('Car Number', data.carNumber);
 
         const updateRange = `'${SHEET_NAME}'!A${rowNumber}:${String.fromCharCode(65 + headers.length-1)}${rowNumber}`;
         await sheets.spreadsheets.values.update({
@@ -375,12 +404,12 @@ export async function updateOwnerDataAction(flatId: string, data: Partial<OwnerE
 }
 
 export type SignupFormData = {
-  ownerName: string;
-  email: string;
   contactNumber: string;
 };
 
-export type PreSignupData = SignupFormData & { passwordExists: boolean };
+export type PreSignupData = { 
+    passwordExists: boolean 
+};
 
 export async function getPreSignupFlatDataAction(flatId: string): Promise<PreSignupData | null> {
     const normalizedFlatId = normalizeFlatId(flatId);
@@ -390,7 +419,7 @@ export async function getPreSignupFlatDataAction(flatId: string): Promise<PreSig
         const sheets = await getSheetsClient();
         const rowNumber = await findRowByFlatId(sheets, normalizedFlatId);
 
-        if (!rowNumber) return null; // Flat doesn't exist at all, proceed with fresh signup.
+        if (!rowNumber) return { passwordExists: false }; // Flat doesn't exist at all, proceed with fresh signup.
 
         const range = `'${SHEET_NAME}'!A${rowNumber}:${MAX_COLUMN_LETTER}${rowNumber}`;
         const response = await sheets.spreadsheets.values.get({
@@ -399,7 +428,7 @@ export async function getPreSignupFlatDataAction(flatId: string): Promise<PreSig
         });
 
         const row = response.data.values?.[0];
-        if (!row) return null;
+        if (!row) return { passwordExists: false };
 
         const headersResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `'${SHEET_NAME}'!A1:${MAX_COLUMN_LETTER}1` });
         const headers = headersResponse.data.values?.[0] as string[];
@@ -408,14 +437,11 @@ export async function getPreSignupFlatDataAction(flatId: string): Promise<PreSig
         
         const password = row[headerIndexMap.get('Password')!];
         if (password && password.length > 0) {
-            return { passwordExists: true, ownerName: '', email: '', contactNumber: '' };
+            return { passwordExists: true };
         }
         
         return {
             passwordExists: false,
-            ownerName: row[headerIndexMap.get('Owner Name')!] || '',
-            email: row[headerIndexMap.get('Email')!] || '',
-            contactNumber: row[headerIndexMap.get('Contact Number')!] || '',
         };
 
     } catch (e: any) {
@@ -437,6 +463,13 @@ export async function signupOwnerAction(
 
     try {
         const sheets = await getSheetsClient();
+        
+        // Step 1: Validate contact number against Sheet2
+        const isContactValid = await validateContactNumber(sheets, flatId, formData.contactNumber);
+        if (!isContactValid) {
+            return { success: false, message: "The contact number provided does not match our records for this flat." };
+        }
+
         const rowNumber = await findRowByFlatId(sheets, flatId);
         
         const headersResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `'${SHEET_NAME}'!A1:${MAX_COLUMN_LETTER}1` });
@@ -467,8 +500,6 @@ export async function signupOwnerAction(
             };
             
             updateField('Password', password_from_user);
-            updateField('Owner Name', formData.ownerName);
-            updateField('Email', formData.email);
             updateField('Contact Number', formData.contactNumber);
             updateField('Last Updated', new Date().toISOString());
             // Mark as registered on signup completion
@@ -491,8 +522,6 @@ export async function signupOwnerAction(
                     case 'Floor': acc.push(floor); break;
                     case 'Flat': acc.push(flat); break;
                     case 'Password': acc.push(password_from_user); break;
-                    case 'Owner Name': acc.push(formData.ownerName); break;
-                    case 'Email': acc.push(formData.email); break;
                     case 'Contact Number': acc.push(formData.contactNumber); break;
                     case 'Maintenance Status': acc.push('pending'); break;
                     case 'Registered': acc.push('TRUE'); break; // Mark as registered on signup
