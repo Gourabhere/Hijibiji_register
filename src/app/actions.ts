@@ -1,3 +1,4 @@
+
 'use server';
 
 import { google } from 'googleapis';
@@ -8,16 +9,17 @@ export type FlatData = BaseFlatData & {
     parkingAllocation: 'Covered' | 'Open' | 'No Parking' | '';
     bloodGroup: string;
     carNumber: string;
+    registrationStatus: string;
 };
 
 // All column names used in the sheet
 const COLUMN_NAMES = [
     'Flat ID', 'Block', 'Floor', 'Flat', 'Owner Name', 'Contact Number',
     'Email', 'Family Members', 'Issues / Complaints', 'Maintenance Status',
-    'Registered', 'Password', 'Last Updated', 'Move In Month',
+    'Registered', 'Registration Status', 'Last Updated', 'Move In Month', 'Password',
     'Emergency Contact Number', 'Parking Allocation', 'Blood Group', 'Car Number'
 ];
-const MAX_COLUMN_LETTER = 'R';
+const MAX_COLUMN_LETTER = 'S';
 
 
 const SPREADSHEET_ID = process.env.GOOGLE_SHEETS_ID;
@@ -126,6 +128,7 @@ export async function getFlatsData(): Promise<Record<string, FlatData>> {
                     parkingAllocation: row[headerIndexMap.get('Parking Allocation')!] || '',
                     bloodGroup: row[headerIndexMap.get('Blood Group')!] || '',
                     carNumber: row[headerIndexMap.get('Car Number')!] || '',
+                    registrationStatus: row[headerIndexMap.get('Registration Status')!] || 'Pending',
                 };
             }
         }
@@ -176,6 +179,7 @@ export async function saveFlatDataAction(flatId: string, data: FlatData): Promis
         updateField('Issues / Complaints', data.issues);
         updateField('Maintenance Status', data.maintenanceStatus);
         updateField('Registered', data.registered ? 'TRUE' : 'FALSE');
+        updateField('Registration Status', data.registrationStatus);
         updateField('Last Updated', new Date().toISOString());
         updateField('Move In Month', data.moveInMonth);
         updateField('Emergency Contact Number', data.emergencyContactNumber);
@@ -276,6 +280,7 @@ export async function getOwnerFlatData(flatId: string): Promise<OwnerFlatData | 
             issues: row[headerIndexMap.get('Issues / Complaints')!] || '',
             maintenanceStatus: row[headerIndexMap.get('Maintenance Status')!] || 'pending',
             registered: row[headerIndexMap.get('Registered')!] === 'TRUE',
+            registrationStatus: row[headerIndexMap.get('Registration Status')!] || 'Pending',
             lastUpdated: row[headerIndexMap.get('Last Updated')!] || '',
             moveInMonth: row[headerIndexMap.get('Move In Month')!] || '',
             emergencyContactNumber: row[headerIndexMap.get('Emergency Contact Number')!] || '',
@@ -299,11 +304,11 @@ export type OwnerEditableData = {
     emergencyContactNumber: string;
     parkingAllocation: 'Covered' | 'Open' | 'No Parking' | '';
     bloodGroup: string;
-    maintenanceStatus: string;
+    registrationStatus: string;
     carNumber: string;
 };
 
-export async function updateOwnerDataAction(flatId: string, data: OwnerEditableData): Promise<{ success: boolean; message: string }> {
+export async function updateOwnerDataAction(flatId: string, data: Partial<OwnerEditableData>): Promise<{ success: boolean; message: string }> {
     const normalizedFlatId = normalizeFlatId(flatId);
     try {
         const sheets = await getSheetsClient();
@@ -330,6 +335,7 @@ export async function updateOwnerDataAction(flatId: string, data: OwnerEditableD
 
         // Function to safely update a value in the array by column name
         const updateField = (fieldName: string, value: any) => {
+            if (value === undefined) return;
             const index = headerIndexMap.get(fieldName);
             if (index !== undefined) {
                 updatedValues[index] = value;
@@ -348,7 +354,7 @@ export async function updateOwnerDataAction(flatId: string, data: OwnerEditableD
         updateField('Emergency Contact Number', data.emergencyContactNumber);
         updateField('Parking Allocation', data.parkingAllocation);
         updateField('Blood Group', data.bloodGroup);
-        updateField('Maintenance Status', data.maintenanceStatus);
+        updateField('Registration Status', data.registrationStatus);
         updateField('Car Number', data.carNumber);
         
         const range = `'${SHEET_NAME}'!A${rowNumber}:${String.fromCharCode(65 + headers.length-1)}${rowNumber}`;
@@ -407,11 +413,22 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
             return { success: true, message: 'Signup successful! Please log in to update your details.', flatId };
 
         } else { // Flat does not exist, create it
-            const newRowData = [
-                flatId, block, floor, flat, '', '', '', '', '', 'pending',
-                'FALSE', password_from_user, new Date().toISOString(),
-                '', '', '', '', ''
-            ];
+             const newRowData = COLUMN_NAMES.reduce((acc, colName) => {
+                switch(colName) {
+                    case 'Flat ID': acc.push(flatId); break;
+                    case 'Block': acc.push(block); break;
+                    case 'Floor': acc.push(floor); break;
+                    case 'Flat': acc.push(flat); break;
+                    case 'Maintenance Status': acc.push('pending'); break;
+                    case 'Registered': acc.push('FALSE'); break;
+                    case 'Registration Status': acc.push('Pending'); break;
+                    case 'Password': acc.push(password_from_user); break;
+                    case 'Last Updated': acc.push(new Date().toISOString()); break;
+                    default: acc.push(''); break;
+                }
+                return acc;
+            }, [] as (string | boolean | number)[]);
+
 
             const appendRange = `'${SHEET_NAME}'!A:${MAX_COLUMN_LETTER}`;
             await sheets.spreadsheets.values.append({
@@ -426,3 +443,5 @@ export async function signupOwnerAction(block: string, floor: string, flat: stri
         return { success: false, message: handleApiError(e, 'process owner signup').message };
     }
 }
+
+    
