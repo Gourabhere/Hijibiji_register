@@ -294,6 +294,7 @@ export type OwnerEditableData = {
     emergencyContactNumber: string;
     parkingAllocation: 'Covered' | 'Open' | 'No Parking' | '';
     bloodGroup: string;
+    maintenanceStatus: string;
 };
 
 export async function updateOwnerDataAction(flatId: string, data: OwnerEditableData): Promise<{ success: boolean; message: string }> {
@@ -341,6 +342,7 @@ export async function updateOwnerDataAction(flatId: string, data: OwnerEditableD
         updateField('Emergency Contact Number', data.emergencyContactNumber);
         updateField('Parking Allocation', data.parkingAllocation);
         updateField('Blood Group', data.bloodGroup);
+        updateField('Maintenance Status', data.maintenanceStatus);
         
         const range = `'${SHEET_NAME}'!A${rowNumber}:${String.fromCharCode(65 + headers.length-1)}${rowNumber}`;
         await sheets.spreadsheets.values.update({

@@ -25,6 +25,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetClose 
 import { Separator } from '@/components/ui/separator';
 
 const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+const maintenanceStatusOptions = ['Paid', 'Pending', 'Intimation Sent', 'Overdue'];
 
 export default function OwnerDashboardPage() {
     const router = useRouter();
@@ -43,6 +44,7 @@ export default function OwnerDashboardPage() {
         emergencyContactNumber: '',
         parkingAllocation: '',
         bloodGroup: '',
+        maintenanceStatus: 'pending',
     });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -78,6 +80,7 @@ export default function OwnerDashboardPage() {
                             emergencyContactNumber: data.emergencyContactNumber,
                             parkingAllocation: data.parkingAllocation,
                             bloodGroup: data.bloodGroup,
+                            maintenanceStatus: data.maintenanceStatus,
                         });
                     } else {
                         setError('Could not find details for your flat.');
@@ -121,12 +124,7 @@ export default function OwnerDashboardPage() {
         if (!flatData) return;
 
         startTransition(async () => {
-            const dataToSave = { ...formData };
-            if (!formData.registered) {
-              dataToSave.registered = true;
-            }
-
-            const result = await updateOwnerDataAction(flatData.flatId, dataToSave);
+            const result = await updateOwnerDataAction(flatData.flatId, formData);
             if (result.success) {
                 toast({
                     title: 'Success!',
@@ -368,8 +366,13 @@ export default function OwnerDashboardPage() {
                                         </Select>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label>Maintenance Status</Label>
-                                        <div>{getMaintenanceBadge(flatData.maintenanceStatus)}</div>
+                                        <Label htmlFor="maintenanceStatus">Maintenance Status</Label>
+                                        <Select value={formData.maintenanceStatus} onValueChange={(v) => handleSelectChange('maintenanceStatus', v)}>
+                                            <SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger>
+                                            <SelectContent>
+                                                {maintenanceStatusOptions.map(status => <SelectItem key={status} value={status}>{status}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
                                     </div>
                                     <div className="flex items-center space-x-2 pt-2 md:col-span-2">
                                          <Checkbox
