@@ -22,6 +22,8 @@ import { useTheme } from 'next-themes';
 import { loginOwnerAction, signupOwnerAction, getPreSignupFlatDataAction } from '@/app/actions';
 import { HijibijiFlatData, BlockName, getFlatsForFloor } from '@/data/flat-data';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { PhoneInput } from '@/components/ui/phone-input';
+
 
 function HomePageContent() {
   const router = useRouter();
@@ -249,24 +251,13 @@ function HomePageContent() {
 
                     {isCheckingFlat && <p className="text-sm text-muted-foreground text-center">Checking flat status...</p>}
                     
-                    <div className="flex items-end gap-2">
-                        <div className="w-1/3">
-                            <Label htmlFor="countryCode">Code</Label>
-                            <Select onValueChange={setCountryCode} defaultValue="+91">
-                                <SelectTrigger id="countryCode" className="mt-1 h-12 bg-muted/50">
-                                    <SelectValue placeholder="Code" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="+91">+91</SelectItem>
-                                    <SelectItem value="+1">+1</SelectItem>
-                                    <SelectItem value="+44">+44</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="flex-grow">
-                            <Label htmlFor="contactNumber" className="flex items-center gap-2"><Phone className="w-4 h-4" />Contact Number</Label>
-                            <Input id="contactNumber" type="tel" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} required className="mt-1 h-12 bg-muted/50" placeholder="Number (Without Country code)" />
-                        </div>
+                    <div>
+                      <Label htmlFor="contactNumber" className="flex items-center gap-2 mb-1"><Phone className="w-4 h-4" />Contact Number</Label>
+                      <PhoneInput
+                        phone={contactNumber}
+                        onPhoneChange={setContactNumber}
+                        onCountryChange={(country) => setCountryCode(country.dialCode)}
+                      />
                     </div>
                     
                     <div>
@@ -330,3 +321,5 @@ export default function HomePage() {
     </Suspense>
   )
 }
+
+    
