@@ -327,7 +327,7 @@ export default function OwnerDashboardPage() {
                             <Card className="shadow-lg rounded-2xl">
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-3 text-xl"><User className="text-primary"/>My Profile</CardTitle>
-                                    <CardDescription>Update your personal and contact details here. Saving any change will mark your flat as registered.</CardDescription>
+                                    <CardDescription>Update your personal and contact details here.</CardDescription>
                                 </CardHeader>
                                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
