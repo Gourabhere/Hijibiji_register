@@ -50,17 +50,18 @@ function LoginPageContent() {
   // Common states
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingFlat, startChecking] = useTransition();
-  const [error, setError] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [signupError, setSignupError] = useState('');
 
   // Pre-load data logic
   useEffect(() => {
     if (selectedBlock && selectedFloor && selectedFlat) {
       const flatId = `${selectedBlock.replace('Block ', '')}${selectedFlat}${selectedFloor}`;
       startChecking(async () => {
-        setError('');
+        setSignupError('');
         const preSignupData = await getPreSignupFlatDataAction(flatId);
         if (preSignupData?.passwordExists) {
-            setError("An account for this flat already exists. Please log in.");
+            setSignupError("An account for this flat already exists. Please log in.");
         }
       });
     }
@@ -68,7 +69,7 @@ function LoginPageContent() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setLoginError('');
     setIsLoading(true);
 
     // Admin check
@@ -99,10 +100,10 @@ function LoginPageContent() {
         localStorage.removeItem('isAdmin');
         router.push('/owner');
       } else {
-        setError(result.message || "Invalid credentials. Please check your Email/Flat ID and password.");
+        setLoginError(result.message || "Invalid credentials. Please check your Email/Flat ID and password.");
       }
     } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred.');
+      setLoginError(err.message || 'An unexpected error occurred.');
     } finally {
       setIsLoading(false);
     }
@@ -111,19 +112,19 @@ function LoginPageContent() {
   const handleOwnerSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!agreedToTerms) {
-      setError("You must agree to the Terms of Service and Privacy Policy.");
+      setSignupError("You must agree to the Terms of Service and Privacy Policy.");
       return;
     }
     if (signupPassword !== confirmPassword) {
-      setError("Passwords do not match.");
+      setSignupError("Passwords do not match.");
       return;
     }
     if (!selectedBlock || !selectedFloor || !selectedFlat) {
-      setError("Please select your block, floor, and flat.");
+      setSignupError("Please select your block, floor, and flat.");
       return;
     }
 
-    setError('');
+    setSignupError('');
     setIsLoading(true);
 
     try {
@@ -141,10 +142,10 @@ function LoginPageContent() {
         router.push('/owner');
 
       } else {
-        setError(result.message);
+        setSignupError(result.message);
       }
     } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred during signup.');
+      setSignupError(err.message || 'An unexpected error occurred during signup.');
     } finally {
       setIsLoading(false);
     }
@@ -183,18 +184,17 @@ function LoginPageContent() {
                     <TabsTrigger value="signup"><UserPlus className="mr-2 h-4 w-4"/>Sign Up</TabsTrigger>
                 </TabsList>
                 
-                <div className="mt-4">
-                {error && (
-                  <Alert variant="destructive">
-                      <AlertTriangle className="h-4 w-4" />
-                      <AlertTitle>Action Failed</AlertTitle>
-                      <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
-                </div>
-
                 <TabsContent value="signin">
-                  <form onSubmit={handleLogin} className="space-y-4 pt-4">
+                  <div className="h-20 py-2">
+                    {loginError && (
+                      <Alert variant="destructive">
+                          <AlertTriangle className="h-4 w-4" />
+                          <AlertTitle>Login Failed</AlertTitle>
+                          <AlertDescription>{loginError}</AlertDescription>
+                      </Alert>
+                    )}
+                  </div>
+                  <form onSubmit={handleLogin} className="space-y-4">
                     <div>
                       <Label htmlFor="identifier">Flat ID</Label>
                       <Input 
@@ -224,7 +224,16 @@ function LoginPageContent() {
                 </TabsContent>
 
                 <TabsContent value="signup">
-                  <form onSubmit={handleOwnerSignup} className="space-y-4 pt-4">
+                   <div className="h-20 py-2">
+                    {signupError && (
+                      <Alert variant="destructive">
+                          <AlertTriangle className="h-4 w-4" />
+                          <AlertTitle>Signup Failed</AlertTitle>
+                          <AlertDescription>{signupError}</AlertDescription>
+                      </Alert>
+                    )}
+                  </div>
+                  <form onSubmit={handleOwnerSignup} className="space-y-4">
                     <div className="grid grid-cols-3 gap-2">
                         <div className="col-span-3 sm:col-span-1">
                             <Label>Block</Label>
