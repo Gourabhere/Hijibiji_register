@@ -488,8 +488,8 @@ export async function signupOwnerAction(
         const sheets = await getSheetsClient();
         
         // Step 1: Validate contact number against Sheet1
-        const fullContactNumber = `${formData.countryCode}${formData.contactNumber}`;
-        const isContactValid = await validateContactNumber(sheets, flatId, fullContactNumber);
+        const contactNumber = formData.contactNumber;
+        const isContactValid = await validateContactNumber(sheets, flatId, contactNumber);
         if (!isContactValid) {
             return { success: false, message: "The contact number provided does not match our records for this flat." };
         }
@@ -545,7 +545,7 @@ export async function signupOwnerAction(
                     case 'Floor': acc.push(floor); break;
                     case 'Flat': acc.push(flat); break;
                     case 'Password': acc.push(password_from_user); break;
-                    case 'Contact Number': acc.push(fullContactNumber); break;
+                    case 'Contact Number': acc.push(formData.contactNumber); break;
                     case 'Maintenance Status': acc.push('pending'); break;
                     case 'Registered': acc.push('FALSE'); break; // Set to FALSE on signup
                     case 'Registration Status': acc.push(''); break; // Blank on signup
