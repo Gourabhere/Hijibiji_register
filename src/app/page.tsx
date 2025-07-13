@@ -183,7 +183,7 @@ function HomePageContent() {
                     <TabsTrigger value="signin"><LogIn className="mr-2 h-4 w-4"/>Sign In</TabsTrigger>
                     <TabsTrigger value="signup"><UserPlus className="mr-2 h-4 w-4"/>Sign Up</TabsTrigger>
                 </TabsList>
-                <div className="mt-4 h-12">
+                <div className="mt-4">
                   {error && (
                     <Alert variant="destructive">
                         <AlertTriangle className="h-4 w-4" />
