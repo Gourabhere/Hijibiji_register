@@ -524,7 +524,6 @@ export async function signupOwnerAction(
             };
             
             updateField('Password', password_from_user);
-            updateField('Contact Number', fullContactNumber);
             updateField('Last Updated', new Date().toISOString());
             // Set to FALSE on signup, user must confirm details later.
             updateField('Registered', 'FALSE');
