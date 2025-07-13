@@ -526,9 +526,9 @@ export async function signupOwnerAction(
             updateField('Password', password_from_user);
             updateField('Contact Number', fullContactNumber);
             updateField('Last Updated', new Date().toISOString());
-            // Mark as registered on signup completion
-            updateField('Registered', 'TRUE');
-            updateField('Registration Status', 'Done');
+            // Set to FALSE on signup, user must confirm details later.
+            updateField('Registered', 'FALSE');
+            updateField('Registration Status', '');
 
             await sheets.spreadsheets.values.update({
                 spreadsheetId: SPREADSHEET_ID,
@@ -548,8 +548,8 @@ export async function signupOwnerAction(
                     case 'Password': acc.push(password_from_user); break;
                     case 'Contact Number': acc.push(fullContactNumber); break;
                     case 'Maintenance Status': acc.push('pending'); break;
-                    case 'Registered': acc.push('TRUE'); break; // Mark as registered on signup
-                    case 'Registration Status': acc.push('Done'); break;
+                    case 'Registered': acc.push('FALSE'); break; // Set to FALSE on signup
+                    case 'Registration Status': acc.push(''); break; // Blank on signup
                     case 'Last Updated': acc.push(new Date().toISOString()); break;
                     default: acc.push(''); break;
                 }
