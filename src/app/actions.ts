@@ -95,14 +95,12 @@ async function findRowByFlatId(sheets: any, flatId: string, sheetName: string = 
 }
 
 // Check if the contact number is valid for the given flat ID in Sheet1
-async function validateContactNumber(sheets: any, flatId: string, contactNumber: string): Promise<boolean> {
+async function validateContactNumber(sheets: any, flatId: string, contactNumber: string): Promise<{ isValid: boolean, isSheetContactEmpty: boolean, message: string }> {
     try {
         const rowNumber = await findRowByFlatId(sheets, flatId, SHEET_NAME);
         if (!rowNumber) {
-            // If the flat doesn't exist at all in Sheet1, it's not valid for signup against pre-filled data.
-            // This might happen if an admin hasn't added the flat yet.
-            // Depending on desired logic, you could allow creation, but for now, we deny.
-            return false;
+            // This case should be handled before calling this function, but as a safeguard:
+            return { isValid: false, isSheetContactEmpty: false, message: "Flat ID not found in our records." };
         }
 
         // Get headers to find the 'Contact Number' column index
@@ -124,15 +122,23 @@ async function validateContactNumber(sheets: any, flatId: string, contactNumber:
         });
 
         const row = response.data.values?.[0];
-        if (!row || !row[contactNumberIndex]) {
-            return false; // No contact number found for this flat in Sheet1
+        const sheetContactValue = row ? row[contactNumberIndex] : '';
+
+        // Case 1: Contact number field in the sheet is empty or just whitespace
+        if (!sheetContactValue || sheetContactValue.trim() === '') {
+            return { isValid: true, isSheetContactEmpty: true, message: "Contact number field is empty, proceeding with signup." };
         }
         
-        // Clean up both numbers to only digits before comparing
-        const sheetContactNumbers = row[contactNumberIndex].toString().replace(/\D/g, '');
+        // Case 2: Contact number exists, so we validate it
+        const sheetContactNumbers = sheetContactValue.toString().replace(/\D/g, '');
         const userContactNumber = contactNumber.replace(/\D/g, '');
 
-        return sheetContactNumbers.includes(userContactNumber);
+        if (sheetContactNumbers.includes(userContactNumber)) {
+            return { isValid: true, isSheetContactEmpty: false, message: "Validation successful." };
+        } else {
+            return { isValid: false, isSheetContactEmpty: false, message: "The contact number provided does not match our records for this flat." };
+        }
+
     } catch (e) {
         throw handleApiError(e, 'validate contact number');
     }
@@ -488,88 +494,72 @@ export async function signupOwnerAction(
     try {
         const sheets = await getSheetsClient();
         
-        // Step 1: Validate contact number against Sheet1
-        const contactNumber = formData.contactNumber;
-        const isContactValid = await validateContactNumber(sheets, flatId, contactNumber);
-        if (!isContactValid) {
-            return { success: false, message: "The contact number provided does not match our records for this flat." };
+        const rowNumber = await findRowByFlatId(sheets, flatId);
+
+        // If the flat doesn't exist in the sheet, it's an invalid signup attempt.
+        if (!rowNumber) {
+            return { success: false, message: "This flat is not recognized in our system. Please contact administration." };
         }
 
-        const rowNumber = await findRowByFlatId(sheets, flatId);
+        // Step 1: Validate contact number against Sheet1
+        const contactNumber = formData.contactNumber;
+        const validationResult = await validateContactNumber(sheets, flatId, contactNumber);
+
+        if (!validationResult.isValid) {
+            return { success: false, message: validationResult.message };
+        }
         
         const headersResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `'${SHEET_NAME}'!A1:${MAX_COLUMN_LETTER}1` });
         const headers = headersResponse.data.values?.[0] as string[];
         if (!headers) throw new Error("Sheet headers not found.");
         const headerIndexMap = new Map(headers.map((h, i) => [h, i]));
 
-        if (rowNumber) { // Flat exists, update it
-            const range = `'${SHEET_NAME}'!A${rowNumber}:${MAX_COLUMN_LETTER}${rowNumber}`;
-            const response = await sheets.spreadsheets.values.get({
-                spreadsheetId: SPREADSHEET_ID,
-                range: range,
-            });
-            const row = response.data.values?.[0];
-            if (!row) throw new Error("Could not retrieve existing flat data.");
+        // Flat exists, update it
+        const range = `'${SHEET_NAME}'!A${rowNumber}:${MAX_COLUMN_LETTER}${rowNumber}`;
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: range,
+        });
+        const row = response.data.values?.[0];
+        if (!row) throw new Error("Could not retrieve existing flat data.");
 
-            if (row[headerIndexMap.get('Password')!] && row[headerIndexMap.get('Password')!].length > 0) {
-                 return { success: false, message: "An account for this flat already exists. Please log in." };
-            }
-
-            // Update existing row with new details
-            const existingRowValues = [...row];
-            const updateField = (fieldName: string, value: any) => {
-                const index = headerIndexMap.get(fieldName);
-                if (index !== undefined) {
-                    existingRowValues[index] = value;
-                }
-            };
-            
-            updateField('Password', password_from_user);
-            updateField('Last Updated', new Date().toISOString());
-            // Set to FALSE on signup, user must confirm details later.
-            updateField('Registered', 'FALSE');
-            updateField('Registration Status', '');
-
-            await sheets.spreadsheets.values.update({
-                spreadsheetId: SPREADSHEET_ID,
-                range: range,
-                valueInputOption: 'USER_ENTERED',
-                requestBody: { values: [existingRowValues] },
-            });
-            return { success: true, message: 'Signup successful! Please log in to update your details.', flatId };
-
-        } else { // Flat does not exist, create it
-             const newRowData = COLUMN_NAMES.reduce((acc, colName) => {
-                switch(colName) {
-                    // Prepend flatId with a single quote to force string format in Sheets
-                    case 'Flat ID': acc.push(`'${flatId}`); break;
-                    case 'Block': acc.push(block); break;
-                    case 'Floor': acc.push(floor); break;
-                    case 'Flat': acc.push(flat); break;
-                    case 'Password': acc.push(password_from_user); break;
-                    case 'Contact Number': acc.push(formData.contactNumber); break;
-                    case 'Maintenance Status': acc.push('pending'); break;
-                    case 'Registered': acc.push('FALSE'); break; // Set to FALSE on signup
-                    case 'Registration Status': acc.push(''); break; // Blank on signup
-                    case 'Last Updated': acc.push(new Date().toISOString()); break;
-                    default: acc.push(''); break;
-                }
-                return acc;
-            }, [] as (string | boolean | number)[]);
-
-
-            const appendRange = `'${SHEET_NAME}'!A:${MAX_COLUMN_LETTER}`;
-            await sheets.spreadsheets.values.append({
-                spreadsheetId: SPREADSHEET_ID,
-                range: appendRange,
-                valueInputOption: 'USER_ENTERED',
-                requestBody: { values: [newRowData] },
-            });
-            return { success: true, message: 'Signup successful! Please log in to update your details.', flatId };
+        if (row[headerIndexMap.get('Password')!] && row[headerIndexMap.get('Password')!].length > 0) {
+             return { success: false, message: "An account for this flat already exists. Please log in." };
         }
+
+        // Update existing row with new details
+        const existingRowValues = [...row];
+        const updateField = (fieldName: string, value: any) => {
+            const index = headerIndexMap.get(fieldName);
+            if (index !== undefined) {
+                existingRowValues[index] = value;
+            }
+        };
+        
+        // If the contact number in the sheet was empty, update it with the user's provided number.
+        if (validationResult.isSheetContactEmpty) {
+            updateField('Contact Number', contactNumber);
+        }
+
+        updateField('Password', password_from_user);
+        updateField('Last Updated', new Date().toISOString());
+        // Set to FALSE on signup, user must confirm details later.
+        updateField('Registered', 'FALSE');
+        updateField('Registration Status', '');
+
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: range,
+            valueInputOption: 'USER_ENTERED',
+            requestBody: { values: [existingRowValues] },
+        });
+        return { success: true, message: 'Signup successful! Please log in to update your details.', flatId };
+
     } catch (e: any) {
         return { success: false, message: handleApiError(e, 'process owner signup').message };
     }
 }
+
+    
 
     
