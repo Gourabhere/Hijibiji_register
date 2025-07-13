@@ -10,6 +10,7 @@ export type FlatData = BaseFlatData & {
     bloodGroup: string;
     carNumber: string;
     registrationStatus: string;
+    passwordExists: boolean;
 };
 
 // All column names used in the sheet
@@ -126,8 +127,11 @@ async function validateContactNumber(sheets: any, flatId: string, contactNumber:
             return false; // No contact number found for this flat in Sheet1
         }
         
-        const sheetContactNumber = row[contactNumberIndex].toString().trim();
-        return sheetContactNumber === contactNumber.trim();
+        // Clean up both numbers to only digits before comparing
+        const sheetContactNumbers = row[contactNumberIndex].toString().replace(/\D/g, '');
+        const userContactNumber = contactNumber.replace(/\D/g, '');
+
+        return sheetContactNumbers.includes(userContactNumber);
     } catch (e) {
         throw handleApiError(e, 'validate contact number');
     }
@@ -157,6 +161,7 @@ export async function getFlatsData(): Promise<Record<string, FlatData>> {
             const flatIdFromSheet = row[headerIndexMap.get('Flat ID')!];
             if (flatIdFromSheet) {
                 const normalizedId = normalizeFlatId(flatIdFromSheet);
+                const password = row[headerIndexMap.get('Password')!];
                 flatData[normalizedId] = {
                     ownerName: row[headerIndexMap.get('Owner Name')!] || '',
                     contactNumber: row[headerIndexMap.get('Contact Number')!] || '',
@@ -172,6 +177,7 @@ export async function getFlatsData(): Promise<Record<string, FlatData>> {
                     bloodGroup: row[headerIndexMap.get('Blood Group')!] || '',
                     carNumber: row[headerIndexMap.get('Car Number')!] || '',
                     registrationStatus: row[headerIndexMap.get('Registration Status')!] || 'Pending',
+                    passwordExists: !!password && password.length > 0,
                 };
             }
         }
@@ -310,6 +316,7 @@ export async function getOwnerFlatData(flatId: string): Promise<OwnerFlatData | 
         const headers = headersResponse.data.values?.[0];
         if (!headers) throw new Error("Sheet headers not found.");
         const headerIndexMap = new Map(headers.map((h, i) => [h, i]));
+        const password = row[headerIndexMap.get('Password')!];
 
         return {
             flatId: row[headerIndexMap.get('Flat ID')!] || '',
@@ -330,6 +337,7 @@ export async function getOwnerFlatData(flatId: string): Promise<OwnerFlatData | 
             parkingAllocation: row[headerIndexMap.get('Parking Allocation')!] || '',
             bloodGroup: row[headerIndexMap.get('Blood Group')!] || '',
             carNumber: row[headerIndexMap.get('Car Number')!] || '',
+            passwordExists: !!password && password.length > 0,
         };
     } catch(e: any) {
         throw handleApiError(e, 'fetch owner flat data');
@@ -418,6 +426,7 @@ export async function updateOwnerDataAction(flatId: string, data: Partial<OwnerE
 }
 
 export type SignupFormData = {
+  countryCode: string;
   contactNumber: string;
 };
 
@@ -479,7 +488,8 @@ export async function signupOwnerAction(
         const sheets = await getSheetsClient();
         
         // Step 1: Validate contact number against Sheet1
-        const isContactValid = await validateContactNumber(sheets, flatId, formData.contactNumber);
+        const fullContactNumber = `${formData.countryCode}${formData.contactNumber}`;
+        const isContactValid = await validateContactNumber(sheets, flatId, fullContactNumber);
         if (!isContactValid) {
             return { success: false, message: "The contact number provided does not match our records for this flat." };
         }
@@ -514,7 +524,7 @@ export async function signupOwnerAction(
             };
             
             updateField('Password', password_from_user);
-            updateField('Contact Number', formData.contactNumber);
+            updateField('Contact Number', fullContactNumber);
             updateField('Last Updated', new Date().toISOString());
             // Mark as registered on signup completion
             updateField('Registered', 'TRUE');
@@ -536,7 +546,7 @@ export async function signupOwnerAction(
                     case 'Floor': acc.push(floor); break;
                     case 'Flat': acc.push(flat); break;
                     case 'Password': acc.push(password_from_user); break;
-                    case 'Contact Number': acc.push(formData.contactNumber); break;
+                    case 'Contact Number': acc.push(fullContactNumber); break;
                     case 'Maintenance Status': acc.push('pending'); break;
                     case 'Registered': acc.push('TRUE'); break; // Mark as registered on signup
                     case 'Registration Status': acc.push('Done'); break;

@@ -18,11 +18,13 @@ interface FlatCellProps {
   ownerName: string;
   flatId: string;
   existsInSheet: boolean;
+  passwordExists: boolean;
   onClick: () => void;
 }
 
-export function FlatCell({ isRegistered, ownerInitials, ownerName, flatId, onClick, existsInSheet }: FlatCellProps) {
-  const hasSignedUpButNotRegistered = existsInSheet && !isRegistered;
+export function FlatCell({ isRegistered, ownerInitials, ownerName, flatId, onClick, existsInSheet, passwordExists }: FlatCellProps) {
+  // "Pending" means they've signed up (password exists) but haven't been marked as fully registered.
+  const hasSignedUpButNotRegistered = existsInSheet && passwordExists && !isRegistered;
 
   const getCellStateClasses = () => {
     if (isRegistered) {

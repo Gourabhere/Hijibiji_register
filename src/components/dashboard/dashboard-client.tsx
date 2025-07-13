@@ -60,6 +60,7 @@ export type FlatData = {
   parkingAllocation: 'Covered' | 'Open' | 'No Parking' | '';
   bloodGroup: string;
   carNumber: string;
+  passwordExists: boolean;
 }
 
 export const DashboardClient = ({ isEditable = false }: { isEditable?: boolean }) => {
