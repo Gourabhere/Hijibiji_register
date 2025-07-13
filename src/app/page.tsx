@@ -185,9 +185,9 @@ function HomePageContent() {
                     <TabsTrigger value="signup"><UserPlus className="mr-2 h-4 w-4"/>Sign Up</TabsTrigger>
                 </TabsList>
                 <TabsContent value="signin">
-                  <div className="h-20 py-2">
+                  <div className="pt-2">
                     {loginError && (
-                      <Alert variant="destructive">
+                      <Alert variant="destructive" className="mb-4">
                           <AlertTriangle className="h-4 w-4" />
                           <AlertTitle>Login Failed</AlertTitle>
                           <AlertDescription>{loginError}</AlertDescription>
@@ -224,9 +224,9 @@ function HomePageContent() {
                 </TabsContent>
 
                 <TabsContent value="signup">
-                   <div className="h-20 py-2">
+                   <div className="pt-2">
                     {signupError && (
-                      <Alert variant="destructive">
+                      <Alert variant="destructive" className="mb-4">
                           <AlertTriangle className="h-4 w-4" />
                           <AlertTitle>Signup Failed</AlertTitle>
                           <AlertDescription>{signupError}</AlertDescription>
@@ -330,5 +330,3 @@ export default function HomePage() {
     </Suspense>
   )
 }
-
-    
