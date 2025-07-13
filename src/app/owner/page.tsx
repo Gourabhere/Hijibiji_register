@@ -136,6 +136,16 @@ export default function OwnerDashboardPage() {
         e.preventDefault();
         if (!flatData) return;
 
+        const { ownerName, contactNumber, email, bloodGroup, parkingAllocation } = formData;
+        if (!ownerName || !contactNumber || !email || !bloodGroup || !parkingAllocation) {
+            toast({
+                title: 'Missing Information',
+                description: 'Please fill out all required fields marked with an asterisk (*).',
+                variant: 'destructive',
+            });
+            return;
+        }
+
         startTransition(async () => {
             const result = await updateOwnerDataAction(flatData.flatId, formData);
             if (result.success) {
@@ -144,7 +154,10 @@ export default function OwnerDashboardPage() {
                     description: result.message,
                 });
                 // Optionally refetch data to confirm changes
-                // router.refresh();
+                const updatedData = await getOwnerFlatData(flatData.flatId);
+                if (updatedData) {
+                    setFlatData(updatedData);
+                }
             } else {
                 toast({
                     title: 'Update Failed',
@@ -318,15 +331,21 @@ export default function OwnerDashboardPage() {
                                 </CardHeader>
                                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <Label htmlFor="ownerName" className="flex items-center gap-2"><User className="w-4 h-4" />Full Name</Label>
+                                        <Label htmlFor="ownerName" className="flex items-center gap-2">
+                                            <User className="w-4 h-4" />Full Name <span className="text-destructive">*</span>
+                                        </Label>
                                         <Input id="ownerName" value={formData.ownerName} onChange={handleInputChange} />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="contactNumber" className="flex items-center gap-2"><Phone className="w-4 h-4" />Contact Number</Label>
+                                        <Label htmlFor="contactNumber" className="flex items-center gap-2">
+                                            <Phone className="w-4 h-4" />Contact Number <span className="text-destructive">*</span>
+                                        </Label>
                                         <Input id="contactNumber" type="tel" value={formData.contactNumber} onChange={handleInputChange} />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="email" className="flex items-center gap-2"><Mail className="w-4 h-4" />Email Address</Label>
+                                        <Label htmlFor="email" className="flex items-center gap-2">
+                                            <Mail className="w-4 h-4" />Email Address <span className="text-destructive">*</span>
+                                        </Label>
                                         <Input id="email" type="email" value={formData.email} onChange={handleInputChange} />
                                     </div>
                                      <div className="space-y-2">
@@ -346,7 +365,9 @@ export default function OwnerDashboardPage() {
                                         <Input id="familyMembers" value={formData.familyMembers} onChange={handleInputChange} placeholder="e.g., 2 Adults, 1 Child" />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="bloodGroup" className="flex items-center gap-2"><HeartPulse className="w-4 h-4"/>Blood Group</Label>
+                                        <Label htmlFor="bloodGroup" className="flex items-center gap-2">
+                                            <HeartPulse className="w-4 h-4"/>Blood Group <span className="text-destructive">*</span>
+                                        </Label>
                                         <Select value={formData.bloodGroup} onValueChange={(v) => handleSelectChange('bloodGroup', v)}>
                                             <SelectTrigger><SelectValue placeholder="Select Blood Group" /></SelectTrigger>
                                             <SelectContent>
@@ -370,7 +391,9 @@ export default function OwnerDashboardPage() {
                                         </Button>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="parkingAllocation" className="flex items-center gap-2"><Car className="w-4 h-4"/>Parking Allocation</Label>
+                                        <Label htmlFor="parkingAllocation" className="flex items-center gap-2">
+                                            <Car className="w-4 h-4"/>Parking Allocation <span className="text-destructive">*</span>
+                                        </Label>
                                         <Select value={formData.parkingAllocation} onValueChange={(v: any) => handleSelectChange('parkingAllocation', v)}>
                                             <SelectTrigger><SelectValue placeholder="Select Parking" /></SelectTrigger>
                                             <SelectContent>
