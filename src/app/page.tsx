@@ -42,6 +42,7 @@ function HomePageContent() {
   const [selectedFlat, setSelectedFlat] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [countryCode, setCountryCode] = useState('+91');
   const [contactNumber, setContactNumber] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   
@@ -125,7 +126,7 @@ function HomePageContent() {
     setIsLoading(true);
 
     try {
-      const formData = { contactNumber };
+      const formData = { countryCode, contactNumber };
       const result = await signupOwnerAction(selectedBlock, selectedFloor, selectedFlat, signupPassword, formData);
       if (result.success && result.flatId) {
         toast({
@@ -180,14 +181,15 @@ function HomePageContent() {
                     <TabsTrigger value="signin"><LogIn className="mr-2 h-4 w-4"/>Sign In</TabsTrigger>
                     <TabsTrigger value="signup"><UserPlus className="mr-2 h-4 w-4"/>Sign Up</TabsTrigger>
                 </TabsList>
-
-                {error && (
-                  <Alert variant="destructive" className="mt-4">
-                      <AlertTriangle className="h-4 w-4" />
-                      <AlertTitle>Action Failed</AlertTitle>
-                      <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
+                <div className="mt-4 h-12">
+                  {error && (
+                    <Alert variant="destructive">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>Action Failed</AlertTitle>
+                        <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+                </div>
 
                 <TabsContent value="signin">
                   <form onSubmit={handleLogin} className="space-y-4 pt-4">
@@ -246,12 +248,27 @@ function HomePageContent() {
                     </div>
 
                     {isCheckingFlat && <p className="text-sm text-muted-foreground text-center">Checking flat status...</p>}
-
-                    <div>
-                        <Label htmlFor="contactNumber" className="flex items-center gap-2"><Phone className="w-4 h-4" />Contact Number</Label>
-                        <Input id="contactNumber" type="tel" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} required className="mt-1 h-12 bg-muted/50" placeholder="Enter registered contact number" />
+                    
+                    <div className="flex items-end gap-2">
+                        <div className="w-1/3">
+                            <Label htmlFor="countryCode">Code</Label>
+                            <Select onValueChange={setCountryCode} defaultValue="+91">
+                                <SelectTrigger id="countryCode" className="mt-1 h-12 bg-muted/50">
+                                    <SelectValue placeholder="Code" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="+91">+91</SelectItem>
+                                    <SelectItem value="+1">+1</SelectItem>
+                                    <SelectItem value="+44">+44</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="flex-grow">
+                            <Label htmlFor="contactNumber" className="flex items-center gap-2"><Phone className="w-4 h-4" />Contact Number</Label>
+                            <Input id="contactNumber" type="tel" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} required className="mt-1 h-12 bg-muted/50" placeholder="Number (Without Country code)" />
+                        </div>
                     </div>
-
+                    
                     <div>
                         <Label htmlFor="signupPassword">Create Password</Label>
                         <Input id="signupPassword" type="password" placeholder="Choose a strong password" value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)} required className="mt-1 h-12 bg-muted/50" />
