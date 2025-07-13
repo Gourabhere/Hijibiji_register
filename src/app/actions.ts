@@ -66,6 +66,7 @@ const normalizeFlatId = (id: any): string => {
     return id.toString()
         .trim()
         .toUpperCase()
+        .replace(/^'/, '') // Remove leading single quote if present
         .replace(/^BLOCK\s*/, '')
         .replace(/FLAT|FLOOR/g, '')
         .replace(/[\s,-]+/g, '');
@@ -540,7 +541,8 @@ export async function signupOwnerAction(
         } else { // Flat does not exist, create it
              const newRowData = COLUMN_NAMES.reduce((acc, colName) => {
                 switch(colName) {
-                    case 'Flat ID': acc.push(flatId); break;
+                    // Prepend flatId with a single quote to force string format in Sheets
+                    case 'Flat ID': acc.push(`'${flatId}`); break;
                     case 'Block': acc.push(block); break;
                     case 'Floor': acc.push(floor); break;
                     case 'Flat': acc.push(flat); break;
@@ -569,3 +571,5 @@ export async function signupOwnerAction(
         return { success: false, message: handleApiError(e, 'process owner signup').message };
     }
 }
+
+    
