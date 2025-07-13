@@ -24,7 +24,6 @@ const MAX_COLUMN_LETTER = 'S';
 
 const SPREADSHEET_ID = process.env.GOOGLE_SHEETS_ID;
 const SHEET_NAME = process.env.GOOGLE_SHEET_NAME || 'Sheet1'; // Name of the sheet/tab in your Google Sheet
-const SHEET_NAME_SHEET2 = process.env.GOOGLE_SHEET_NAME_SHEET2 || 'Sheet2';
 
 
 // Helper to authenticate and get the Google Sheets API client
@@ -93,26 +92,41 @@ async function findRowByFlatId(sheets: any, flatId: string, sheetName: string = 
     }
 }
 
-// Check if the contact number is valid for the given flat ID in Sheet2
+// Check if the contact number is valid for the given flat ID in Sheet1
 async function validateContactNumber(sheets: any, flatId: string, contactNumber: string): Promise<boolean> {
     try {
-        const rowNumber = await findRowByFlatId(sheets, flatId, SHEET_NAME_SHEET2);
+        const rowNumber = await findRowByFlatId(sheets, flatId, SHEET_NAME);
         if (!rowNumber) {
-            return false; // Flat ID not found in validation sheet.
+            // If the flat doesn't exist at all in Sheet1, it's not valid for signup against pre-filled data.
+            // This might happen if an admin hasn't added the flat yet.
+            // Depending on desired logic, you could allow creation, but for now, we deny.
+            return false;
         }
 
-        const range = `'${SHEET_NAME_SHEET2}'!A${rowNumber}:B${rowNumber}`; // Assuming Flat ID is in col A, Contact in col B
+        // Get headers to find the 'Contact Number' column index
+        const headersResponse = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `'${SHEET_NAME}'!A1:${MAX_COLUMN_LETTER}1` });
+        const headers = headersResponse.data.values?.[0] as string[];
+        if (!headers) throw new Error("Sheet headers not found.");
+        const headerIndexMap = new Map(headers.map((h, i) => [h, i]));
+        const contactNumberIndex = headerIndexMap.get('Contact Number');
+
+        if (contactNumberIndex === undefined) {
+            throw new Error("'Contact Number' column not found in Sheet1.");
+        }
+
+        // Get the specific row data
+        const range = `'${SHEET_NAME}'!A${rowNumber}:${MAX_COLUMN_LETTER}${rowNumber}`;
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
             range: range,
         });
 
         const row = response.data.values?.[0];
-        if (!row || !row[1]) {
-            return false; // No contact number found for this flat
+        if (!row || !row[contactNumberIndex]) {
+            return false; // No contact number found for this flat in Sheet1
         }
         
-        const sheetContactNumber = row[1].toString().trim();
+        const sheetContactNumber = row[contactNumberIndex].toString().trim();
         return sheetContactNumber === contactNumber.trim();
     } catch (e) {
         throw handleApiError(e, 'validate contact number');
@@ -464,7 +478,7 @@ export async function signupOwnerAction(
     try {
         const sheets = await getSheetsClient();
         
-        // Step 1: Validate contact number against Sheet2
+        // Step 1: Validate contact number against Sheet1
         const isContactValid = await validateContactNumber(sheets, flatId, formData.contactNumber);
         if (!isContactValid) {
             return { success: false, message: "The contact number provided does not match our records for this flat." };
